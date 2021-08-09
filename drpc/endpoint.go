@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/grpool"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/drpc/socket"
@@ -202,7 +203,7 @@ func (that *endpoint) GetSession(sessionID string) (Session, bool) {
 
 // RangeSession 遍历session
 func (that *endpoint) RangeSession(fn func(sess Session) bool) {
-	that.sessHub.sessions.Iterator(func(key, value interface{}) bool {
+	that.sessHub.sessions.Range(func(key, value interface{}) bool {
 		return fn(value.(*session))
 	})
 }
@@ -345,7 +346,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			}
 			//修改会话状态为就绪，并且执行会话消息读取监听
 			sess.changeStatus(statusOk)
-			dgpool.FILOAnywayGo(sess.startReadAndHandle)
+			err = grpool.Add(sess.startReadAndHandle)
 			if err != nil {
 				glog.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
@@ -359,7 +360,10 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 	glog.Infof("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 	//修改会话状态，并且启动响应监听
 	sess.changeStatus(statusOk)
-	dgpool.FILOAnywayGo(sess.startReadAndHandle)
+	err = grpool.Add(sess.startReadAndHandle)
+	if err != nil {
+		return nil, statDialFailed.Copy(err)
+	}
 	//把当前会话加入会话池
 	that.sessHub.set(sess)
 	return sess, nil
@@ -392,7 +396,10 @@ func (that *endpoint) ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Se
 	}
 	glog.Infof("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 	sess.changeStatus(statusOk)
-	dgpool.FILOAnywayGo(sess.startReadAndHandle)
+	err := grpool.Add(sess.startReadAndHandle)
+	if err != nil {
+		return nil, statUnknownError.Copy(err)
+	}
 	//把当前会话加入会话池
 	that.sessHub.set(sess)
 	return sess, nil

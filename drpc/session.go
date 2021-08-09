@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/grpool"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/drpc/socket"
 	"github.com/osgochina/dmicro/drpc/status"
-	"github.com/osgochina/dmicro/utils/dgpool"
 	"io"
 	"net"
 	"sync"
@@ -865,10 +865,10 @@ func (that *session) startReadAndHandle() {
 		// 给优雅处理器添加一次记录,优雅的结束会话之前，需要等待改协程处理完毕
 		that.graceCtxWaitGroup.Add(1)
 
-		if !dgpool.FILOGo(func() {
+		if err = grpool.Add(func() {
 			defer that.endpoint.putHandleCtx(ctx, true)
 			ctx.handle()
-		}) {
+		}); err != nil {
 			that.endpoint.putHandleCtx(ctx, true)
 		}
 	}
