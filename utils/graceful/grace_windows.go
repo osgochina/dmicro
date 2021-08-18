@@ -5,6 +5,7 @@ package graceful
 import (
 	"os"
 	"os/signal"
+	"time"
 )
 
 func (that *Graceful) GraceSignal() {
@@ -20,4 +21,4 @@ func (that *Graceful) Reboot(timeout ...time.Duration) {
 	that.logger.Infof("windows system doesn't support reboot! call Shutdown() is recommended.")
 }
 
-func (that *Graceful) AddInherited(procFiles []*os.File, envs []*Env) {}
+func (that *Graceful) AddInherited(procFiles []*os.File, envs map[string]string) {}
