@@ -25,17 +25,17 @@ import (
 var (
 	bodyCodecMapping = map[string]byte{
 		//"application/x-protobuf":            codec.ID_PROTOBUF,
-		"application/json": codec.IdJson,
-		//"application/x-www-form-urlencoded": codec.ID_FORM,
-		//"text/plain":                        codec.ID_PLAIN,
-		//"text/xml":                          codec.ID_XML,
+		"application/json":                  codec.IdJson,
+		"application/x-www-form-urlencoded": codec.IdForm,
+		"text/plain":                        codec.IdPlain,
+		"text/xml":                          codec.IdXml,
 	}
 	contentTypeMapping = map[byte]string{
 		//codec.ID_PROTOBUF: "application/x-protobuf;charset=utf-8",
-		codec.IdJson: "application/json;charset=utf-8",
-		//codec.ID_FORM:     "application/x-www-form-urlencoded;charset=utf-8",
-		//codec.ID_PLAIN:    "text/plain;charset=utf-8",
-		//codec.ID_XML:      "text/xml;charset=utf-8",
+		codec.IdJson:  "application/json;charset=utf-8",
+		codec.IdForm:  "application/x-www-form-urlencoded;charset=utf-8",
+		codec.IdPlain: "text/plain;charset=utf-8",
+		codec.IdXml:   "text/xml;charset=utf-8",
 	}
 )
 
