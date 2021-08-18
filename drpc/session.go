@@ -439,20 +439,14 @@ func (that *session) send(
 //发送消息
 func (that *session) doSend(output message.Message) *status.Status {
 
-	var (
-		ctxTimout context.Context
-		cancel    context.CancelFunc
-	)
 	//如果设置了上下文生存时间，则应该对会话设置生存时间
 	if age := that.ContextAge(); age > 0 {
-		ctxTimout, cancel = context.WithTimeout(output.Context(), age)
+		ctxTimout, cancel := context.WithTimeout(output.Context(), age)
+		defer cancel()
 		message.WithContext(ctxTimout)(output)
 	}
 	that.writeLock.Lock()
-	defer func() {
-		that.writeLock.Unlock()
-		cancel()
-	}()
+	defer that.writeLock.Unlock()
 
 	ctx := output.Context()
 	select {
@@ -504,7 +498,7 @@ func (that *session) EarlyReceive(newArgs message.NewBodyFunc, ctx ...context.Co
 		return input
 	}
 
-	input.SetBody(newArgs)
+	input.SetNewBody(newArgs)
 	// 如果处理失败了，则把错误赋值给status
 	defer func() {
 		if p := recover(); p != nil {
