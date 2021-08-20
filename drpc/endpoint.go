@@ -288,11 +288,17 @@ func (that *endpoint) getPushHandler(uriPath string) (*Handler, bool) {
 func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, *Status) {
 
 	var sess = newSession(that, nil, protoFunc)
+	//连接到服务端之前，触发事件
+	stat := that.pluginContainer.beforeDial(sess, false)
+	if !stat.OK() {
+		return nil, stat
+	}
 	//链接远端服务器，链接如果不成功，会重试
 	_, err := that.dialer.dialWithRetry(addr, "", func(conn net.Conn) error {
 		sess.socket.Reset(conn, protoFunc...)
 		sess.socket.SetID(sess.LocalAddr().String())
-		stat := that.pluginContainer.afterDial(sess, false)
+		// 链接成功之后触发事件
+		stat = that.pluginContainer.afterDial(sess, false)
 		if !stat.OK() {
 			_ = conn.Close()
 			return stat.Cause()
@@ -300,6 +306,8 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 		return nil
 	})
 	if err != nil {
+		//链接失败触发事件
+		_ = that.pluginContainer.afterDialFail(sess, err, false)
 		return nil, statDialFailed.Copy(err)
 	}
 
@@ -310,6 +318,8 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			oldID := sess.ID()
 			oldIP := sess.LocalAddr().String()
 			oldConn := sess.getConn()
+			//连接到服务端之前，触发事件
+			_ = that.pluginContainer.beforeDial(sess, true)
 			//重新链接服务器端
 			_, err = that.dialer.dialWithRetry(addr, oldID, func(conn net.Conn) error {
 				sess.socket.Reset(conn, protoFunc...)
@@ -323,7 +333,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 				//更改会话状态为初始状态
 				sess.changeStatus(statusPreparing)
 				//执行事件
-				stat := that.pluginContainer.afterDial(sess, true)
+				stat = that.pluginContainer.afterDial(sess, true)
 				//如果执行事件返回的状态不是ok，则把当前链接关闭，把状态修改为重试中，继续重试。
 				if !stat.OK() {
 					_ = conn.Close()
@@ -334,6 +344,8 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			})
 			//如果到了最大重试次数还没有链接成功，则把会话关闭，
 			if err != nil {
+				//链接失败触发事件
+				_ = that.pluginContainer.afterDialFail(sess, err, true)
 				_ = sess.closeLocked()
 				//防止状态没有修改成功，再次尝试修改状态
 				sess.tryChangeStatus(statusRedialFailed, statusRedialing)

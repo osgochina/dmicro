@@ -53,7 +53,7 @@ type inheritNet struct {
 	mutex       sync.Mutex
 	inheritOnce sync.Once
 
-	//这个的作用是为了测试的时候能够精确的确定继承的监听句柄的起始未知，默认值是3
+	//这个的作用是为了测试的时候能够精确得确定继承的监听句柄的起始未知，默认值是3
 	fdStart int
 
 	//传递需要继承的文件句柄列表方法

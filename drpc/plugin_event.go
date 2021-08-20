@@ -88,6 +88,35 @@ func (that *pluginSingleContainer) afterListen(addr net.Addr) {
 	return
 }
 
+// BeforeDialPlugin 作为客户端链接到服务端之前调用该事件
+type BeforeDialPlugin interface {
+	Plugin
+	BeforeDial(sess EarlySession, isRedial bool) *Status
+}
+
+// 作为客户端角色，链接到远程服务端之前，触发该事件，并返回状态
+func (that *pluginSingleContainer) beforeDial(sess EarlySession, isRedial bool) (stat *Status) {
+	var pluginName string
+	defer func() {
+		if p := recover(); p != nil {
+			glog.Errorf("[BeforeDialPlugin:%s]  panic:%v\n%s", pluginName, p, status.PanicStackTrace())
+			stat = statDialFailed.Copy(p)
+		}
+	}()
+	for _, plugin := range that.plugins {
+		if _plugin, ok := plugin.(BeforeDialPlugin); ok {
+			pluginName = plugin.Name()
+			if stat = _plugin.BeforeDial(sess, isRedial); !stat.OK() {
+				glog.Debugf("[BeforeDialPlugin:%s] is_redial:%v, error:%s",
+					pluginName, isRedial, stat.String(),
+				)
+				return stat
+			}
+		}
+	}
+	return nil
+}
+
 // AfterDialPlugin 作为客户端链接到服务端成功以后触发该事件
 type AfterDialPlugin interface {
 	Plugin
@@ -108,6 +137,35 @@ func (that *pluginSingleContainer) afterDial(sess EarlySession, isRedial bool) (
 			pluginName = plugin.Name()
 			if stat = _plugin.AfterDial(sess, isRedial); !stat.OK() {
 				glog.Debugf("[AfterDialPlugin:%s] network:%s, addr:%s, is_redial:%v, error:%s",
+					pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), isRedial, stat.String(),
+				)
+				return stat
+			}
+		}
+	}
+	return nil
+}
+
+// AfterDialFailPlugin 作为客户端链接到服务端失败以后触发该事件
+type AfterDialFailPlugin interface {
+	Plugin
+	AfterDialFail(sess EarlySession, err error, isRedial bool) *Status
+}
+
+// 作为客户端角色，链接到远程服务端失败以后，触发该事件，并返回状态
+func (that *pluginSingleContainer) afterDialFail(sess EarlySession, err error, isRedial bool) (stat *Status) {
+	var pluginName string
+	defer func() {
+		if p := recover(); p != nil {
+			glog.Errorf("[AfterDialFailPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
+			stat = statDialFailed.Copy(p)
+		}
+	}()
+	for _, plugin := range that.plugins {
+		if _plugin, ok := plugin.(AfterDialFailPlugin); ok {
+			pluginName = plugin.Name()
+			if stat = _plugin.AfterDialFail(sess, err, isRedial); !stat.OK() {
+				glog.Debugf("[AfterDialFailPlugin:%s] network:%s, addr:%s, is_redial:%v, error:%s",
 					pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), isRedial, stat.String(),
 				)
 				return stat

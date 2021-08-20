@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	cli := drpc.NewEndpoint(drpc.EndpointConfig{PrintDetail: true})
+	cli := drpc.NewEndpoint(drpc.EndpointConfig{PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
 	defer cli.Close()
 
 	cli.RoutePush(new(Push))
@@ -18,18 +18,20 @@ func main() {
 	if !stat.OK() {
 		glog.Fatalf("%v", stat)
 	}
-	var result int
-	stat = sess.Call("/math/add",
-		[]int{1, 2, 3, 4, 5},
-		&result,
-		message.WithSetMeta("author", "henrylee2cn"),
-	).Status()
-	if !stat.OK() {
-		glog.Fatalf("%v", stat)
+	for i := 0; i < 100; i++ {
+		var result int
+		stat = sess.Call("/math/add",
+			[]int{1, 2, 3, 4, 5},
+			&result,
+			message.WithSetMeta("author", "henrylee2cn"),
+		).Status()
+		if !stat.OK() {
+			glog.Fatalf("%v", stat)
+		}
+		glog.Printf("result: %d", result)
+		glog.Printf("Wait 10 seconds to receive the push...")
+		time.Sleep(time.Second * 1)
 	}
-	glog.Printf("result: %d", result)
-	glog.Printf("Wait 10 seconds to receive the push...")
-	time.Sleep(time.Second * 10)
 }
 
 type Push struct {

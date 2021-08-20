@@ -500,8 +500,8 @@ func (that *handlerCtx) buildReplyBody(header message.Header) interface{} {
 	//设置消息体的格式
 	that.input.SetBody(that.callCmd.result)
 
-	//读取PUSH消息头之后执行该事件
-	stat := that.pluginContainer.afterReadPushHeader(that)
+	//读取reply消息头之后执行该事件
+	stat := that.pluginContainer.afterReadReplyHeader(that)
 	if !stat.OK() {
 		that.callCmd.stat = stat
 		return nil

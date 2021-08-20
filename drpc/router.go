@@ -260,7 +260,8 @@ func (that *SubRouter) reg(
 		}
 		h.routerTypeName = routerTypeName
 		hadHandlers[h.name] = h
-		//pluginContainer.postReg(h)
+		//触发路由注册事件
+		pluginContainer.afterRegRouter(h)
 		glog.Printf("register %s handler: %s", routerTypeName, h.name)
 		names = append(names, h.name)
 	}
