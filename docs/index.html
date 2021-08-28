@@ -10,12 +10,18 @@
 </head>
 <body>
   <div id="app"></div>
+  <!--复制到剪贴板-->
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+  <!--图片缩放 - Zoom image-->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-go.min.js"></script>
+
+
   <script>
     window.$docsify = {
       name: 'D-Micro',
       loadSidebar: 'summary.md',
-      loadNavbar: false,
-      mergeNavbar: true,
       themeColor: '#3F71B5',
       auto2top: true,
       subMaxLevel: 4,
@@ -30,10 +36,19 @@
         placeholder: {
           '/': '输入关键词搜索'
         },
+      },
+      copyCode: {
+        copyCode: {
+          buttonText : '点击复制',
+          errorText  : '错误',
+          successText: '复制'
+        }
       }
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <!--搜索插件-->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/glog"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
+	"github.com/osgochina/dmicro/logger"
 	"time"
 )
 
@@ -16,20 +16,20 @@ func main() {
 
 	sess, stat := cli.Dial("127.0.0.1:9091")
 	if !stat.OK() {
-		glog.Fatalf("%v", stat)
+		logger.Fatalf("%v", stat)
 	}
 	for i := 0; i < 100; i++ {
 		var result int
 		stat = sess.Call("/math/add",
 			[]int{1, 2, 3, 4, 5},
 			&result,
-			message.WithSetMeta("author", "henrylee2cn"),
+			message.WithSetMeta("author", "liuzhiming"),
 		).Status()
 		if !stat.OK() {
-			glog.Fatalf("%v", stat)
+			logger.Fatalf("%v", stat)
 		}
-		glog.Printf("result: %d", result)
-		glog.Printf("Wait 10 seconds to receive the push...")
+		logger.Printf("result: %d", result)
+		logger.Printf("Wait 10 seconds to receive the push...")
 		time.Sleep(time.Second * 1)
 	}
 }
@@ -39,6 +39,6 @@ type Push struct {
 }
 
 func (that *Push) Status(arg *string) *drpc.Status {
-	glog.Printf("%s", *arg)
+	logger.Printf("%s", *arg)
 	return nil
 }

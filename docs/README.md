@@ -22,7 +22,7 @@ require github.com/osgochina/dmicro latest
 
 * import
 
-```golang
+```go
 import "github.com/henrylee2cn/erpc/v6"
 ```
 
