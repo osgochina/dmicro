@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Document</title>
+  <title>DMicro - 使用文档</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Description">
+  <meta name="description" content="DMicro微服务框架文档">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 </head>
@@ -12,8 +12,25 @@
   <div id="app"></div>
   <script>
     window.$docsify = {
-      name: '',
-      repo: ''
+      name: 'D-Micro',
+      loadSidebar: 'summary.md',
+      loadNavbar: true,
+      mergeNavbar: true,
+      themeColor: '#3F71B5',
+      auto2top: true,
+      subMaxLevel: 4,
+      topMargin: 20,
+      repo: 'https://github.com/osgochina/dmicro/',
+      search: {
+        depth: 6,
+        noData: {
+          '/': '没有找到结果!'
+        },
+        paths: 'auto',
+        placeholder: {
+          '/': '输入关键词搜索'
+        },
+      }
     }
   </script>
   <!-- Docsify v4 -->

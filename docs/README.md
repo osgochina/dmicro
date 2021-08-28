@@ -11,12 +11,19 @@
 
 
 ## 安装
+
 ```html
 go get -u -v github.com/osgochina/dmicro
 ```
 推荐使用 `go.mod`:
 ```
 require github.com/osgochina/dmicro latest
+```
+
+* import
+
+```golang
+import "github.com/henrylee2cn/erpc/v6"
 ```
 
 ## 限制
