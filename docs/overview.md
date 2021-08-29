@@ -2,7 +2,7 @@
 
 如何快速的通过简单的代码创建一个真正的rpc服务。
 以下就是示例代码：
-```golang
+```go
 package main
 
 import (
@@ -50,7 +50,7 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 
 服务已经建立完毕，如何通过client链接它呢？
 
-```golang
+```go
 
 package main
 

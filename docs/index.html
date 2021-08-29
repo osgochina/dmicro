@@ -10,14 +10,6 @@
 </head>
 <body>
   <div id="app"></div>
-  <!--复制到剪贴板-->
-  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
-  <!--图片缩放 - Zoom image-->
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-go.min.js"></script>
-
-
   <script>
     window.$docsify = {
       name: 'D-Micro',
@@ -27,28 +19,19 @@
       subMaxLevel: 4,
       topMargin: 20,
       repo: 'https://github.com/osgochina/dmicro/',
-      search: {
-        depth: 6,
-        noData: {
-          '/': '没有找到结果!'
-        },
-        paths: 'auto',
-        placeholder: {
-          '/': '输入关键词搜索'
-        },
-      },
-      copyCode: {
-        copyCode: {
-          buttonText : '点击复制',
-          errorText  : '错误',
-          successText: '复制'
-        }
-      }
+      search: "auto"
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <!--搜索插件-->
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+  <!--golang的语法高亮-->
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-go.min.js"></script>
+  <!--复制到剪贴板-->
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+  <!--图片缩放 - Zoom image-->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
+
 </body>
 </html>
