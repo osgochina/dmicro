@@ -13,7 +13,6 @@ import (
 func main() {
 	//开启信号监听
 	go drpc.GraceSignal()
-
 	// 创建一个rpc服务
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		CountTime:   true,
@@ -23,18 +22,18 @@ func main() {
 	})
 	//注册处理方法
 	svr.RouteCall(new(Math))
-
+	//启动监听
 	err := svr.ListenAndServe()
-	logger.Error(err)
+	logger.Warning(err)
 }
 
+// Math rpc请求的最终处理器，必须集成drpc.CallCtx
 type Math struct {
 	drpc.CallCtx
 }
 
-// Add 数据方法，把传入的参数累加，把结果返回
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
-	// 查看传入的元数据
+	// test meta
 	logger.Infof("author: %s", m.PeekMeta("author"))
 	// add
 	var r int
@@ -83,3 +82,4 @@ func main() {
     logger.Printf("result: %d", result)
 }
 ```
+通过以上的代码事例，大家基本可以了解`drpc`框架是怎么使用。
