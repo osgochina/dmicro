@@ -520,6 +520,9 @@ func (that *endpoint) Close() (err error) {
 			err = gerror.NewSkipf(2, "panic:%v\n", p)
 		}
 	}()
+	//关闭endpoint前，执行该事件
+	that.pluginContainer.beforeCloseEndpoint(that)
+
 	close(that.closeCh)
 	for lis := range that.listeners {
 		//if _, ok := lis.(*quic.Listener); !ok {
@@ -549,5 +552,7 @@ func (that *endpoint) Close() (err error) {
 	//	}
 	//}
 
+	//关闭endpoint后执行该事件
+	that.pluginContainer.afterCloseEndpoint(that, err)
 	return nil
 }

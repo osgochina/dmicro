@@ -49,6 +49,44 @@ func (that *PluginContainer) afterNewEndpoint(e EarlyEndpoint) {
 	}
 }
 
+// BeforeCloseEndpointPlugin 关闭Endpoint之前触发该事件
+type BeforeCloseEndpointPlugin interface {
+	Plugin
+	BeforeCloseEndpoint(Endpoint, *PluginContainer) error
+}
+
+// beforeNewEndpoint 在关闭endpoint之前执行已定义的插件。
+func (that *PluginContainer) beforeCloseEndpoint(endpoint Endpoint) {
+	var err error
+	for _, plugin := range that.plugins {
+		if _plugin, ok := plugin.(BeforeCloseEndpointPlugin); ok {
+			if err = _plugin.BeforeCloseEndpoint(endpoint, that); err != nil {
+				glog.Fatalf("[BeforeCloseEndpoint:%s] %s", plugin.Name(), err.Error())
+				return
+			}
+		}
+	}
+}
+
+// AfterCloseEndpointPlugin 关闭Endpoint之后触发该事件
+type AfterCloseEndpointPlugin interface {
+	Plugin
+	AfterCloseEndpoint(Endpoint, error) error
+}
+
+// afterCloseEndpoint 关闭Endpoint之后执行已定义的插件
+func (that *PluginContainer) afterCloseEndpoint(endpoint Endpoint, e error) {
+	var err error
+	for _, plugin := range that.plugins {
+		if _plugin, ok := plugin.(AfterCloseEndpointPlugin); ok {
+			if err = _plugin.AfterCloseEndpoint(endpoint, e); err != nil {
+				glog.Fatalf("[AfterNewEndpoint:%s] %s", plugin.Name(), err.Error())
+				return
+			}
+		}
+	}
+}
+
 // AfterRegRouterPlugin 路由注册成功触发该事件
 type AfterRegRouterPlugin interface {
 	Plugin
