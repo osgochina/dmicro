@@ -521,7 +521,7 @@ func (that *endpoint) Close() (err error) {
 		}
 	}()
 	//关闭endpoint前，执行该事件
-	that.pluginContainer.beforeCloseEndpoint(that)
+	err = that.pluginContainer.beforeCloseEndpoint(that)
 
 	close(that.closeCh)
 	for lis := range that.listeners {

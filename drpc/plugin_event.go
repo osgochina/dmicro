@@ -56,16 +56,16 @@ type BeforeCloseEndpointPlugin interface {
 }
 
 // beforeNewEndpoint 在关闭endpoint之前执行已定义的插件。
-func (that *PluginContainer) beforeCloseEndpoint(endpoint Endpoint) {
-	var err error
+func (that *PluginContainer) beforeCloseEndpoint(endpoint Endpoint) (err error) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeCloseEndpointPlugin); ok {
 			if err = _plugin.BeforeCloseEndpoint(endpoint); err != nil {
 				glog.Fatalf("[BeforeCloseEndpoint:%s] %s", plugin.Name(), err.Error())
-				return
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 // AfterCloseEndpointPlugin 关闭Endpoint之后触发该事件
