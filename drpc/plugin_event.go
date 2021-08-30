@@ -106,7 +106,7 @@ func (that *pluginSingleContainer) afterRegRouter(h *Handler) {
 	}
 }
 
-// AfterListenPlugin 监听以后触发该事件
+// AfterListenPlugin 服务端监听以后触发该事件
 type AfterListenPlugin interface {
 	Plugin
 	AfterListen(net.Addr) error
@@ -398,7 +398,7 @@ func (that *pluginSingleContainer) afterReadCallHeader(ctx ReadCtx) *Status {
 	return nil
 }
 
-// BeforeReadCallBodyPlugin 读取CALL 消息的body之前触发该事件
+// BeforeReadCallBodyPlugin 读取CALL消息的body之前触发该事件
 type BeforeReadCallBodyPlugin interface {
 	Plugin
 	BeforeReadCallBody(ReadCtx) *Status

@@ -18,24 +18,21 @@
     * [整体架构](drpc/diagram.md)
     * [Endpoint](drpc/endpoint.md)
     * [配置介绍](drpc/config.md)
-    * [server](drpc/server.md)
-    * [client](drpc/client.md)
-    * [session](drpc/session.md)
+    * [服务端](drpc/server.md)
+    * [客户端](drpc/client.md)
+    * [会话](drpc/session.md)
     * [socket](drpc/socket.md)
-    * [router](drpc/router.md)
-    * [message](drpc/message.md)
+    * [路由](drpc/router.md)
+    * [消息](drpc/message.md)
     * [handler](drpc/handler.md)
-    * [context](drpc/context.md)
-    * [status](drpc/status.md)
-    * [graceful](drpc/graceful.md)
-    
-
-* 扩展包
-
-  * [协议](drpc/proto.md)
-  * [编解码器](drpc/codec.md)
-  * [插件](drpc/plugin.md)
-  * [传输过滤器](drpc/tfilter.md)
+    * [上下文](drpc/context.md)
+    * [状态](drpc/status.md)
+    * [事件](drpc/event.md)
+    * [协议](drpc/proto.md)
+    * [编解码器](drpc/codec.md)
+    * [插件](drpc/plugin.md)
+    * [传输过滤器](drpc/tfilter.md)
+    * [优雅重启](drpc/graceful.md)
 
 
 * 性能测试
