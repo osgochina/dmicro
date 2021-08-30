@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc/message"
+	"github.com/osgochina/dmicro/logger"
 	"strconv"
 	"time"
 )
@@ -24,7 +25,7 @@ const (
 )
 
 func enablePrintRunLog() bool {
-	return glog.GetLevel()&glog.LEVEL_DEBU > 0
+	return logger.GetLevel()&glog.LEVEL_DEBU > 0
 }
 
 //打印运行log
@@ -39,7 +40,7 @@ func (that *session) printRunLog(realIP string, costTime time.Duration, input, o
 	addr += "(real:" + realIP + ")"
 	var (
 		costTimeStr string
-		printFunc   = glog.Debugf
+		printFunc   = logger.Debugf
 	)
 	if that.endpoint.countTime {
 		if costTime >= that.endpoint.slowCometDuration {

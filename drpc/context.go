@@ -3,11 +3,11 @@ package drpc
 import (
 	"context"
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/status"
+	"github.com/osgochina/dmicro/logger"
 	"reflect"
 	"sync"
 	"time"
@@ -481,7 +481,7 @@ func (that *handlerCtx) buildReplyBody(header message.Header) interface{} {
 	//从call消息暂存池获取改消息对象
 	_callCmd, ok := that.sess.callCmdMap.Search(header.Seq())
 	if !ok {
-		glog.Warningf("not found call cmd: %v", that.input)
+		logger.Warningf("not found call cmd: %v", that.input)
 	}
 	that.callCmd = _callCmd.(*callCmd)
 
@@ -523,7 +523,7 @@ func (that *handlerCtx) handleReply() {
 	}
 	defer func() {
 		if p := recover(); p != nil {
-			glog.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			logger.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
 		}
 		//把响应消息的消息体赋值给返回值
 		that.callCmd.result = that.input.Body()
@@ -577,7 +577,7 @@ func (that *handlerCtx) handle() {
 	}
 E:
 	that.output.SetStatus(statCodeMTypeNotAllowed)
-	glog.Errorf(logFormatDisconnected,
+	logger.Errorf(logFormatDisconnected,
 		that.input.MType(), that.IP(), that.input.ServiceMethod(), that.input.Seq(),
 		messageLogBytes(that.input, that.sess.endpoint.printDetail))
 
@@ -598,7 +598,7 @@ func (that *handlerCtx) handlePush() {
 	}
 	defer func() {
 		if p := recover(); p != nil {
-			glog.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			logger.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
 		}
 		//计算该请求处理消耗时间
 		that.recordCost()
@@ -619,7 +619,7 @@ func (that *handlerCtx) handlePush() {
 		}
 	}
 	if !that.stat.OK() {
-		glog.Warningf("%s", that.stat.String())
+		logger.Warningf("%s", that.stat.String())
 	}
 }
 
@@ -629,7 +629,7 @@ func (that *handlerCtx) handleCall() {
 
 	defer func() {
 		if p := recover(); p != nil {
-			glog.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			logger.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
 			//报错的情况，如果没有写入响应，则再次写入响应
 			if !isWrite {
 				if that.stat.OK() {

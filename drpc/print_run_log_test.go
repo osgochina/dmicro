@@ -1,44 +1,44 @@
 package drpc
 
 import (
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/test/gtest"
+	"github.com/osgochina/dmicro/logger"
 	"testing"
 )
 
 func TestEnablePrintRunLog(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		_ = glog.SetLevelStr("ALL")
+		_ = logger.SetLevelStr("ALL")
 		t.Assert(enablePrintRunLog(), true)
-		_ = glog.SetLevelStr("DEV")
+		_ = logger.SetLevelStr("DEV")
 		t.Assert(enablePrintRunLog(), true)
-		_ = glog.SetLevelStr("DEVELOP")
+		_ = logger.SetLevelStr("DEVELOP")
 		t.Assert(enablePrintRunLog(), true)
-		_ = glog.SetLevelStr("PROD")
+		_ = logger.SetLevelStr("PROD")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("PRODUCT")
+		_ = logger.SetLevelStr("PRODUCT")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("DEBU")
+		_ = logger.SetLevelStr("DEBU")
 		t.Assert(enablePrintRunLog(), true)
-		_ = glog.SetLevelStr("DEBUG")
+		_ = logger.SetLevelStr("DEBUG")
 		t.Assert(enablePrintRunLog(), true)
-		_ = glog.SetLevelStr("INFO")
+		_ = logger.SetLevelStr("INFO")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("NOTI")
+		_ = logger.SetLevelStr("NOTI")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("NOTICE")
+		_ = logger.SetLevelStr("NOTICE")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("WARN")
+		_ = logger.SetLevelStr("WARN")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("WARNING")
+		_ = logger.SetLevelStr("WARNING")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("ERRO")
+		_ = logger.SetLevelStr("ERRO")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("ERROR")
+		_ = logger.SetLevelStr("ERROR")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("CRIT")
+		_ = logger.SetLevelStr("CRIT")
 		t.Assert(enablePrintRunLog(), false)
-		_ = glog.SetLevelStr("CRITICAL")
+		_ = logger.SetLevelStr("CRITICAL")
 		t.Assert(enablePrintRunLog(), false)
 	})
 }

@@ -1,10 +1,10 @@
 package auth_test
 
 import (
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/auth"
+	"github.com/osgochina/dmicro/logger"
 	"testing"
 	"time"
 )
@@ -84,7 +84,7 @@ var authBearer = auth.NewBearerPlugin(
 		if !stat.OK() {
 			return stat
 		}
-		glog.Infof("auth info: %s, result: %s", clientAuthInfo, ret)
+		logger.Infof("auth info: %s, result: %s", clientAuthInfo, ret)
 		return nil
 	},
 	drpc.WithBodyCodec('s'),
@@ -97,7 +97,7 @@ var authChecker = auth.NewCheckerPlugin(
 		if !stat.OK() {
 			return
 		}
-		glog.Infof("auth info: %v", authInfo)
+		logger.Infof("auth info: %v", authInfo)
 		if clientAuthInfo != authInfo {
 			return nil, drpc.NewStatus(403, "auth fail", "auth fail detail")
 		}

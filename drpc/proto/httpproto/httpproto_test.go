@@ -3,11 +3,11 @@ package httpproto_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto/httpproto"
+	"github.com/osgochina/dmicro/logger"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -19,7 +19,7 @@ type Home struct {
 }
 
 func (h *Home) Test(arg *map[string]string) (map[string]interface{}, *drpc.Status) {
-	glog.Infof("peer_id: %s", gconv.String(h.PeekMeta("peer_id")))
+	logger.Infof("peer_id: %s", gconv.String(h.PeekMeta("peer_id")))
 	return map[string]interface{}{
 		"arg": *arg,
 	}, nil

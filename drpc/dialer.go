@@ -3,7 +3,7 @@ package drpc
 import (
 	"crypto/tls"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/glog"
+	"github.com/osgochina/dmicro/logger"
 	"net"
 	"time"
 )
@@ -89,9 +89,9 @@ func (that *Dialer) dialWithRetry(addr, sessID string, fn func(conn net.Conn) er
 	for redialTimes.Add(-1) > 0 {
 		time.Sleep(that.redialInterval)
 		if sessID == "" {
-			glog.Debugf("trying to redial... (network:%s, addr:%s)", that.network, addr)
+			logger.Debugf("trying to redial... (network:%s, addr:%s)", that.network, addr)
 		} else {
-			glog.Debugf("trying to redial... (network:%s, addr:%s, id:%s)", that.network, addr, sessID)
+			logger.Debugf("trying to redial... (network:%s, addr:%s, id:%s)", that.network, addr, sessID)
 		}
 		conn, err = that.dialOne(addr)
 		if err == nil {
