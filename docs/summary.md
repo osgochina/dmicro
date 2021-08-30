@@ -17,7 +17,7 @@
 
     * [整体架构](drpc/diagram.md)
     * [Endpoint](drpc/endpoint.md)
-    * [配置](drpc/config.md)
+    * [配置介绍](drpc/config.md)
     * [server](drpc/server.md)
     * [client](drpc/client.md)
     * [session](drpc/session.md)

@@ -186,10 +186,10 @@ var GetReadLimit = message.MsgSizeLimit
 // SetReadLimit 设置消息最大长度限制
 var SetReadLimit = message.SetMsgSizeLimit
 
-// SetSocketKeepAlive 开启关闭链接保活
+// SetSocketKeepAlive 开启关闭死链检测
 var SetSocketKeepAlive = socket.SetKeepAlive
 
-// SetSocketKeepAlivePeriod 链接保活间隔时间
+// SetSocketKeepAlivePeriod 死链检测间隔时间
 var SetSocketKeepAlivePeriod = socket.SetKeepAlivePeriod
 
 // SocketReadBuffer 获取链接读缓冲区长度
