@@ -52,7 +52,7 @@ func (that *PluginContainer) afterNewEndpoint(e EarlyEndpoint) {
 // BeforeCloseEndpointPlugin 关闭Endpoint之前触发该事件
 type BeforeCloseEndpointPlugin interface {
 	Plugin
-	BeforeCloseEndpoint(Endpoint, *PluginContainer) error
+	BeforeCloseEndpoint(Endpoint) error
 }
 
 // beforeNewEndpoint 在关闭endpoint之前执行已定义的插件。
@@ -60,7 +60,7 @@ func (that *PluginContainer) beforeCloseEndpoint(endpoint Endpoint) {
 	var err error
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeCloseEndpointPlugin); ok {
-			if err = _plugin.BeforeCloseEndpoint(endpoint, that); err != nil {
+			if err = _plugin.BeforeCloseEndpoint(endpoint); err != nil {
 				glog.Fatalf("[BeforeCloseEndpoint:%s] %s", plugin.Name(), err.Error())
 				return
 			}
