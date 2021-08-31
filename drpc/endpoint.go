@@ -115,7 +115,7 @@ type endpoint struct {
 }
 
 func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
-	//doPrintPid()
+
 	//创建插件容器，并把全局插件加入到容器的最左，方便后续添加插件保存执行顺序
 	pluginContainer := newPluginContainer()
 	pluginContainer.AppendLeft(globalLeftPlugin...)
@@ -289,7 +289,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 
 	var sess = newSession(that, nil, protoFunc)
 	//连接到服务端之前，触发事件
-	stat := that.pluginContainer.beforeDial(sess, false)
+	stat := that.pluginContainer.beforeDial(addr, false)
 	if !stat.OK() {
 		return nil, stat
 	}
@@ -319,7 +319,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			oldIP := sess.LocalAddr().String()
 			oldConn := sess.getConn()
 			//连接到服务端之前，触发事件
-			_ = that.pluginContainer.beforeDial(sess, true)
+			_ = that.pluginContainer.beforeDial(addr, true)
 			//重新链接服务器端
 			_, err = that.dialer.dialWithRetry(addr, oldID, func(conn net.Conn) error {
 				sess.socket.Reset(conn, protoFunc...)

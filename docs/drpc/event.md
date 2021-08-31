@@ -3,14 +3,31 @@
 事件机制是一种经过充分测试的可靠机制，是一种非常适用与解耦的机制。
 在`drpc`中，事件贯穿与整个`Endpoint`的生命周期，是它不可或缺的重要一环。
 
+
+### 事件与插件的关系
+
+在`drpc`中的事件与传统的事件在形式上有一些区别，这里的事件更多的可以看做是在系统执行过程中埋下的钩子，
+具体的高级功能实现需要配合`插件`，组合后才能形成真正的事件。
+
+
 插件是使用多个`事件`有逻辑的组合形成的实现特定功能的一种机制，整个`drpc`的插件都离不开事件机制。
 
 比如`ignoreCase`插件，就使用`AfterReadCallHeader`,`AfterReadPushHeader`两个事件，来修改请求的`ServiceMethod`，把它转换成全小写,
 从而达到忽略大小写的效果。
 
-### 事件与插件的关系
+### Endpoint生命周期事件图
 
-事件架构图待完成
+因为`Endpoint`是支持同时有多个角色，即能作为服务端，也能作为客户端，并且支持`Call`,`Push`两种消息。所以它的事件触发流程也是多种多样的。
+
+这里我帮大家单独整理出来`Endpoint`作为单一角色时候的流程图。
+
+#### 接收call请求的服务端和发送call请求的客户端
+![](images/recvcallandsendcall.svg)
+
+
+#### 接收push请求的服务端和发送push请求的客户端
+![](images/recvpushandsendpush.svg)
+
 
 ### Endpoint生命周期中会触发的事件列表
 
@@ -70,7 +87,7 @@ AfterListen(net.Addr) error
 作为客户端链接到服务端之前调用该事件
 
 ```go
-BeforeDial(sess EarlySession, isRedial bool) *Status
+BeforeDial(addr string, isRedial bool) *Status
 ```
 
 #### AfterDial
@@ -149,7 +166,7 @@ BeforeWritePush(WriteCtx) *Status
 
 #### BeforeReadHeader
 
-执行读取Header之前触发该事件
+执行读取Header之前触发该事件,客户端，服务端在readMessage之前都会执行该事件，然后才会阻塞读等待，等待消息到达，不是说消息到了后才触发该事件。
 
 ```go
 BeforeReadHeader(EarlyCtx) error

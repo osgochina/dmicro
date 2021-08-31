@@ -129,11 +129,11 @@ func (that *pluginSingleContainer) afterListen(addr net.Addr) {
 // BeforeDialPlugin 作为客户端链接到服务端之前调用该事件
 type BeforeDialPlugin interface {
 	Plugin
-	BeforeDial(sess EarlySession, isRedial bool) *Status
+	BeforeDial(addr string, isRedial bool) *Status
 }
 
 // 作为客户端角色，链接到远程服务端之前，触发该事件，并返回状态
-func (that *pluginSingleContainer) beforeDial(sess EarlySession, isRedial bool) (stat *Status) {
+func (that *pluginSingleContainer) beforeDial(addr string, isRedial bool) (stat *Status) {
 	var pluginName string
 	defer func() {
 		if p := recover(); p != nil {
@@ -144,7 +144,7 @@ func (that *pluginSingleContainer) beforeDial(sess EarlySession, isRedial bool) 
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeDialPlugin); ok {
 			pluginName = plugin.Name()
-			if stat = _plugin.BeforeDial(sess, isRedial); !stat.OK() {
+			if stat = _plugin.BeforeDial(addr, isRedial); !stat.OK() {
 				logger.Debugf("[BeforeDialPlugin:%s] is_redial:%v, error:%s",
 					pluginName, isRedial, stat.String(),
 				)
@@ -364,7 +364,7 @@ type BeforeReadHeaderPlugin interface {
 	BeforeReadHeader(EarlyCtx) error
 }
 
-// 读取消息头之前执行该事件
+// 读取消息头之前执行该事件,客户端，服务端在readMessage之前都会执行该事件，然后才会阻塞读，不是说消息到了后才触发该事件
 func (that *pluginSingleContainer) beforeReadHeader(ctx EarlyCtx) error {
 	var err error
 	for _, plugin := range that.plugins {
