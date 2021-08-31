@@ -31,7 +31,7 @@
 
 ### Endpoint生命周期中会触发的事件列表
 
-#### BeforeNewEndpoint
+#### `BeforeNewEndpoint`
 
  创建Endpoint之前触发该事件
 
@@ -41,7 +41,7 @@
 BeforeNewEndpoint(*EndpointConfig, *PluginContainer) error
 ```
 
-#### AfterNewEndpoint
+#### `AfterNewEndpoint`
 
  创建Endpoint之后触发该事件
 ```go
@@ -50,7 +50,7 @@ AfterNewEndpoint(EarlyEndpoint) error
 
 创建Endpoint之后触发该事件。参数为`EarlyEndpoint`接口，该接口具体定义可以参考源码。
 
-#### BeforeCloseEndpoint
+#### `BeforeCloseEndpoint`
 
  关闭Endpoint之前触发该事件
 
@@ -58,7 +58,7 @@ AfterNewEndpoint(EarlyEndpoint) error
 BeforeCloseEndpoint(Endpoint) error
 ```
 
-#### AfterCloseEndpoint
+#### `AfterCloseEndpoint`
 
 关闭Endpoint之后触发该事件
 
@@ -66,7 +66,7 @@ BeforeCloseEndpoint(Endpoint) error
 AfterCloseEndpoint(Endpoint, error) error
 ```
 
-#### AfterRegRouter
+#### `AfterRegRouter`
 
 路由注册成功触发该事件
 
@@ -74,7 +74,7 @@ AfterCloseEndpoint(Endpoint, error) error
 AfterRegRouter(*Handler) error
 ```
 
-#### AfterRegRouter
+#### `AfterRegRouter`
 
 服务端监听以后触发该事件
 
@@ -82,7 +82,7 @@ AfterRegRouter(*Handler) error
 AfterListen(net.Addr) error
 ```
 
-#### BeforeDial
+#### `BeforeDial`
 
 作为客户端链接到服务端之前调用该事件
 
@@ -90,7 +90,7 @@ AfterListen(net.Addr) error
 BeforeDial(addr string, isRedial bool) *Status
 ```
 
-#### AfterDial
+#### `AfterDial`
 
 作为客户端链接到服务端成功以后触发该事件
 
@@ -98,7 +98,7 @@ BeforeDial(addr string, isRedial bool) *Status
 AfterDial(sess EarlySession, isRedial bool) *Status
 ```
 
-#### AfterDialFail
+#### `AfterDialFail`
 
 作为客户端链接到服务端失败以后触发该事件
 
@@ -106,7 +106,7 @@ AfterDial(sess EarlySession, isRedial bool) *Status
 	AfterDialFail(sess EarlySession, err error, isRedial bool) *Status
 ```
 
-#### AfterAccept
+#### `AfterAccept`
 
 作为服务端，接收到客户端的链接后触发该事件
 
@@ -115,7 +115,7 @@ AfterAccept(EarlySession) *Status
 ```
 
 
-#### BeforeWriteCall
+#### `BeforeWriteCall`
 
 写入CALL消息之前触发该事件
 
@@ -123,7 +123,7 @@ AfterAccept(EarlySession) *Status
 BeforeWriteCall(WriteCtx) *Status
 ```
 
-#### AfterWriteCall
+#### `AfterWriteCall`
 
 写入CALL消息成功之后触发该事件
 
@@ -132,7 +132,7 @@ AfterWriteCall(WriteCtx) *Status
 ```
 
 
-#### BeforeWriteReply
+#### `BeforeWriteReply`
 
 写入Reply消息之前触发该事件
 
@@ -140,7 +140,7 @@ AfterWriteCall(WriteCtx) *Status
 BeforeWriteReply(WriteCtx) *Status
 ```
 
-#### AfterWriteReply
+#### `AfterWriteReply`
 
 写入Reply消息成功之后触发该事件
 
@@ -148,7 +148,7 @@ BeforeWriteReply(WriteCtx) *Status
 AfterWriteReply(WriteCtx) *Status
 ```
 
-#### BeforeWritePush
+#### `BeforeWritePush`
 
 写入PUSH消息之前触发该事件
 
@@ -156,7 +156,7 @@ AfterWriteReply(WriteCtx) *Status
 BeforeWritePush(WriteCtx) *Status
 ```
 
-#### AfterWritePush
+#### `AfterWritePush`
 
 写入PUSH消息成功之后触发该事件
 
@@ -164,7 +164,7 @@ BeforeWritePush(WriteCtx) *Status
 	AfterWritePush(WriteCtx) *Status
 ```
 
-#### BeforeReadHeader
+#### `BeforeReadHeader`
 
 执行读取Header之前触发该事件,客户端，服务端在readMessage之前都会执行该事件，然后才会阻塞读等待，等待消息到达，不是说消息到了后才触发该事件。
 
@@ -172,7 +172,7 @@ BeforeWritePush(WriteCtx) *Status
 BeforeReadHeader(EarlyCtx) error
 ```
 
-#### AfterReadCallHeader
+#### `AfterReadCallHeader`
 
 读取CALL消息的Header之后触发该事件
 
@@ -181,7 +181,7 @@ AfterReadCallHeader(ReadCtx) *Status
 ```
 
 
-#### BeforeReadCallBody
+#### `BeforeReadCallBody`
 
 读取CALL消息的body之前触发该事件
 
@@ -189,7 +189,7 @@ AfterReadCallHeader(ReadCtx) *Status
 BeforeReadCallBody(ReadCtx) *Status
 ```
 
-#### AfterReadCallBody
+#### `AfterReadCallBody`
 
 读取CALL消息的body之后触发该事件
 
@@ -197,7 +197,7 @@ BeforeReadCallBody(ReadCtx) *Status
 AfterReadCallBody(ReadCtx) *Status
 ```
 
-#### AfterReadPushHeader
+#### `AfterReadPushHeader`
 
 读取PUSH消息Header之后触发该事件
 
@@ -205,7 +205,7 @@ AfterReadCallBody(ReadCtx) *Status
 AfterReadPushHeader(ReadCtx) *Status
 ```
 
-#### BeforeReadPushBody
+#### `BeforeReadPushBody`
 
 读取PUSH消息body之前触发该事件
 
@@ -213,7 +213,7 @@ AfterReadPushHeader(ReadCtx) *Status
 BeforeReadPushBody(ReadCtx) *Status
 ```
 
-#### AfterReadPushBody
+#### `AfterReadPushBody`
 
 读取PUSH消息body之后触发该事件
 
@@ -221,7 +221,7 @@ BeforeReadPushBody(ReadCtx) *Status
 AfterReadPushBody(ReadCtx) *Status
 ```
 
-#### AfterReadReplyHeader
+#### `AfterReadReplyHeader`
 
 读取REPLY消息Header之前触发该事件
 
@@ -229,7 +229,7 @@ AfterReadPushBody(ReadCtx) *Status
 AfterReadReplyHeader(ReadCtx) *Status
 ```
 
-#### BeforeReadReplyBody
+#### `BeforeReadReplyBody`
 
 读取REPLY消息body之前触发该事件
 
@@ -237,7 +237,7 @@ AfterReadReplyHeader(ReadCtx) *Status
 BeforeReadReplyBody(ReadCtx) *Status
 ```
 
-#### AfterReadReplyBody
+#### `AfterReadReplyBody`
 
 读取REPLY消息body之后触发该事件
 
@@ -245,7 +245,7 @@ BeforeReadReplyBody(ReadCtx) *Status
 AfterReadReplyBody(ReadCtx) *Status
 ```
 
-#### AfterDisconnect
+#### `AfterDisconnect`
 
 断开会话以后触发该事件
 

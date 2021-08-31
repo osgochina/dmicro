@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/os/glog"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/plugin/ignorecase"
 	"time"
 )
 
@@ -16,7 +17,7 @@ func main() {
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: true,
-	})
+	}, ignorecase.NewIgnoreCase())
 
 	svr.RouteCall(new(Math))
 

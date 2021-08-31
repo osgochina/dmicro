@@ -4,3 +4,5 @@
 
 1. 增加 `BeforeCloseEndpoint` 关闭Endpoint之前触发该事件.
 2. 增加 `AfterCloseEndpointPlugin` 关闭Endpoint之后触发该事件.
+3. 完善 `event`事件的测试用例。
+4. 完善 `confg`配置的测试用例。
