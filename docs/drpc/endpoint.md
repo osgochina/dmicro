@@ -25,7 +25,7 @@
 读取号数据后，经过解析，执行对应的方法。 可以理解为每个请求都是一个协程。
 
 
-### Endpoint的使用
+## Endpoint的使用
 
 在快速开始的示例中，我们演示了`Endpoint`的简单用法，在这里我们详细介绍它的高级用法。
 
@@ -35,11 +35,11 @@
 * `EarlyEndpoint` 在事件`AfterNewEndpoint`中作为参数传入，因为此时Endpoint刚刚创立，很多`Endpoint`提供的方法还不能使用。
 * `Endpoint` 完全对象，能使用所有的方法。
 
-### Endpoint的方法
+## Endpoint的方法
 
-#### `NewEndpoint()`
+### 新建Endpoint对象
 
-* 新建Endpoint对象。
+* `NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint`
 
 ```go
 
@@ -58,17 +58,17 @@ cfg 是配置对象，具体配置信息可以参考 [config](drpc/config.md).
 插件是由多个事件组合，并且根据不同的逻辑形成的特定组件。
 具体信息参考 [插件](drpc/plugin.md)。
 
-#### `Router()`
+### 获取路由对象
 
-* 返回路由对象
+* `Router() *Router`
 
-#### `SubRoute()`
+### 设置路由分组
 
-* 设置路由分组
+* `SubRoute(pathPrefix string, plugin ...Plugin) *SubRouter`
 
-#### `RouteCall()`
+### 通过struct对象注册CALL命令路由
 
-* 通过结构体对象注册CALL命令路由
+* `RouteCall(callCtrlStruct interface{}, plugin ...Plugin) []string `
 
 ```go
 type Math struct {
@@ -85,9 +85,9 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 endpointSvr.RouteCall(new(Math))
 ```
 
-#### `RouteCallFunc()`
+### 通过对象的方法注册CALL命令路由
 
-* 通过对象的方法注册CALL命令路由
+* `RouteCallFunc(callHandleFunc interface{}, plugin ...Plugin) string`
 
 ```go
 type Math struct {
@@ -104,9 +104,9 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 endpoint.RouteCallFunc((*Math).Add)
 ```
 
-#### `RoutePush()`
+### 通过struct对象注册PUSH命令的路由
 
-* 通过结构体对象注册PUSH命令的路由
+* `RoutePush(pushCtrlStruct interface{}, plugin ...Plugin) []string `
 
 ```go
 type MathPush struct {
@@ -123,9 +123,9 @@ func (m *MathPush) Add(arg *[]int) *drpc.Status {
 endpoint.RoutePush(new(MathPush))
 ```
 
-#### `RoutePushFunc()`
+### 通过对象的方法注册PUSH命令的路由
 
-* 通过对象的方法注册PUSH命令的路由
+* `RoutePushFunc(pushHandleFunc interface{}, plugin ...Plugin) string`
 
 ```go
 type MathPush struct {
@@ -142,9 +142,9 @@ func (m *MathPush) Add(arg *[]int) *drpc.Status {
 endpoint.RoutePush((*MathPush).Add)
 ```
 
-#### `SetUnknownCall()`
+### 设置Call命令未匹配时如何处理
 
-* 设置CALL命令的默认路由
+* `SetUnknownCall(fn func(UnknownCallCtx) (interface{}, *Status), plugin ...Plugin) `
 
 ```go
 endpoint.SetUnknownCall(func(ctx drpc.UnknownCallCtx) (interface{}, *drpc.Status){
@@ -152,9 +152,9 @@ endpoint.SetUnknownCall(func(ctx drpc.UnknownCallCtx) (interface{}, *drpc.Status
 },ignorecase.NewIgnoreCase())
 ```
 
-#### `SetUnknownPush()`
+### 设置PUSH命令未匹配时如何处理
 
-* 设置PUSH命令的默认路由
+* `SetUnknownPush(fn func(UnknownPushCtx) *Status, plugin ...Plugin)`
 
 ```go
 endpoint.SetUnknownCall(ctx drpc.UnknownPushCtx) *drpc.Status{
@@ -162,9 +162,9 @@ endpoint.SetUnknownCall(ctx drpc.UnknownPushCtx) *drpc.Status{
 },ignorecase.NewIgnoreCase())
 ```
 
-#### `Dial()`
+### 拨号链接远端
 
-* 拨号链接远端
+*  `Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, *Status)`
 
 ```go
 sess, stat := cli.Dial("127.0.0.1:9091",jsonproto.NewJSONProtoFunc())
@@ -175,9 +175,9 @@ if !stat.OK() {
 
 大家注意第二个参数，这里是可以自定义协议的的，也就是说一个Endpoint，链接多个远端服务时，可以使用不同的协议。
 
-#### `ListenAndServe()`
+### 启动端点并监听
 
-* 端点启动并监听，对外提供服务
+* `ListenAndServe(protoFunc ...proto.ProtoFunc) error`
 
 ```go
 _ = svr.ListenAndServe(jsonproto.NewJSONProtoFunc())
@@ -185,42 +185,42 @@ _ = svr.ListenAndServe(jsonproto.NewJSONProtoFunc())
 
 监听的时候也可以指定协议。
 
-#### `Close()`
+### 关闭端点
 
-* 关闭端点
+* `Close() (err error)`
 
-#### `GetSession()`
+### 获取session详情
 
-* 根据sessionid获取session详情。
+* `GetSession(sessionID string) (Session, bool)`
 
-#### `RangeSession()`
+### 遍历所有Session
 
-* 遍历所有session。
+* `RangeSession(fn func(sess Session) bool) `
 
-#### `CountSession()`
+### 统计当前session数量
 
-* 统计当前session个数。
+* `CountSession() int `
 
-#### `ServeConn()`
+### 使用新的链接重新生成会话
 
-* 通过提供的链接，生成会话并返回。
+* `ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Session, *Status)`
 
 1. 不支持自动重连
 2. 不检查是否是 TLS链接
 3. 会执行AfterAcceptPlugin 事件
 
-#### `PluginContainer()`
+### 获取端点的插件列表 
 
-* 获取端点的插件容器，可以通过它对插件进行操作。
+* `PluginContainer() *PluginContainer `
 
-#### `TLSConfig()`
+### 获取该端点的证书信息
 
-* 获取该端点的证书信息。
+* `TLSConfig() *tls.Config `
 
-#### `SetTLSConfig()`
+### 设置该端点的证书信息
 
-* 设置该端点的证书信息。
+* `SetTLSConfig(tlsConfig *tls.Config)`
 
-#### `SetTLSConfigFromFile()`
+### 通过文件生成端点的证书配置
 
-* 通过文件生成端点的证书信息。
+* `SetTLSConfigFromFile(tlsCertFile, tlsKeyFile string, insecureSkipVerifyForClient ...bool) error`

@@ -1,4 +1,4 @@
-# 架构图
+## 架构图
 
 ![](images/drpc_architecture_diagram.svg)
 

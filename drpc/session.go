@@ -31,7 +31,7 @@ type EarlySession interface {
 	// Swap 临时存储区内容
 	Swap() *gmap.Map
 
-	// SetID 设置seaside
+	// SetID 设置session id
 	SetID(newID string)
 
 	// ControlFD 原始链接的fd
@@ -274,6 +274,7 @@ func (that *session) Health() bool {
 	return false
 }
 
+// Endpoint 获取当前session属于那个Endpoint
 func (that *session) Endpoint() Endpoint {
 	return that.endpoint
 }
@@ -308,12 +309,12 @@ func (that *session) getConn() net.Conn {
 	return that.socket.Raw()
 }
 
-// ModifySocket 替换底层的链接
+// ModifySocket 替换底层的socket套接字
 // NOTE:
-// The connection fd is not allowed to change!
-// Inherit the previous session id and custom data swap;
-// If modifiedConn!=nil, reset the net.Conn of the socket;
-// If newProtoFunc!=nil, reset the ProtoFunc of the socket.
+// 连接fd不允许更改!
+// 继承以前的session id和Swap;
+// 如果 modifiedConn!=nil,重置 net.Conn
+// 如果 newProtoFunc!=nil, 重置 ProtoFunc.
 func (that *session) ModifySocket(fn func(conn net.Conn) (modifiedConn net.Conn, newProtoFunc proto.ProtoFunc)) {
 	conn := that.getConn()
 	modifiedConn, newProtoFunc := fn(conn)
@@ -389,12 +390,14 @@ func (that *session) SetContextAge(duration time.Duration) {
 	that.contextAgeLock.Unlock()
 }
 
+// Close 关闭当前session
 func (that *session) Close() error {
 	that.lock.Lock()
 	defer that.lock.Unlock()
 	return that.closeLocked()
 }
 
+// Swap 获取session的临时交换区数据
 func (that *session) Swap() *gmap.Map {
 	return that.socket.Swap()
 }
