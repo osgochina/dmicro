@@ -27,7 +27,7 @@ require github.com/osgochina/dmicro latest
 * import
 
 ```go
-import "github.com/henrylee2cn/erpc/v6"
+import "github.com/osgochina/dmicro"
 ```
 
 ## 限制
