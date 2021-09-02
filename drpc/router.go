@@ -15,10 +15,13 @@ import (
 	"unsafe"
 )
 
-// HTTPServiceMethodMapper like most RPC services service method mapper.
-// Such as: user/get
-// It is the default mapper.
-// The mapping rule of struct(func) name to service methods:
+// ServiceMethodMapper ServiceMethod的转换函数类型
+type ServiceMethodMapper func(prefix, name string) (serviceMethod string)
+
+// HTTPServiceMethodMapper service method名称的映射规则，使用"/"做分隔符
+// 默认的映射规则
+// 生成的serviceMethod类似于：/pay/alipay/app
+//  struct或者func的名字转换成service methods的规则如下：
 //  `AaBb` -> `/aa_bb`
 //  `ABcXYz` -> `/abc_xyz`
 //  `Aa__Bb` -> `/aa_bb`
@@ -32,15 +35,34 @@ func HTTPServiceMethodMapper(prefix, name string) string {
 	return path.Join("/", prefix, toServiceMethods(name, '/', true))
 }
 
-type ServiceMethodMapper func(prefix, name string) (serviceMethod string)
+// RPCServiceMethodMapper service method名称的映射规则，使用"."做分隔符
+// 生成的serviceMethod类似于：pay.alipay.app
+//  struct或者func的名字转换成service methods的规则如下：
+//  `AaBb` -> `AaBb`
+//  `ABcXYz` -> `ABcXYz`
+//  `Aa__Bb` -> `Aa_Bb`
+//  `aa__bb` -> `aa_bb`
+//  `ABC__XYZ` -> `ABC_XYZ`
+//  `Aa_Bb` -> `Aa.Bb`
+//  `aa_bb` -> `aa.bb`
+//  `ABC_XYZ` -> `ABC.XYZ`
+func RPCServiceMethodMapper(prefix, name string) string {
+	p := prefix + "." + toServiceMethods(name, '.', false)
+	return strings.Trim(p, ".")
+}
 
+// SetServiceMethodMapper 设置路由路径的生成函数
 func SetServiceMethodMapper(mapper ServiceMethodMapper) {
 	globalServiceMethodMapper = mapper
 }
 
+//默认的全局转换函数
 var globalServiceMethodMapper = HTTPServiceMethodMapper
 
-// toServiceMethods maps struct(func) name to service methods.
+// toServiceMethods 把 struct(func) 的名字转换成service methods.
+// name 需要转换的名字
+// sep 分隔符
+// toSnake 是否要转换成蛇形
 func toServiceMethods(name string, sep rune, toSnake bool) string {
 	var a = make([]rune, 0)
 	var last rune
@@ -80,6 +102,7 @@ type Router struct {
 	subRouter *SubRouter
 }
 
+// SubRouter 组路由器
 type SubRouter struct {
 	root            *Router
 	callHandlers    map[string]*Handler
@@ -90,7 +113,7 @@ type SubRouter struct {
 	pluginContainer *PluginContainer
 }
 
-//新建路由器
+//创建路由对象
 func newRouter(pluginContainer *PluginContainer) *Router {
 	rootGroup := globalServiceMethodMapper("", "")
 	root := &Router{
@@ -183,12 +206,12 @@ func (that *Router) SetUnknownPush(fn func(UnknownPushCtx) *status.Status, plugi
 	that.subRouter.unknownPush = &h
 }
 
-// Root 返回根路由器
+// Root 返回分组路由的根路由器
 func (that *SubRouter) Root() *Router {
 	return that.root
 }
 
-// ToRouter 转换成添加了 SetUnknownCall 和 SetUnknownPush 方法的路由器
+// ToRouter 把分组路由转换成根路由
 func (that *SubRouter) ToRouter() *Router {
 	return &Router{subRouter: that}
 }
@@ -235,6 +258,7 @@ func (that *SubRouter) reg(
 	ctrlStruct interface{},
 	plugins []Plugin,
 ) []string {
+	// 先把要执行的插件clone一遍
 	pluginContainer := that.pluginContainer.cloneAndAppendMiddle(plugins...)
 	warnInvalidHandlerHooks(plugins)
 	handlers, err := handlerMaker(
@@ -436,6 +460,7 @@ func makeCallHandlersFromStruct(prefix string, callCtrlStruct interface{}, plugi
 	return handlers, nil
 }
 
+// 创建Call方法的处理器，传入的参数是func
 func makeCallHandlersFromFunc(prefix string, callHandleFunc interface{}, pluginContainer *PluginContainer) ([]*Handler, error) {
 
 	var (
@@ -551,6 +576,7 @@ func makeCallHandlersFromFunc(prefix string, callHandleFunc interface{}, pluginC
 	}}, nil
 }
 
+// 创建push消息的处理器，传入的参数是struct
 func makePushHandlersFromStruct(prefix string, pushCtrlStruct interface{}, pluginContainer *PluginContainer) ([]*Handler, error) {
 
 	var (
@@ -654,6 +680,7 @@ func makePushHandlersFromStruct(prefix string, pushCtrlStruct interface{}, plugi
 	return handlers, nil
 }
 
+// 创建push消息的处理器，传入的参数是func
 func makePushHandlersFromFunc(prefix string, pushHandleFunc interface{}, pluginContainer *PluginContainer) ([]*Handler, error) {
 
 	var (
@@ -764,6 +791,7 @@ func isBelongToCallCtx(name string) bool {
 	return false
 }
 
+// 判断方法是否属于 PushCtx
 func isBelongToPushCtx(name string) bool {
 	for m := 0; m < typeOfPushCtx.NumMethod(); m++ {
 		if name == typeOfPushCtx.Method(m).Name {
@@ -773,21 +801,25 @@ func isBelongToPushCtx(name string) bool {
 	return false
 }
 
+// 判断返回值类型是否是 *Status 类型
 func isStatusType(s string) bool {
 	return strings.HasPrefix(s, "*") && strings.HasSuffix(s, ".Status")
 }
 
+// 获取 struct对象的名称
 func ctrlStructName(cType reflect.Type) string {
 	split := strings.Split(cType.String(), ".")
 	return split[len(split)-1]
 }
 
+// 获取处理器方法的名字
 func handlerFuncName(v reflect.Value) string {
 	str := objectName(v)
 	split := strings.Split(str, ".")
 	return split[len(split)-1]
 }
 
+// 获取对象的名字
 func objectName(v reflect.Value) string {
 	t := v.Type()
 	if t.Kind() == reflect.Func {
@@ -806,12 +838,13 @@ func isExportedOrBuiltinType(t reflect.Type) bool {
 	return isExportedName(t.Name()) || t.PkgPath() == ""
 }
 
-// IsExportedName is this an exported - upper case - name?
+// IsExportedName 判断name是否是一个可以被外部调用的大写开头的方法名
 func isExportedName(name string) bool {
 	r, _ := utf8.DecodeRuneInString(name)
 	return unicode.IsUpper(r)
 }
 
+// 把英文字符串转换成蛇形格式
 func snakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false
