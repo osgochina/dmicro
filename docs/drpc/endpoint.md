@@ -16,7 +16,7 @@
 * 执行`ListenAndServe`方法，则会变成服务端，监听指定的地址端口，处理客户端请求。
 * 执行`Dial` 方法，则会链接到远程服务端，可以请求服务端接口。
 
-整个框架的生命周期可以参考 [event](drpc/event.md) 模块。
+整个框架的生命周期可以参考 [hook](drpc/hook.md) 模块。
 
 ### 请求的生命周期
 
@@ -32,7 +32,7 @@
 `Endpoint` 提供了三个对象`BaseEndpoint`,`EarlyEndpoint`,`Endpoint`分别对应不同的生命周期使用。
 
 * `BaseEndpoint` 基础对象，继承使用。
-* `EarlyEndpoint` 在事件`AfterNewEndpoint`中作为参数传入，因为此时Endpoint刚刚创立，很多`Endpoint`提供的方法还不能使用。
+* `EarlyEndpoint` 在钩子`AfterNewEndpoint`中作为参数传入，因为此时Endpoint刚刚创立，很多`Endpoint`提供的方法还不能使用。
 * `Endpoint` 完全对象，能使用所有的方法。
 
 ## Endpoint的方法
@@ -55,7 +55,7 @@ cfg 是配置对象，具体配置信息可以参考 [config](drpc/config.md).
 
 重点来介绍下`plugins`,这个参数是可选参数，并且是一个数组，支持传入多个插件，并按传入的顺序执行。
 
-插件是由多个事件组合，并且根据不同的逻辑形成的特定组件。
+插件是由多个钩子组合，并且根据不同的逻辑形成的特定组件。
 具体信息参考 [插件](drpc/plugin.md)。
 
 ### 获取路由对象
@@ -207,7 +207,7 @@ _ = svr.ListenAndServe(jsonproto.NewJSONProtoFunc())
 
 1. 不支持自动重连
 2. 不检查是否是 TLS链接
-3. 会执行AfterAcceptPlugin 事件
+3. 会执行AfterAcceptPlugin 钩子
 
 ### 获取端点的插件列表 
 

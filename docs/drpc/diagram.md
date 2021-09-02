@@ -19,7 +19,7 @@ drpc框架的主对象，为`server`和`client`提供相同的`API`封装。
 
 ### `Plugins Interface Array`
 
-插件是通过各种事件的组合加上独特的逻辑，形成特殊的功能。
+插件是通过各种钩子的组合加上独特的逻辑，形成特殊的功能。
 这些功能可以复用在不同的`Endpoint`上。
 
 ### `Router Structure`

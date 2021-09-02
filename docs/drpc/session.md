@@ -14,13 +14,13 @@
 * `EarlySession`
 > 会话刚被创建，还未启动`goroutine`读取数据。
 
-    该对象主要提供给`event`使用。
+    该对象主要提供给`hook`使用。
     1. `AfterDial`
     2. `AfterDialFail`
     3. `AfterAccept`
 
 * `BaseSession`
-> 最基础的会话信息接口。被用在`AfterDisconnect`事件中。
+> 最基础的会话信息接口。被用在`AfterDisconnect`钩子中。
 
 * `CtxSession`
 > 在处理器处理逻辑的时候，在上下文中传递。
