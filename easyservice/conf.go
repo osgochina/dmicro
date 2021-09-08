@@ -1,8 +1,10 @@
-package easyserver
+package easyservice
 
 import (
 	"fmt"
 	"github.com/gogf/gf/net/gipv4"
+	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"net"
@@ -23,6 +25,32 @@ type BoxConf struct {
 	RequestMaxTimeout  time.Duration `json:"request_max_timeout" comment:"请求最长超时时间"`
 	RedialTimes        int           `json:"redial_times" comment:"在链接中断时候，试图链接服务端的最大重试次数。仅限客户端角色使用"`
 	RedialInterval     time.Duration `json:"redial_interval" comment:"仅限客户端角色使用 试图链接服务端时候，重试的时间间隔"`
+}
+
+// NewBoxConf 创建BoxConf对象
+func NewBoxConf() *BoxConf {
+	return &BoxConf{}
+}
+
+// DefaultBoxConf 创建运行配置
+func DefaultBoxConf(parser *gcmd.Parser, config *gcfg.Config) *BoxConf {
+	cfg := NewBoxConf()
+	cfg.Network = config.GetString("default.sandbox.Network", "tcp")
+	host := parser.GetOptVar("host", config.GetString("default.sandbox.Host", "127.0.0.1"))
+	port := parser.GetOptVar("port", config.GetInt("default.sandbox.Port", 0))
+	debug := parser.GetOptVar("debug", config.GetBool("Debug", false))
+	cfg.ListenAddress = fmt.Sprintf("%s:%d", host.String(), port.Int())
+	cfg.SandBoxName = config.GetString("default.sandbox.Name", "")
+	cfg.PrintDetail = debug.Bool()
+	cfg.SessionMaxTimeout = config.GetDuration("default.sandbox.SessionMaxTimeout", 0)
+	cfg.ResponseMaxTimeout = config.GetDuration("default.sandbox.ResponseMaxTimeout", 0)
+	cfg.RequestMaxTimeout = config.GetDuration("default.sandbox.RequestMaxTimeout", 0)
+	cfg.SlowTimeout = config.GetDuration("default.sandbox.SlowTimeout", 0)
+	cfg.SlowTimeout = config.GetDuration("default.sandbox.SlowTimeout", 0)
+	cfg.CountTime = config.GetBool("default.sandbox.CountTime", false)
+	cfg.RedialTimes = config.GetInt("default.sandbox.RedialTimes", 0)
+	cfg.RedialInterval = config.GetDuration("default.sandbox.RedialTimes", 0)
+	return cfg
 }
 
 // ListenPort 获取监听端口

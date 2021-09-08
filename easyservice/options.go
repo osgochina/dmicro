@@ -1,4 +1,4 @@
-package easyserver
+package easyservice
 
 import (
 	"fmt"
@@ -56,6 +56,7 @@ EXAMPLES
 	/path/to/server start pay  --host=127.0.0.1 --port=8808
 	/path/to/server stop
 	/path/to/server quit
+	/path/to/server reload
 	/path/to/server version
 	/path/to/server help
 `)
@@ -68,9 +69,9 @@ func SetHelpContent(content string) {
 
 // 解析命令行，根据返回值判断是否继续执行
 // 返回false，则结束进程，返回true继续执行
-func (that *Server) parserArgs(parser *gcmd.Parser) bool {
+func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
 	//设置pid文件
-	that.pidFile = parser.GetOpt("pid", fmt.Sprintf("/tmp/%s.pid", that.processName))
+	that.pidFile = parser.GetOpt("pid", gfile.TempDir(fmt.Sprintf("%s.pid", that.processName)))
 
 	command := gcmd.GetArg(1)
 	switch strings.ToLower(command) {
@@ -85,6 +86,8 @@ func (that *Server) parserArgs(parser *gcmd.Parser) bool {
 		return true
 	case "stop":
 		that.stop(parser, "stop")
+	case "reload":
+		that.stop(parser, "reload")
 	case "quit":
 		that.stop(parser, "quit")
 		return false
@@ -104,7 +107,7 @@ func (that *Server) parserArgs(parser *gcmd.Parser) bool {
 	return false
 }
 
-func (that *Server) stop(parser *gcmd.Parser, signal string) {
+func (that *EasyService) stop(parser *gcmd.Parser, signal string) {
 	pidFile := that.pidFile
 	var serverPid = 0
 	if gfile.IsFile(pidFile) {
@@ -118,19 +121,21 @@ func (that *Server) stop(parser *gcmd.Parser, signal string) {
 	switch signal {
 	case "stop":
 		sigNo = syscall.SIGTERM
+	case "reload":
+		sigNo = syscallSIGUSR2
 	case "quit":
 		sigNo = syscall.SIGQUIT
 	default:
 		logger.Fatalf("signal cmd `%s' not found", signal)
 	}
-	err := syscall.Kill(serverPid, sigNo)
+	err := syscallKill(serverPid, sigNo)
 	if err != nil {
 		logger.Errorf("error:%v", err)
 	}
 	os.Exit(0)
 }
 
-func (that *Server) checkStart() {
+func (that *EasyService) checkStart() {
 	pidFile := that.pidFile
 	var serverPid = 0
 	if gfile.IsFile(pidFile) {
@@ -139,15 +144,14 @@ func (that *Server) checkStart() {
 	if serverPid == 0 {
 		return
 	}
-	err := syscall.Kill(serverPid, 0)
-	if err == nil {
+	if checkStart(serverPid) {
 		logger.Fatalf("Server [%d] is already running.", serverPid)
 	}
 	return
 }
 
 //解析配置文件
-func (that *Server) parserConfig(parser *gcmd.Parser) {
+func (that *EasyService) parserConfig(parser *gcmd.Parser) {
 	that.config = gcfg.Instance()
 	array := garray.NewStrArrayFrom(os.Args)
 	//判断是否需要后台运行
@@ -170,12 +174,12 @@ func (that *Server) parserConfig(parser *gcmd.Parser) {
 	if index != -1 {
 		_ = that.config.Set("Debug", true)
 	} else {
-		debug := parser.GetOptVar("debug", false)
+		debug := parser.GetOptVar("debug", that.config.GetBool("Debug", false))
 		_ = that.config.Set("Debug", debug.Bool())
 	}
 }
 
 //显示帮助信息
-func (that *Server) help() {
+func (that *EasyService) help() {
 	fmt.Print(helpContent)
 }

@@ -1,4 +1,4 @@
-package easyserver
+package easyservice
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ var (
 )
 
 //显示版本信息
-func (that *Server) version() {
+func (that *EasyService) version() {
 	fmt.Printf("Server Version: %s\n", BuildVersion)
 	fmt.Printf("Server Build Time: %s\n", BuildTime)
 	fmt.Printf("Go version: %s\n", BuildGoVersion)

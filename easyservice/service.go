@@ -1,27 +1,28 @@
-package easyserver
+package easyservice
 
 import (
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"os"
 	"os/exec"
-	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 )
 
-// Server 服务对象
-type Server struct {
+// EasyService 服务对象
+type EasyService struct {
 	sList          *gmap.IntAnyMap //启动的服务列表
 	started        *gtime.Time     //服务启动时间
 	shutting       bool            // 服务正在关闭
-	bus            chan struct{}   // 控制总线
 	beforeStopFunc StopFunc        //服务关闭之前执行该方法
 	pidFile        string          //pid文件的路径
 	processName    string          // 进程名字
@@ -30,15 +31,15 @@ type Server struct {
 }
 
 // StartFunc 启动回调方法
-type StartFunc func(service *Server)
+type StartFunc func(service *EasyService)
 
 // StopFunc 服务关闭回调方法
-type StopFunc func(service *Server) bool
+type StopFunc func(service *EasyService) bool
 
-// NewServer 创建服务
-func NewServer(processName ...string) *Server {
-	svr := &Server{
-		processName: "default-server",
+// NewEasyService  创建服务
+func NewEasyService(processName ...string) *EasyService {
+	svr := &EasyService{
+		processName: "easy-service",
 		sList:       gmap.NewIntAnyMap(true),
 	}
 	if len(processName) > 0 {
@@ -48,22 +49,22 @@ func NewServer(processName ...string) *Server {
 }
 
 // SetPidFile 设置pid文件
-func (that *Server) SetPidFile(pidFile string) {
+func (that *EasyService) SetPidFile(pidFile string) {
 	that.pidFile = pidFile
 }
 
 // SetProcessName 设置进程名字
-func (that *Server) SetProcessName(processName string) {
+func (that *EasyService) SetProcessName(processName string) {
 	that.processName = processName
 }
 
 // BeforeStop 设置服务重启方法
-func (that *Server) BeforeStop(f StopFunc) {
+func (that *EasyService) BeforeStop(f StopFunc) {
 	that.beforeStopFunc = f
 }
 
 // Setup 启动服务，并执行传入的启动方法
-func (that *Server) Setup(startFunction StartFunc) {
+func (that *EasyService) Setup(startFunction StartFunc) {
 	//解析命令行
 	parser, err := gcmd.Parse(defaultOptions)
 	if err != nil {
@@ -100,24 +101,26 @@ func (that *Server) Setup(startFunction StartFunc) {
 
 	that.sList.Iterator(func(k int, v interface{}) bool {
 		sandbox := v.(ISandBox)
-		if e := sandbox.Setup(); e != nil {
-			logger.Fatalf("Service.Int: %v.", e)
-		}
+		go func() {
+			logger.Info(sandbox.Setup())
+		}()
 		return true
 	})
-	//监听重启信号
-	go that.signaler()
+
+	//设置优雅退出时候需要做的工作
+	drpc.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 	//等待服务结束
 	logger.Noticef("服务已经初始化完成, %d 个协程被创建.\n", runtime.NumGoroutine())
-	that.master()
+	//监听重启信号
+	drpc.GraceSignal()
 }
 
-func (that *Server) AddSandBox(s ISandBox) {
+func (that *EasyService) AddSandBox(s ISandBox) {
 	that.sList.Set(s.ID(), s)
 }
 
 // GetSandBox 获取指定的服务沙盒
-func (that *Server) GetSandBox(id int) ISandBox {
+func (that *EasyService) GetSandBox(id int) ISandBox {
 	s, found := that.sList.Search(id)
 	if !found {
 		return nil
@@ -126,22 +129,22 @@ func (that *Server) GetSandBox(id int) ISandBox {
 }
 
 // Config 获取配置信息
-func (that *Server) Config() *gcfg.Config {
+func (that *EasyService) Config() *gcfg.Config {
 	return that.config
 }
 
 // CmdParser 返回命令行解析
-func (that *Server) CmdParser() *gcmd.Parser {
+func (that *EasyService) CmdParser() *gcmd.Parser {
 	return that.cmdParser
 }
 
 // StartTime 返回启动时间
-func (that *Server) StartTime() *gtime.Time {
+func (that *EasyService) StartTime() *gtime.Time {
 	return that.started
 }
 
 //设置日志级别
-func (that *Server) initLogSetting(config *gcfg.Config) error {
+func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 	level := config.GetString("logger.Level", "PRODUCT")
 
 	env := that.config.GetString("ENV_NAME")
@@ -165,7 +168,7 @@ func (that *Server) initLogSetting(config *gcfg.Config) error {
 }
 
 //守护进程
-func (that *Server) demonize(config *gcfg.Config) error {
+func (that *EasyService) demonize(config *gcfg.Config) error {
 
 	//判断是否需要后台运行
 	daemon := config.GetBool("Daemon", false)
@@ -205,13 +208,10 @@ func (that *Server) demonize(config *gcfg.Config) error {
 }
 
 //写入pid文件
-func (that *Server) putPidFile() {
+func (that *EasyService) putPidFile() {
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)
-	}
-	if e := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); e != nil {
-		logger.Fatalf("syscall.Flock: %v, already in running?", e)
 	}
 	if e := os.Truncate(that.pidFile, 0); e != nil {
 		logger.Fatalf("os.Truncate: %v.", e)
@@ -221,56 +221,35 @@ func (that *Server) putPidFile() {
 	}
 }
 
-//监听信号
-func (that *Server) signaler() {
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT, syscall.SIGPROF) //增加SIGPROF信号支持
-	for {
-		switch <-ch {
-		case syscall.SIGHUP:
-			logger.Notice("Received SIGHUP signal, configuring service...")
-		case syscall.SIGTERM, syscall.SIGINT:
-			logger.Notice("Received SIGTERM signal, shutting down...")
-			that.Shutdown()
-		}
-	}
+// Shutdown 主动结束进程
+func (that *EasyService) Shutdown(timeout ...time.Duration) {
+	drpc.Shutdown(timeout...)
 }
 
-// 主协程阻塞等待结束的信号
-func (that *Server) master() {
-	that.bus = make(chan struct{})
-	for {
-		select {
-		case s, ok := <-that.bus:
-			if !ok {
-				logger.Noticef("%s Service exit properly.", that.processName)
-				return
-			}
-			logger.Noticef("%s received signal: %v", that.processName, s)
-			return
-		}
-	}
-}
-
-// Shutdown 关闭服务
-func (that *Server) Shutdown() {
+func (that *EasyService) firstSweep() error {
 	if that.shutting {
-		return
+		return nil
 	}
 	that.shutting = true
 	//结束服务前调用该方法,如果结束回调方法返回false，则中断结束
 	if that.beforeStopFunc != nil && !that.beforeStopFunc(that) {
-		logger.Debug("执行完服务停止前的回调方法，该方法强制中断了服务结束流程！")
+		err := gerror.New("执行完服务停止前的回调方法，该方法强制中断了服务结束流程！")
+		logger.Info(err)
 		that.shutting = false
-		return
+		return err
 	}
-	go that.shutdownNext()
+	if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
+		if e := gfile.Remove(that.pidFile); e != nil {
+			logger.Errorf("os.Remove: %v\n", e)
+		}
+		logger.Infof("Remove pidFile %s successful\n", that.pidFile)
+	}
+	return nil
 }
 
 //进行结束收尾工作
-func (that *Server) shutdownNext() {
-
-	//初始化各个服务组件
+func (that *EasyService) beforeExiting() error {
+	//结束各组件
 	that.sList.Iterator(func(k int, v interface{}) bool {
 		service := v.(ISandBox)
 		if e := service.Shutdown(); e != nil {
@@ -280,13 +259,5 @@ func (that *Server) shutdownNext() {
 		}
 		return true
 	})
-	// remove the pidFile
-	if len(that.pidFile) > 0 {
-		if e := gfile.Remove(that.pidFile); e != nil {
-			logger.Errorf("os.Remove: %v\n", e)
-		}
-		logger.Infof("Remove pidFile %s successful\n", that.pidFile)
-	}
-	//结束主协程
-	that.bus <- struct{}{}
+	return nil
 }
