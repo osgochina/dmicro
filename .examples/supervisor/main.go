@@ -20,7 +20,7 @@ func runServer() {
 	entry.SetProcessName("server")
 	entry.User = "lzm"
 	entry.Directory = "/home/lzm/go/src/dmicro/.examples/"
-	entry.Command = []string{"/home/lzm/go/src/dmicro/.examples/simple/server"}
+	entry.Command = "/home/lzm/go/src/dmicro/.examples/simple/server"
 	entry.SetRedirectStderr(true)
 	entry.SetStdoutLogfile("/tmp/tttserver.log")
 	proc := m.CreateProcess(entry)

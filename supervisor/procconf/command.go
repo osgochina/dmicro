@@ -2,102 +2,20 @@ package procconf
 
 import (
 	"errors"
-	"fmt"
 	"os/exec"
 	"syscall"
-	"unicode"
 )
 
 // create command from string or []string
-func createCommand(command interface{}) (*exec.Cmd, error) {
-	args := make([]string, 0)
-	var err error = nil
-
-	if s, ok := command.(string); ok {
-		args, err = parseCommand(s)
-		if err != nil {
-			return nil, err
-		}
-	} else if a, ok := command.([]string); ok {
-		args = a
-	}
-
+func createCommand(command string, args ...[]string) (*exec.Cmd, error) {
 	if len(args) <= 0 {
 		return nil, errors.New("empty command")
 	}
-
-	cmd := exec.Command(args[0])
+	cmd := exec.Command(command)
 	if len(args) > 1 {
-		cmd.Args = args
+		cmd.Args = args[0]
 	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
 
 	return cmd, nil
-}
-
-func parseCommand(command string) ([]string, error) {
-	args := make([]string, 0)
-	cmdLen := len(command)
-	for i := 0; i < cmdLen; {
-		// find the first non-space char
-		j := skipSpace(command, i)
-		if j == -1 {
-			break
-		}
-		i = j
-		for ; j < cmdLen; j++ {
-			if unicode.IsSpace(rune(command[j])) {
-				args = appendArgument(command[i:j], args)
-				i = j + 1
-				break
-			} else if command[j] == '\\' {
-				j++
-			} else if command[j] == '"' || command[j] == '\'' {
-				k := findChar(command, j+1, command[j])
-				if k == -1 {
-					args = appendArgument(command[i:], args)
-					i = cmdLen
-				} else {
-					args = appendArgument(command[i:k+1], args)
-					i = k + 1
-				}
-				break
-			}
-		}
-		if j >= cmdLen {
-			args = appendArgument(command[i:], args)
-			i = cmdLen
-		}
-	}
-	if len(args) <= 0 {
-		return nil, fmt.Errorf("no command from empty string")
-	}
-	return args, nil
-}
-
-func skipSpace(s string, offset int) int {
-	for i := offset; i < len(s); i++ {
-		if !unicode.IsSpace(rune(s[i])) {
-			return i
-		}
-	}
-	return -1
-}
-
-func appendArgument(arg string, args []string) []string {
-	if arg[0] == '"' || arg[0] == '\'' {
-		return append(args, arg[1:len(arg)-1])
-	}
-	return append(args, arg)
-}
-
-func findChar(s string, offset int, ch byte) int {
-	for i := offset; i < len(s); i++ {
-		if s[i] == '\\' {
-			i++
-		} else if s[i] == ch {
-			return i
-		}
-	}
-	return -1
 }

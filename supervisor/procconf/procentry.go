@@ -9,8 +9,11 @@ import (
 type ProcEntry struct {
 	//进程名称
 	Name string
-	// 启动命令及参数
-	Command []string
+	// 启动命令
+	Command string
+	// 启动参数
+	Args []string
+
 	//进程运行目录
 	Directory string
 	//在supervisord启动的时候也自动启动
@@ -95,7 +98,7 @@ func (that *ProcEntry) SetProcessName(name string) {
 }
 
 func (that *ProcEntry) CreateCommand() (*exec.Cmd, error) {
-	return createCommand(that.Command)
+	return createCommand(that.Command, that.Args)
 }
 
 func (that *ProcEntry) SetStdoutLogFileMaxBytes(v string) {
