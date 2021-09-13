@@ -23,7 +23,7 @@ func NewManager() *Manager {
 func (that *Manager) CreateProcess(conf *procconf.ProcEntry) *Process {
 	that.lock.Lock()
 	defer that.lock.Unlock()
-	procName := conf.GetProcessName()
+	procName := conf.Name()
 	proc, ok := that.procList[procName]
 	if !ok {
 		proc = NewProcess(conf)

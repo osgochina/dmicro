@@ -5,8 +5,8 @@ import "github.com/osgochina/dmicro/supervisor/logger"
 // 创建标准输出日志
 func (that *Process) createStdoutLogger() logger.Logger {
 	logFile := that.GetStdoutLogfile()
-	maxBytes := int64(that.procEntry.GetStdoutLogFileMaxBytes(50 * 1024 * 1024))
-	backups := that.procEntry.GetStdoutLogFileBackups(10)
+	maxBytes := int64(that.procEntry.StdoutLogFileMaxBytes(50 * 1024 * 1024))
+	backups := that.procEntry.StdoutLogFileBackups(10)
 	//logEventEmitter := p.createStdoutLogEventEmitter()
 	props := make(map[string]string)
 	syslogFacility := that.procEntry.GetExtendString("syslog_facility", "")
@@ -28,8 +28,8 @@ func (that *Process) createStdoutLogger() logger.Logger {
 // 创建标准错误日志
 func (that *Process) createStderrLogger() logger.Logger {
 	logFile := that.GetStderrLogfile()
-	maxBytes := int64(that.procEntry.GetStderrLogFileMaxBytes(50 * 1024 * 1024))
-	backups := that.procEntry.GetStderrLogFileBackups(10)
+	maxBytes := int64(that.procEntry.StderrLogFileMaxBytes(50 * 1024 * 1024))
+	backups := that.procEntry.StderrLogFileBackups(10)
 	//logEventEmitter := p.createStderrLogEventEmitter()
 	props := make(map[string]string)
 	syslogFacility := that.procEntry.GetExtendString("syslog_facility", "")

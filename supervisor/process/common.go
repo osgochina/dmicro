@@ -27,12 +27,12 @@ func (that *Process) isRunning() bool {
 
 // 在supervisord启动的时候也自动启动
 func (that *Process) isAutoStart() bool {
-	return that.procEntry.AutoStart
+	return that.procEntry.AutoStart()
 }
 
 // 设置进程的运行用户
 func (that *Process) setUser() error {
-	userName := that.procEntry.User
+	userName := that.procEntry.User()
 	if len(userName) == 0 {
 		return nil
 	}
@@ -73,9 +73,9 @@ func (that *Process) setUser() error {
 // 设置进程运行的环境变量
 func (that *Process) setEnv() {
 
-	if len(that.procEntry.Environment) != 0 {
+	if len(that.procEntry.Environment()) != 0 {
 		that.cmd.Env = os.Environ()
-		for k, v := range that.procEntry.Environment {
+		for k, v := range that.procEntry.Environment() {
 			that.cmd.Env = append(that.cmd.Env, fmt.Sprintf("%s=%s", k, v))
 		}
 	} else {
@@ -85,7 +85,7 @@ func (that *Process) setEnv() {
 
 // 设置进程的运行目录
 func (that *Process) setDir() {
-	dir := that.procEntry.Directory
+	dir := that.procEntry.Directory()
 	if dir != "" {
 		that.cmd.Dir = dir
 	}
@@ -94,7 +94,7 @@ func (that *Process) setDir() {
 func (that *Process) setLog() {
 	that.StdoutLog = that.createStdoutLogger()
 	that.cmd.Stdout = that.StdoutLog
-	if that.procEntry.GetRedirectStderr() {
+	if that.procEntry.RedirectStderr() {
 		that.StderrLog = that.StdoutLog
 	} else {
 		that.StderrLog = that.createStderrLogger()
@@ -126,7 +126,7 @@ func (that *Process) monitorProgramIsRunning(endTime time.Time, monitorExited *i
 
 // 判断进程是否需要自动重启
 func (that *Process) isAutoRestart() bool {
-	autoRestart := that.procEntry.GetAutoReStart("unexpected")
+	autoRestart := that.procEntry.AutoReStart("unexpected")
 
 	if autoRestart == "false" {
 		return false

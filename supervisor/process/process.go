@@ -118,9 +118,9 @@ func (that *Process) run(finishCb func()) {
 	that.startTime = time.Now()
 	atomic.StoreInt32(that.retryTimes, 0)
 	//获取启动时间
-	startSecs := that.procEntry.StartSecs
+	startSecs := that.procEntry.StartSecs()
 	// 重启暂停时间
-	restartPause := that.procEntry.RestartPause
+	restartPause := that.procEntry.RestartPause()
 
 	var once sync.Once
 	finishCbWrapper := func() {
@@ -153,7 +153,7 @@ func (that *Process) run(finishCb func()) {
 		err = that.cmd.Start()
 		if err != nil {
 			// 重试次数已经大于设置中的最大重试次数
-			if atomic.LoadInt32(that.retryTimes) >= int32(that.procEntry.StartRetries) {
+			if atomic.LoadInt32(that.retryTimes) >= int32(that.procEntry.StartRetries()) {
 				that.failToStartProgram(fmt.Sprintf("fail to start program with error:%v", err), finishCbWrapper)
 				break
 			} else {
@@ -198,7 +198,7 @@ func (that *Process) run(finishCb func()) {
 		} else {
 			that.changeStateTo(Backoff)
 		}
-		if atomic.LoadInt32(that.retryTimes) >= int32(that.procEntry.StartRetries) {
+		if atomic.LoadInt32(that.retryTimes) >= int32(that.procEntry.StartRetries()) {
 			that.failToStartProgram(fmt.Sprintf("fail to start program because retry times is greater than %d", that.procEntry.StartRetries), finishCbWrapper)
 			break
 		}
@@ -235,11 +235,11 @@ func (that *Process) Stop(wait bool) {
 	}
 	loggerv2.Infof("stop the program %s", that.GetName())
 
-	sigs := strings.Fields(that.procEntry.StopSignal)
-	waitSecs := time.Duration(that.procEntry.GetStopWaitSecs(10)) * time.Second
-	killWaitSecs := time.Duration(that.procEntry.GetKillWaitSecs(2)) * time.Second
-	stopAsGroup := that.procEntry.StopAsGroup
-	killAsGroup := that.procEntry.KillAsGroup
+	sigs := strings.Fields(that.procEntry.StopSignal())
+	waitSecs := time.Duration(that.procEntry.StopWaitSecs(10)) * time.Second
+	killWaitSecs := time.Duration(that.procEntry.KillWaitSecs(2)) * time.Second
+	stopAsGroup := that.procEntry.StopAsGroup()
+	killAsGroup := that.procEntry.KillAsGroup()
 	if stopAsGroup && !killAsGroup {
 		loggerv2.Error("Cannot set stopAsGroup=true and killAsGroup=false")
 	}
