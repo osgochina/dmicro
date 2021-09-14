@@ -74,7 +74,7 @@ func (that *Process) setUser() error {
 func (that *Process) setEnv() {
 
 	if len(that.procEntry.Environment()) != 0 {
-		that.cmd.Env = os.Environ()
+		//that.cmd.Env = os.Environ()
 		for k, v := range that.procEntry.Environment() {
 			that.cmd.Env = append(that.cmd.Env, fmt.Sprintf("%s=%s", k, v))
 		}

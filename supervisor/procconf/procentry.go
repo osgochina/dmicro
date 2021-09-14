@@ -4,6 +4,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"os/exec"
 	"strconv"
+	"syscall"
 )
 
 type ProcEntry struct {
@@ -122,7 +123,13 @@ func (that *ProcEntry) SetArgs(args []string) {
 
 // CreateCommand 生成命令
 func (that *ProcEntry) CreateCommand() (*exec.Cmd, error) {
-	return createCommand(that.command, that.args)
+
+	cmd := exec.Command(that.command)
+	if len(that.args) > 0 {
+		cmd.Args = append([]string{that.command}, that.args...)
+	}
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
+	return cmd, nil
 }
 
 func (that *ProcEntry) Directory() string {
