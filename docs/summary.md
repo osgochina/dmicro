@@ -32,6 +32,8 @@
   * [插件 - Plugin](drpc/plugin.md)
   * [优雅重启 - Graceful](drpc/graceful.md)
 
+* Supervisor进程监控管理
+  * [快速开始](supervisor/info.md)
 
 * 性能测试
 

@@ -19,9 +19,9 @@ type Header interface {
 	Seq() int32
 	// SetSeq 设置序列号
 	SetSeq(int32)
-	// MType 消息类型 有三种：CALL,REPLY,PUSH
+	// MType 消息类型 有五种：CALL,REPLY,PUSH,AUTH_CALL,AUTH_REPLY
 	MType() byte
-	// SetMType 设置消息类型 有三种：CALL,REPLY,PUSH
+	// SetMType 设置消息类型 有五种：CALL,REPLY,PUSH,AUTH_CALL,AUTH_REPLY
 	SetMType(byte)
 	// ServiceMethod 请求的服务方法名称 长度必须小于255字节 max <= 255
 	ServiceMethod() string
