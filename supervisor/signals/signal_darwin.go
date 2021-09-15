@@ -9,7 +9,9 @@ import (
 	"syscall"
 )
 
-var signalMap = map[string]os.Signal{"SIGABRT": syscall.SIGABRT,
+// 可识别的信号列表
+var signalMap = map[string]os.Signal{
+	"SIGABRT":   syscall.SIGABRT,
 	"SIGALRM":   syscall.SIGALRM,
 	"SIGBUS":    syscall.SIGBUS,
 	"SIGCHLD":   syscall.SIGCHLD,
@@ -40,9 +42,10 @@ var signalMap = map[string]os.Signal{"SIGABRT": syscall.SIGABRT,
 	"SIGVTALRM": syscall.SIGVTALRM,
 	"SIGWINCH":  syscall.SIGWINCH,
 	"SIGXCPU":   syscall.SIGXCPU,
-	"SIGXFSZ":   syscall.SIGXFSZ}
+	"SIGXFSZ":   syscall.SIGXFSZ,
+}
 
-// ToSignal convert a signal name to signal
+// ToSignal 传入信号字符串，返回标准信号
 func ToSignal(signalName string) (os.Signal, error) {
 	if !strings.HasPrefix(signalName, "SIG") {
 		signalName = fmt.Sprintf("SIG%s", signalName)
@@ -54,13 +57,10 @@ func ToSignal(signalName string) (os.Signal, error) {
 
 }
 
-// Kill send signal to the process
-//
-// Args:
-//    process - the process which the signal should be sent to
-//    sig - the signal will be sent
-//    sigChildren - true if the signal needs to be sent to the children also
-//
+// Kill 向指定的进程发送信号
+// process: 进程对象
+// sig: 信号
+// sigChildren: 如果为true，则信号会发送到该进程的子进程
 func Kill(process *os.Process, sig os.Signal, sigChildren bool) error {
 	localSig := sig.(syscall.Signal)
 	pid := process.Pid

@@ -2,34 +2,52 @@ package process
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gfile"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
 )
 
+// Info 进程的运行状态
+type Info struct {
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Start         int    `json:"start"`
+	Stop          int    `json:"stop"`
+	Now           int    `json:"now"`
+	State         int    `json:"state"`
+	StateName     string `json:"statename"`
+	SpawnErr      string `json:"spawnerr"`
+	ExitStatus    int    `json:"exitstatus"`
+	Logfile       string `json:"logfile"`
+	StdoutLogfile string `json:"stdout_logfile"`
+	StderrLogfile string `json:"stderr_logfile"`
+	Pid           int    `json:"pid"`
+}
+
 // GetProcessInfo 获取进程的详情
-func (that *Process) GetProcessInfo() *ProcessInfo {
-	return &ProcessInfo{
+func (that *Process) GetProcessInfo() *Info {
+	return &Info{
 		Name:          that.GetName(),
 		Description:   that.GetDescription(),
 		Start:         int(that.GetStartTime().Unix()),
 		Stop:          int(that.GetStopTime().Unix()),
 		Now:           int(time.Now().Unix()),
 		State:         int(that.GetState()),
-		Statename:     that.GetState().String(),
-		Spawnerr:      "",
-		Exitstatus:    that.GetExitStatus(),
+		StateName:     that.GetState().String(),
+		SpawnErr:      "",
+		ExitStatus:    that.GetExitStatus(),
 		Logfile:       that.GetStdoutLogfile(),
 		StdoutLogfile: that.GetStdoutLogfile(),
 		StderrLogfile: that.GetStderrLogfile(),
-		Pid:           that.GetPid()}
+		Pid:           that.Pid()}
 
 }
 
 // GetName 获取进程名
 func (that *Process) GetName() string {
-	return that.procEntry.Name()
+	return that.entry.Name()
 }
 
 // GetDescription 获取进程描述
@@ -92,8 +110,8 @@ func (that *Process) GetExitStatus() int {
 	return 0
 }
 
-// GetPid 获取进程pid，返回0表示进程未启动
-func (that *Process) GetPid() int {
+// Pid 获取进程pid，返回0表示进程未启动
+func (that *Process) Pid() int {
 	that.lock.RLock()
 	defer that.lock.RUnlock()
 
@@ -105,21 +123,15 @@ func (that *Process) GetPid() int {
 
 // GetStdoutLogfile 获取标准输出将要写入的日志文件
 func (that *Process) GetStdoutLogfile() string {
-	fileName := that.procEntry.StdoutLogfile("/dev/null")
-	expandFile, err := PathExpand(fileName)
-	if err != nil {
-		return fileName
-	}
+	fileName := that.entry.StdoutLogfile("/dev/null")
+	expandFile := gfile.RealPath(fileName)
 	return expandFile
 }
 
 // GetStderrLogfile 获取标准错误将要写入的日志文件
 func (that *Process) GetStderrLogfile() string {
-	fileName := that.procEntry.StderrLogfile("/dev/null")
-	expandFile, err := PathExpand(fileName)
-	if err != nil {
-		return fileName
-	}
+	fileName := that.entry.StderrLogfile("/dev/null")
+	expandFile := gfile.RealPath(fileName)
 	return expandFile
 }
 
@@ -156,7 +168,7 @@ func (that *Process) inExitCodes(exitCode int) bool {
 
 // 获取配置的退出code值列表
 func (that *Process) getExitCodes() []int {
-	strExitCodes := strings.Split(that.procEntry.ExitCodes("0,2"), ",")
+	strExitCodes := strings.Split(that.entry.ExitCodes("0,2"), ",")
 	result := make([]int, 0)
 	for _, val := range strExitCodes {
 		i, err := strconv.Atoi(val)

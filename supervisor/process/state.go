@@ -50,13 +50,7 @@ func (p State) String() string {
 	}
 }
 
+// 更改进程的运行状态
 func (that *Process) changeStateTo(procState State) {
-	//procName := that.config.GetProcessName()
-	//groupName := that.config.GetGroupName()
-	//
-	//if procState == Starting {
-	//	events.
-	//}
-
 	that.state = procState
 }

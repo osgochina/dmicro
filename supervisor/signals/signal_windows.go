@@ -11,7 +11,7 @@ import (
 	"syscall"
 )
 
-//convert a signal name to signal
+// ToSignal 传入信号字符串，返回标准信号
 func ToSignal(signalName string) (os.Signal, error) {
 	if signalName == "HUP" {
 		return syscall.SIGHUP, nil
@@ -34,12 +34,10 @@ func ToSignal(signalName string) (os.Signal, error) {
 
 }
 
-//
-// Args:
-//    process - the process
-//    sig - the signal
-//    sigChildren - ignore in windows system
-//
+// Kill 向指定的进程发送信号
+// process: 进程对象
+// sig: 信号
+// sigChildren: windows 下会忽略这个参数
 func Kill(process *os.Process, sig os.Signal, sigChilren bool) error {
 	//Signal command can't kill children processes, call  taskkill command to kill them
 	cmd := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", process.Pid))

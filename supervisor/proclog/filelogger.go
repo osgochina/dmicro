@@ -1,4 +1,4 @@
-package logger
+package proclog
 
 import (
 	"fmt"
@@ -59,7 +59,7 @@ func (that *FileLogger) Write(p []byte) (int, error) {
 	if that.fileSize >= that.maxSize {
 		_ = that.Close()
 		that.backupFiles()
-		that.openFile(true)
+		_ = that.openFile(true)
 	}
 	return n, err
 }

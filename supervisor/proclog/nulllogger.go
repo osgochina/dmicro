@@ -1,4 +1,4 @@
-package logger
+package proclog
 
 import (
 	"fmt"
