@@ -3,6 +3,7 @@ package process
 import (
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/osgochina/dmicro/logger"
 	"sync"
 )
@@ -22,33 +23,42 @@ func NewManager() *Manager {
 // path: 可执行文件路径
 // args: 参数
 // environment: 环境变量
-func (that *Manager) NewProcess(path string, args []string, environment []string) *Process {
+func (that *Manager) NewProcess(path string, args []string, environment []string) (*Process, error) {
 	p := NewProcess(path, args, environment)
+	if _, found := that.processes.Search(p.GetName()); found {
+		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
+	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
 	logger.Info("创建进程:", p.GetName())
-	return p
+	return p, nil
 }
 
 // NewProcessByEntry 创建进程
 // entry: 配置对象
-func (that *Manager) NewProcessByEntry(entry *Entry) *Process {
+func (that *Manager) NewProcessByEntry(entry *Entry) (*Process, error) {
 	p := NewProcessByEntry(entry)
+	if _, found := that.processes.Search(p.GetName()); found {
+		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
+	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
 	logger.Info("创建进程:", p.GetName())
-	return p
+	return p, nil
 }
 
 // NewProcessCmd 创建进程
 // path: shell命令
 // environment: 环境变量
-func (that *Manager) NewProcessCmd(cmd string, environment ...[]string) *Process {
+func (that *Manager) NewProcessCmd(cmd string, environment ...[]string) (*Process, error) {
 	p := NewProcessCmd(cmd, environment...)
+	if _, found := that.processes.Search(p.GetName()); found {
+		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
+	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
 	logger.Info("创建进程:", p.GetName())
-	return p
+	return p, nil
 }
 
 // Add 添加进程到Manager

@@ -328,8 +328,8 @@ func (that *Process) createProgramCommand() (err error) {
 	}
 	// 设置程序运行时用户
 	if that.setUser() != nil {
-		logger.Errorf("设置程序运行时用户[%s]失败", that.entry.User)
-		return fmt.Errorf("设置进程运行时用户失败")
+		//logger.Errorf("设置程序运行时用户[%s]失败", that.entry.User())
+		return fmt.Errorf("设置程序运行时用户[%s]失败", that.entry.User())
 	}
 	// TODO that.setProgramRestartChangeMonitor(that.cmd.args[0])
 

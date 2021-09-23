@@ -23,7 +23,11 @@ func runServer() {
 	entry.SetDirectory(fmt.Sprintf("%s/../", gfile.MainPkgPath()))
 	entry.SetRedirectStderr(true)
 	entry.SetStdoutLogfile("/tmp/tttserver.log")
-	proc := m.NewProcessByEntry(entry)
+	proc, err := m.NewProcessByEntry(entry)
+	if err != nil {
+		logger.Error(err)
+		return
+	}
 	proc.Start(true)
 	initSignals(m)
 	select {}

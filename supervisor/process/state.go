@@ -3,32 +3,32 @@ package process
 type State int
 
 const (
-	// Stopped the stopped state
+	// Stopped 已停止
 	Stopped State = iota
 
-	// Starting the starting state
+	// Starting 启动中
 	Starting = 10
 
-	// Running the running state
+	// Running 运行中
 	Running = 20
 
-	// Backoff the backoff state
+	// Backoff 已挂起
 	Backoff = 30
 
-	// Stopping the stopping state
+	// Stopping 停止中
 	Stopping = 40
 
-	// Exited the Exited state
+	// Exited 已退出
 	Exited = 100
 
-	// Fatal the Fatal state
+	// Fatal 启动失败
 	Fatal = 200
 
-	// Unknown the unknown state
+	// Unknown 未知状态
 	Unknown = 1000
 )
 
-// String convert State to human-readable string
+// String 把进程状态转换成可识别的字符串
 func (p State) String() string {
 	switch p {
 	case Stopped:
