@@ -24,7 +24,6 @@ type IEvent interface {
 type Event struct {
 	name    string
 	data    *gmap.AnyAnyMap
-	target  interface{}
 	aborted bool
 }
 

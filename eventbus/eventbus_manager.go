@@ -158,10 +158,10 @@ func (that *Manager) Fire(name string, params map[interface{}]interface{}) (e IE
 	}
 
 	// 判断要触发的事件是否存在
-
 	if ev, ok := that.events.Search(name); ok {
+		e = ev.(IEvent)
 		if params != nil {
-			ev.(IEvent).SetData(params)
+			e.SetData(params)
 		}
 		err = that.Publish(e)
 		return e, err
@@ -245,4 +245,16 @@ func (that *Manager) AsyncPublish(e IEvent) {
 	go func(e IEvent) {
 		_ = that.Publish(e)
 	}(e)
+}
+
+// Clear 清空事件管理对象
+func (that *Manager) Clear() {
+	that.Reset()
+}
+
+// Reset 重置事件管理对象
+func (that *Manager) Reset() {
+	that.name = ""
+	that.listeners.Clear()
+	that.events.Clear()
 }
