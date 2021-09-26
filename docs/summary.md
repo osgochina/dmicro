@@ -35,6 +35,9 @@
 * Supervisor进程监控管理
   * [快速开始](supervisor/info.md)
 
+* 组件库
+  * [eventBus(事件总线)](component/eventBus.md)
+
 * 性能测试
 
   * [性能测试](benchmark.md)

@@ -29,20 +29,45 @@ func New(name string) *Manager {
 //================================================== listener ========================================================//
 
 // Subscribe 注册监听事件
-func (that *Manager) Subscribe(listener Listener, priority ...int) (err error) {
-	for _, name := range listener.Listen() {
-		err = that.Listen(name, listener, priority...)
-		if err != nil {
-			return err
+func (that *Manager) Subscribe(listener IListener, priority ...int) (err error) {
+	for _, val := range listener.Listen() {
+		switch val.(type) {
+		case string:
+			err = that.Listen(val.(string), listener, priority...)
+			if err != nil {
+				return err
+			}
+			break
+		case IEvent:
+			name := val.(IEvent).Name()
+			//判断事件是否存在，如果不存在，则添加该事件
+			if !that.HasEvent(name) {
+				err = that.AddEvent(val.(IEvent))
+				if err != nil {
+					return err
+				}
+			}
+			err = that.Listen(name, listener, priority...)
+			if err != nil {
+				return err
+			}
+			break
 		}
 	}
 	return nil
 }
 
 // UnSubscribe 取消监听事件
-func (that *Manager) UnSubscribe(listener Listener) {
-	for _, name := range listener.Listen() {
-		that.UnListen(name, listener)
+func (that *Manager) UnSubscribe(listener IListener) {
+	for _, val := range listener.Listen() {
+		switch val.(type) {
+		case string:
+			that.UnListen(val.(string), listener)
+			break
+		case IEvent:
+			that.UnListen(val.(IEvent).Name(), listener)
+			break
+		}
 	}
 	return
 }
@@ -65,10 +90,10 @@ func (that *Manager) Listen(name string, listener BaseListener, priority ...int)
 	}
 	listen, found := that.listeners.Search(name)
 	if found {
-		listen.(*ListenerQueue).Push(NewListenerItem(name, listener, pv))
+		listen.(*ListenerQueue).Add(NewListenerItem(listener, pv))
 	} else {
 		obj := newListenerQueue()
-		obj.Push(NewListenerItem(name, listener, pv))
+		obj.Add(NewListenerItem(listener, pv))
 		that.listeners.Set(name, obj)
 	}
 	return nil
@@ -88,8 +113,8 @@ func (that *Manager) UnListen(name string, listener BaseListener) {
 	return
 }
 
-// RemoveListeners 清除所有指定事件名的事件监听器
-func (that *Manager) RemoveListeners(name string) {
+// RemoveListenersByName 清除所有指定事件名的事件监听器
+func (that *Manager) RemoveListenersByName(name string) {
 	l, ok := that.listeners.Search(name)
 	if ok {
 		l.(*ListenerQueue).Clear()
@@ -97,9 +122,55 @@ func (that *Manager) RemoveListeners(name string) {
 	}
 }
 
+// RemoveListeners 移除监听方法
+func (that *Manager) RemoveListeners(listener BaseListener) {
+	that.listeners.LockFunc(func(m map[string]interface{}) {
+		for name, v := range m {
+			v.(*ListenerQueue).Remove(listener)
+			if v.(*ListenerQueue).IsEmpty() {
+				delete(m, name)
+			}
+		}
+	})
+}
+
+//================================================== Listener ========================================================//
+
 // HasListeners 判断是否存在指定名称的监听
 func (that *Manager) HasListeners(name string) bool {
 	return that.listeners.Contains(name)
+}
+
+// Listeners 获取监听列表
+func (that *Manager) Listeners() map[string]*ListenerQueue {
+	var result = make(map[string]*ListenerQueue, that.listeners.Size())
+	for k, v := range that.listeners.Map() {
+		result[k] = v.(*ListenerQueue)
+	}
+	return result
+}
+
+// ListenersByName 获取指定事件名称的监听列表
+func (that *Manager) ListenersByName(name string) *ListenerQueue {
+	result := that.listeners.Get(name)
+	if result == nil {
+		return nil
+	}
+	return result.(*ListenerQueue)
+}
+
+// ListenersCount 获取指定名称的监听列表数量
+func (that *Manager) ListenersCount(name string) int {
+	result := that.listeners.Get(name)
+	if result != nil {
+		return result.(*ListenerQueue).Len()
+	}
+	return 0
+}
+
+// ListenedNames 获取监听的事件名列表
+func (that *Manager) ListenedNames() []string {
+	return that.listeners.Keys()
 }
 
 //================================================== event ===========================================================//
@@ -181,8 +252,7 @@ func (that *Manager) Publish(e IEvent) error {
 	queueListeners, found := that.listeners.Search(name)
 	if found && queueListeners != nil && queueListeners.(*ListenerQueue).Len() > 0 {
 		lq := queueListeners.(*ListenerQueue)
-		for i := 0; i < lq.Len(); i++ {
-			item := lq.Pop()
+		for _, item := range lq.Items() {
 			err := item.Listener.Process(e)
 			if err != nil || e.IsAborted() {
 				return err
@@ -197,8 +267,7 @@ func (that *Manager) Publish(e IEvent) error {
 		queueListeners, found = that.listeners.Search(groupName)
 		if found && queueListeners != nil && queueListeners.(*ListenerQueue).Len() > 0 {
 			lq := queueListeners.(*ListenerQueue)
-			for i := 0; i < lq.Len(); i++ {
-				item := lq.Pop()
+			for _, item := range lq.Items() {
 				err := item.Listener.Process(e)
 				if err != nil || e.IsAborted() {
 					return err
@@ -210,8 +279,7 @@ func (that *Manager) Publish(e IEvent) error {
 	queueListeners, found = that.listeners.Search(Wildcard)
 	if found && queueListeners != nil && queueListeners.(*ListenerQueue).Len() > 0 {
 		lq := queueListeners.(*ListenerQueue)
-		for i := 0; i < lq.Len(); i++ {
-			item := lq.Pop()
+		for _, item := range lq.Items() {
 			err := item.Listener.Process(e)
 			if err != nil || e.IsAborted() {
 				return err
@@ -231,8 +299,7 @@ func (that *Manager) PublishBatch(es ...interface{}) (ers []error) {
 			_, err = that.Fire(name, nil)
 		} else if evt, ok := e.(IEvent); ok {
 			err = that.Publish(evt)
-		} // ignore invalid param.
-
+		}
 		if err != nil {
 			ers = append(ers, err)
 		}
