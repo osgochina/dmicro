@@ -1,5 +1,10 @@
 ## 更新日志
 
+### v0.0.7
+
+1. 完成`EventBus(事件总线)`功能的开发，详情请见 [eventBus(事件总线)](component/eventBus.md)
+2. 修复`Supervisor进程监控管理`模块的一些bug。
+
 ### v0.0.6
 
 1. 增加`Supervisor进程监控管理`模块，初步支持管理多个子进程，后续会支持通过`supervisor.conf`配置文件配置子进程启动。
