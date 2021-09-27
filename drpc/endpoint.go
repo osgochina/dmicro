@@ -5,10 +5,12 @@ import (
 	"errors"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/grpool"
+	"github.com/gogf/gf/util/grand"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/drpc/socket"
 	"github.com/osgochina/dmicro/drpc/status"
+	"github.com/osgochina/dmicro/eventbus"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	errors2 "github.com/osgochina/dmicro/utils/errors"
@@ -42,6 +44,9 @@ type BaseEndpoint interface {
 
 	// PluginContainer 插件容器对象
 	PluginContainer() *PluginContainer
+
+	// EventBus 消息总线
+	EventBus() *eventbus.EventBus
 }
 
 type EarlyEndpoint interface {
@@ -94,6 +99,7 @@ type endpoint struct {
 	router            *Router
 	pluginContainer   *PluginContainer
 	sessHub           *SessionHub
+	eventbus          *eventbus.EventBus
 	closeCh           chan struct{}
 	defaultSessionAge time.Duration
 	defaultContextAge time.Duration
@@ -131,6 +137,7 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 		router:            newRouter(pluginContainer),
 		pluginContainer:   pluginContainer,
 		sessHub:           newSessionHub(),
+		eventbus:          eventbus.New(grand.S(8)),
 		defaultSessionAge: cfg.DefaultSessionAge,
 		defaultContextAge: cfg.DefaultContextAge,
 		closeCh:           make(chan struct{}),
@@ -174,6 +181,9 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 // PluginContainer 获取端点的插件容器
 func (that *endpoint) PluginContainer() *PluginContainer {
 	return that.pluginContainer
+}
+func (that *endpoint) EventBus() *eventbus.EventBus {
+	return that.eventbus
 }
 
 // TLSConfig 获取该端点的证书信息

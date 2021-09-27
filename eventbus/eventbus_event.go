@@ -99,6 +99,6 @@ func (that *Event) IsAborted() bool {
 }
 
 // AttachTo 把事件加入到指定的管理器中
-func (that *Event) AttachTo(m *Manager) error {
+func (that *Event) AttachTo(m *EventBus) error {
 	return m.AddEvent(that)
 }

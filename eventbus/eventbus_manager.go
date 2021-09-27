@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// Manager 事件管理器
-type Manager struct {
+// EventBus 事件管理器
+type EventBus struct {
 	//管理器名称
 	name string
 	// 已注册的事件列表
@@ -17,8 +17,8 @@ type Manager struct {
 }
 
 // New 创建事件管理器对象
-func New(name string) *Manager {
-	em := &Manager{
+func New(name string) *EventBus {
+	em := &EventBus{
 		name:      name,
 		events:    gmap.NewStrAnyMap(true),
 		listeners: gmap.NewStrAnyMap(true),
@@ -29,7 +29,7 @@ func New(name string) *Manager {
 //================================================== listener ========================================================//
 
 // Subscribe 注册监听事件
-func (that *Manager) Subscribe(listener IListener, priority ...int) (err error) {
+func (that *EventBus) Subscribe(listener IListener, priority ...int) (err error) {
 	for _, val := range listener.Listen() {
 		switch val.(type) {
 		case string:
@@ -58,7 +58,7 @@ func (that *Manager) Subscribe(listener IListener, priority ...int) (err error) 
 }
 
 // UnSubscribe 取消监听事件
-func (that *Manager) UnSubscribe(listener IListener) {
+func (that *EventBus) UnSubscribe(listener IListener) {
 	for _, val := range listener.Listen() {
 		switch val.(type) {
 		case string:
@@ -73,7 +73,7 @@ func (that *Manager) UnSubscribe(listener IListener) {
 }
 
 // Listen 监听事件
-func (that *Manager) Listen(name string, listener BaseListener, priority ...int) (err error) {
+func (that *EventBus) Listen(name string, listener BaseListener, priority ...int) (err error) {
 	pv := Normal
 	if len(priority) > 0 {
 		pv = priority[0]
@@ -100,7 +100,7 @@ func (that *Manager) Listen(name string, listener BaseListener, priority ...int)
 }
 
 // UnListen 移除事件监听
-func (that *Manager) UnListen(name string, listener BaseListener) {
+func (that *EventBus) UnListen(name string, listener BaseListener) {
 	if val, ok := that.listeners.Search(name); ok {
 		lq := val.(*ListenerQueue)
 		lq.Remove(listener)
@@ -114,7 +114,7 @@ func (that *Manager) UnListen(name string, listener BaseListener) {
 }
 
 // RemoveListenersByName 清除所有指定事件名的事件监听器
-func (that *Manager) RemoveListenersByName(name string) {
+func (that *EventBus) RemoveListenersByName(name string) {
 	l, ok := that.listeners.Search(name)
 	if ok {
 		l.(*ListenerQueue).Clear()
@@ -123,7 +123,7 @@ func (that *Manager) RemoveListenersByName(name string) {
 }
 
 // RemoveListeners 移除监听方法
-func (that *Manager) RemoveListeners(listener BaseListener) {
+func (that *EventBus) RemoveListeners(listener BaseListener) {
 	that.listeners.LockFunc(func(m map[string]interface{}) {
 		for name, v := range m {
 			v.(*ListenerQueue).Remove(listener)
@@ -137,12 +137,12 @@ func (that *Manager) RemoveListeners(listener BaseListener) {
 //================================================== Listener ========================================================//
 
 // HasListeners 判断是否存在指定名称的监听
-func (that *Manager) HasListeners(name string) bool {
+func (that *EventBus) HasListeners(name string) bool {
 	return that.listeners.Contains(name)
 }
 
 // Listeners 获取监听列表
-func (that *Manager) Listeners() map[string]*ListenerQueue {
+func (that *EventBus) Listeners() map[string]*ListenerQueue {
 	var result = make(map[string]*ListenerQueue, that.listeners.Size())
 	for k, v := range that.listeners.Map() {
 		result[k] = v.(*ListenerQueue)
@@ -151,7 +151,7 @@ func (that *Manager) Listeners() map[string]*ListenerQueue {
 }
 
 // ListenersByName 获取指定事件名称的监听列表
-func (that *Manager) ListenersByName(name string) *ListenerQueue {
+func (that *EventBus) ListenersByName(name string) *ListenerQueue {
 	result := that.listeners.Get(name)
 	if result == nil {
 		return nil
@@ -160,7 +160,7 @@ func (that *Manager) ListenersByName(name string) *ListenerQueue {
 }
 
 // ListenersCount 获取指定名称的监听列表数量
-func (that *Manager) ListenersCount(name string) int {
+func (that *EventBus) ListenersCount(name string) int {
 	result := that.listeners.Get(name)
 	if result != nil {
 		return result.(*ListenerQueue).Len()
@@ -169,14 +169,14 @@ func (that *Manager) ListenersCount(name string) int {
 }
 
 // ListenedNames 获取监听的事件名列表
-func (that *Manager) ListenedNames() []string {
+func (that *EventBus) ListenedNames() []string {
 	return that.listeners.Keys()
 }
 
 //================================================== event ===========================================================//
 
 // AddEvent 添加自定义事件
-func (that *Manager) AddEvent(e IEvent) error {
+func (that *EventBus) AddEvent(e IEvent) error {
 	name, err := checkName(e.Name())
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func (that *Manager) AddEvent(e IEvent) error {
 }
 
 // GetEvent 根据name获取自定义事件
-func (that *Manager) GetEvent(name string) (IEvent, bool) {
+func (that *EventBus) GetEvent(name string) (IEvent, bool) {
 	v, ok := that.events.Search(name)
 	if ok {
 		return v.(IEvent), ok
@@ -198,17 +198,17 @@ func (that *Manager) GetEvent(name string) (IEvent, bool) {
 }
 
 // HasEvent 判断自定义事件是否存在
-func (that *Manager) HasEvent(name string) bool {
+func (that *EventBus) HasEvent(name string) bool {
 	return that.events.Contains(name)
 }
 
 // RemoveEvent 移除自定义事件
-func (that *Manager) RemoveEvent(name string) {
+func (that *EventBus) RemoveEvent(name string) {
 	that.events.Remove(name)
 }
 
 // RemoveEvents 移除所有自定义事件
-func (that *Manager) RemoveEvents() {
+func (that *EventBus) RemoveEvents() {
 	that.events.Clear()
 }
 
@@ -217,7 +217,7 @@ func (that *Manager) RemoveEvents() {
 // Fire 使用事件名触发事件
 // name: 事件名
 // params:需要传递给事件的参数
-func (that *Manager) Fire(name string, params map[interface{}]interface{}) (e IEvent, err error) {
+func (that *EventBus) Fire(name string, params map[interface{}]interface{}) (e IEvent, err error) {
 	name, err = checkName(name)
 	if err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func (that *Manager) Fire(name string, params map[interface{}]interface{}) (e IE
 }
 
 // Publish 触发事件
-func (that *Manager) Publish(e IEvent) error {
+func (that *EventBus) Publish(e IEvent) error {
 	// 把中断标记设置为false
 	e.Abort(false)
 	name := e.Name()
@@ -292,7 +292,7 @@ func (that *Manager) Publish(e IEvent) error {
 // PublishBatch 批量触发事件
 // Usage:
 // 	PublishBatch("name1", "name2", &MyEvent{})
-func (that *Manager) PublishBatch(es ...interface{}) (ers []error) {
+func (that *EventBus) PublishBatch(es ...interface{}) (ers []error) {
 	var err error
 	for _, e := range es {
 		if name, ok := e.(string); ok {
@@ -308,19 +308,19 @@ func (that *Manager) PublishBatch(es ...interface{}) (ers []error) {
 }
 
 // AsyncPublish 异步触发事件
-func (that *Manager) AsyncPublish(e IEvent) {
+func (that *EventBus) AsyncPublish(e IEvent) {
 	go func(e IEvent) {
 		_ = that.Publish(e)
 	}(e)
 }
 
 // Clear 清空事件管理对象
-func (that *Manager) Clear() {
+func (that *EventBus) Clear() {
 	that.Reset()
 }
 
 // Reset 重置事件管理对象
-func (that *Manager) Reset() {
+func (that *EventBus) Reset() {
 	that.name = ""
 	that.listeners.Clear()
 	that.events.Clear()
