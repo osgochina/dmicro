@@ -22,7 +22,7 @@ type Process struct {
 	// 进程管理对象
 	Manager *Manager
 	//进程配置
-	entry *Entry
+	entry *ProcEntry
 	// 进程对象
 	cmd *exec.Cmd
 	// 启动时间
@@ -46,7 +46,7 @@ type Process struct {
 
 // NewProcess 创建进程对象
 func NewProcess(path string, args []string, environment ...[]string) *Process {
-	entry := NewEntry(path, args)
+	entry := NewProcEntry(path, args)
 	env := os.Environ()
 	if len(environment) > 0 {
 		for k, v := range environment[0] {
@@ -60,7 +60,7 @@ func NewProcess(path string, args []string, environment ...[]string) *Process {
 }
 
 // NewProcessByEntry 通过详细配置，创建进程对象
-func NewProcessByEntry(entry *Entry) *Process {
+func NewProcessByEntry(entry *ProcEntry) *Process {
 	proc := &Process{
 		Manager:    nil,
 		cmd:        nil,
