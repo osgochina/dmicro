@@ -4,7 +4,6 @@
 
 * 版本管理
 
-  * [版本说明](versions.md)
   * [版本更新记录](changelog.md)
 
 * 快速入门
@@ -30,7 +29,7 @@
   * [传输过滤器 - TFilter](drpc/tfilter.md)
   * [钩子 - Hook](drpc/hook.md)
   * [插件 - Plugin](drpc/plugin.md)
-  * [优雅重启 - Graceful](drpc/graceful.md)
+  * [平滑重启 - Graceful](drpc/graceful.md)
 
 * Supervisor进程监控管理
   * [快速开始](supervisor/info.md)

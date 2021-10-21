@@ -1,5 +1,10 @@
 ## 更新日志
 
+### v0.0.8
+
+1. 完善`平滑重启`的逻辑。
+2. `Supervisor进程监控管理`模块新增接口，支持从`supervisor.ini`格式的配置文件中载入配置，从而启动配置的进程。
+
 ### v0.0.7
 
 1. 完成`EventBus(事件总线)`功能的开发，详情请见 [eventBus(事件总线)](component/eventBus.md)

@@ -27,7 +27,6 @@ func main() {
 			logger.Error(stat.Cause())
 		}
 		fmt.Printf("%d.%s\n", n, result)
-		n++
 		time.Sleep(1 * time.Second)
 	}
 
