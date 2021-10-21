@@ -2,7 +2,7 @@ package graceful
 
 import (
 	"context"
-	"github.com/gogf/gf/os/glog"
+	"github.com/osgochina/dmicro/logger"
 	"os"
 	"sync"
 	"time"
@@ -17,7 +17,6 @@ type Graceful struct {
 	beforeExiting                func() error
 	locker                       sync.Mutex
 	signal                       chan os.Signal
-	logger                       *glog.Logger
 	inheritedEnv                 map[string]string
 	inheritedProcFiles           []*os.File
 	defaultInheritedProcFilesLen int
@@ -32,9 +31,8 @@ func NewGraceful() *Graceful {
 		beforeExiting: func() error {
 			return nil
 		},
-		logger:             glog.New(),
 		inheritedEnv:       make(map[string]string),
-		inheritedProcFiles: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+		inheritedProcFiles: []*os.File{},
 	}
 	graceful.defaultInheritedProcFilesLen = len(graceful.inheritedProcFiles)
 	return graceful
@@ -43,7 +41,7 @@ func NewGraceful() *Graceful {
 // Shutdown 执行进程关闭任务
 func (that *Graceful) Shutdown(timeout ...time.Duration) {
 	defer os.Exit(0)
-	that.logger.Infof("shutting down process...")
+	logger.Println("shutting down process...")
 	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 		go func() {
@@ -52,16 +50,16 @@ func (that *Graceful) Shutdown(timeout ...time.Duration) {
 			var graceful = true
 
 			if err := that.firstSweep(); err != nil {
-				that.logger.Errorf("[shutdown-firstSweep] %s", err.Error())
+				logger.Errorf("[shutdown-firstSweep] %s", err.Error())
 				graceful = false
 			}
 
 			graceful = that.shutdown(ctxTimeout, "shutdown") && graceful
 
 			if graceful {
-				that.logger.Infof("process is shutdown gracefully!")
+				logger.Info("process is shutdown gracefully!")
 			} else {
-				that.logger.Infof("process is shutdown, but not gracefully!")
+				logger.Info("process is shutdown, but not gracefully!")
 			}
 		}()
 		return endCh
@@ -92,12 +90,12 @@ func (that *Graceful) contextExec(timeout []time.Duration, action string, deferC
 	if len(timeout) > 0 {
 		that.SetShutdown(timeout[0], that.firstSweep, that.beforeExiting)
 	}
-
-	ctxTimeout, _ := context.WithTimeout(context.Background(), that.shutdownTimeout)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), that.shutdownTimeout)
+	defer cancel()
 	select {
 	case <-ctxTimeout.Done():
 		if err := ctxTimeout.Err(); err != nil {
-			that.logger.Errorf("[%s-timeout] %s", action, err.Error())
+			logger.Errorf("[%s-timeout] %s", action, err.Error())
 		}
 	case <-deferCallback(ctxTimeout):
 	}
@@ -105,8 +103,9 @@ func (that *Graceful) contextExec(timeout []time.Duration, action string, deferC
 
 //执行后置函数
 func (that *Graceful) shutdown(ctxTimeout context.Context, action string) bool {
+	logger.Infof("[%s-beforeExiting]", action)
 	if err := that.beforeExiting(); err != nil {
-		that.logger.Errorf("[%s-beforeExiting] %s", action, err.Error())
+		logger.Errorf("[%s-beforeExiting] %v", action, err)
 		return false
 	}
 	return true

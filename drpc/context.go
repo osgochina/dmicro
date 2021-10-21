@@ -482,6 +482,7 @@ func (that *handlerCtx) buildReplyBody(header message.Header) interface{} {
 	_callCmd, ok := that.sess.callCmdMap.Search(header.Seq())
 	if !ok {
 		logger.Warningf("not found call cmd: %v", that.input)
+		return nil
 	}
 	that.callCmd = _callCmd.(*callCmd)
 

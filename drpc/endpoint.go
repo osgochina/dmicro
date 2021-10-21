@@ -535,9 +535,7 @@ func (that *endpoint) Close() (err error) {
 
 	close(that.closeCh)
 	for lis := range that.listeners {
-		//if _, ok := lis.(*quic.Listener); !ok {
 		_ = lis.Close()
-		//}
 	}
 	deleteEndpoint(that)
 	var (
@@ -547,7 +545,11 @@ func (that *endpoint) Close() (err error) {
 	that.sessHub.rangeCallback(func(s *session) bool {
 		count++
 		dgpool.FILOAnywayGo(func() {
-			errCh <- s.Close()
+			e := s.Close()
+			if e != nil {
+				logger.Error(e)
+			}
+			errCh <- e
 		})
 		return true
 	})
@@ -556,13 +558,7 @@ func (that *endpoint) Close() (err error) {
 	}
 	close(errCh)
 
-	//for lis := range that.listeners {
-	//	if qlis, ok := lis.(*quic.Listener); ok {
-	//		err = errors.Merge(err, qlis.Close())
-	//	}
-	//}
-
 	//关闭endpoint后执行该事件
 	that.pluginContainer.afterCloseEndpoint(that, err)
-	return nil
+	return err
 }

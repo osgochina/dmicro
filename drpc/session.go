@@ -140,14 +140,14 @@ type Session interface {
 // 会话的状态
 //不能改变枚举值的顺序
 const (
-	statusPreparing      int32 = iota // 会话准备阶段
-	statusOk                          // 会话就绪
-	statusActiveClosing               // 会话主动关闭中
-	statusActiveClosed                // 会话已经主动关闭
-	statusPassiveClosing              // 会话被动关闭中
-	statusPassiveClosed               // 会话被动关闭
-	statusRedialing                   // 会话重建中
-	statusRedialFailed                // 会话重建失败
+	statusPreparing      int32 = iota // 会话准备阶段 1
+	statusOk                          // 会话就绪 2
+	statusActiveClosing               // 会话主动关闭中 3
+	statusActiveClosed                // 会话已经主动关闭 4
+	statusPassiveClosing              // 会话被动关闭中 5
+	statusPassiveClosed               // 会话被动关闭 6
+	statusRedialing                   // 会话重建中 7
+	statusRedialFailed                // 会话重建失败 8
 )
 
 type session struct {
