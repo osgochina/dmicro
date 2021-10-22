@@ -25,8 +25,10 @@ func main() {
 		).Status()
 		if !stat.OK() {
 			logger.Error(stat.Cause())
+			time.Sleep(1 * time.Second)
 		}
 		fmt.Printf("%d.%s\n", n, result)
+		n++
 		time.Sleep(1 * time.Second)
 	}
 

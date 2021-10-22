@@ -3,11 +3,14 @@ package drpc
 import (
 	"encoding/json"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/errors"
 	"github.com/osgochina/dmicro/utils/graceful"
 	"github.com/osgochina/dmicro/utils/inherit"
+	"net"
 	"os"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -43,6 +46,23 @@ func deleteEndpoint(e *endpoint) {
 	endpointList.rwMu.Lock()
 	delete(endpointList.list, e)
 	endpointList.rwMu.Unlock()
+}
+
+// 服务监听成功的情况下，调用该方法。
+//如果是在平滑重启的子进程中，则子进程会发送信号给父进程，让父进程退出。
+func onServeListener(lis net.Listener) {
+	//非子进程，则什么都不走
+	if isChild == false {
+		return
+	}
+	pPid := syscall.Getppid()
+	if pPid != 1 {
+		if err := syscall.Kill(pPid, syscall.SIGTERM); err != nil {
+			logger.Errorf("[reboot-killOldProcess] %s", err.Error())
+			return
+		}
+		logger.Infof("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
+	}
 }
 
 //关闭服务
@@ -98,6 +118,7 @@ func SetShutdown(timeout time.Duration, firstFunc, beforeExitingFunc func() erro
 		},
 		func() error {
 			return errors.Merge(shutdown(), beforeExitingFunc())
+			//return beforeExitingFunc()
 		})
 }
 
@@ -111,10 +132,12 @@ func Reboot(timeout ...time.Duration) {
 	drpcGraceful.Reboot(timeout...)
 }
 
-const parentAddrKey = "INHERIT_LISTEN_PARENT_ADDR"
+const parentAddrKey = "GRACEFUL_INHERIT_LISTEN_PARENT_ADDR"
+const isChildKey = "GRACEFUL_IS_CHILD"
 
 // network:host:[host:port]
 var parentAddrList = make(map[string]map[string][]string, 2)
+var isChild = false
 var parentAddrListMutex sync.Mutex
 
 //通过环境变量，初始化父进程监听的端口
@@ -124,6 +147,11 @@ var parentAddrListMutex sync.Mutex
 func initParentAddrList() {
 	parentAddr := os.Getenv(parentAddrKey)
 	_ = json.Unmarshal(gconv.Bytes(parentAddr), &parentAddrList)
+	//判断当前进程是否是子进程
+	isChildEnv := os.Getenv(isChildKey)
+	if isChildEnv == "true" {
+		isChild = true
+	}
 }
 
 // 服务将要重启之前，把当前进程监听的地址端口序列化写入环境变量
@@ -131,6 +159,7 @@ func setParentAddrList() {
 	b, _ := json.Marshal(parentAddrList)
 	env := make(map[string]string)
 	env[parentAddrKey] = gconv.String(b)
+	env[isChildKey] = "true"
 	drpcGraceful.AddInherited(nil, env)
 }
 

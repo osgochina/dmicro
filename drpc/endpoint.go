@@ -448,6 +448,9 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 	logger.Printf("listen and serve (network:%s, addr:%s)", network, addr)
 	that.pluginContainer.afterListen(lis.Addr())
 
+	// 监听成功
+	onServeListener(lis)
+
 	var tempDelay time.Duration
 	var closeCh = that.closeCh
 

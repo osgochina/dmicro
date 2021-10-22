@@ -16,74 +16,53 @@ import (
 
 //进程启动时候的原始路径
 var originalWD, _ = os.Getwd()
+var isReboot = false
 
 func (that *Graceful) GraceSignal() {
 	// subscribe to SIGINT signals
 	signal.Notify(that.signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR2)
-	sig := <-that.signal
-	signal.Stop(that.signal)
-	switch sig {
-	case syscall.SIGINT, syscall.SIGTERM:
-		that.Shutdown()
-	case syscall.SIGUSR2:
-		that.Reboot()
+	for {
+		sig := <-that.signal
+		switch sig {
+		case syscall.SIGINT, syscall.SIGTERM:
+			signal.Reset(syscall.SIGINT, syscall.SIGTERM)
+			logger.Infof("收到了关闭信号%v", sig)
+			that.Shutdown()
+		case syscall.SIGUSR2:
+			signal.Reset(syscall.SIGUSR2)
+			logger.Infof("收到了重启信号%v", sig)
+			isReboot = true
+			that.Reboot()
+		}
 	}
 }
 
 // Reboot 开启优雅的重启流程
 func (that *Graceful) Reboot(timeout ...time.Duration) {
-	defer os.Exit(0)
-	logger.Info("rebooting process...")
-	var (
-		//ppid     = os.Getppid()
-		graceful = true
-	)
+	//defer os.Exit(0)
+	logger.Info("平滑重启中...")
 
 	that.contextExec(timeout, "reboot", func(ctxTimeout context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 
 		go func() {
 			defer close(endCh)
-			var reboot = true
 			if err := that.firstSweep(); err != nil {
-				logger.Infof("[reboot-firstSweep] %s", err.Error())
-				graceful = false
+				logger.Infof("[平滑重启中 - 执行前置方法失败] %s", err.Error())
+				os.Exit(-1)
 			}
 
 			//启动新的进程
 			_, err := that.startProcess()
+			// 启动新的进程失败，则表示该进程有问题，直接错误退出
 			if err != nil {
-				logger.Infof("[reboot-startNewProcess] %s", err.Error())
-				reboot = false
-			}
-
-			// 关闭当前进程
-			graceful = that.shutdown(ctxTimeout, "reboot") && graceful
-			if !reboot {
-				if graceful {
-					logger.Warning("process reboot failed, but shut down gracefully!")
-				} else {
-					logger.Warning("process reboot failed, and did not shut down gracefully!")
-				}
+				logger.Infof("[平滑重启中 - 启动新的进程失败] %s", err.Error())
 				os.Exit(-1)
 			}
 		}()
-
 		return endCh
 	})
-
-	////如果父进程不是初始进程1，则关闭父进程,如果通过supervisor启动，会有问题，所以去掉该逻辑
-	//if ppid != 1 {
-	//	if err := syscall.Kill(ppid, syscall.SIGTERM); err != nil {
-	//		that.logger.Errorf("[reboot-killOldProcess] %s", err.Error())
-	//		graceful = false
-	//	}
-	//}
-	if graceful {
-		logger.Infof("process is rebooted gracefully.")
-	} else {
-		logger.Infof("process is rebooted, but not gracefully.")
-	}
+	logger.Infof("进程已进行平滑重启,等待子进程的信号...")
 }
 
 // AddInherited 添加需要给重启后新进程继承的文件句柄和环境变量

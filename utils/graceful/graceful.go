@@ -41,25 +41,28 @@ func NewGraceful() *Graceful {
 // Shutdown 执行进程关闭任务
 func (that *Graceful) Shutdown(timeout ...time.Duration) {
 	defer os.Exit(0)
-	logger.Println("shutting down process...")
+	if isReboot {
+		logger.Infof("平滑重启，正在结束父进程...")
+	} else {
+		logger.Infof("正在结束进程...")
+	}
 	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 		go func() {
 			defer close(endCh)
-
 			var graceful = true
-
-			if err := that.firstSweep(); err != nil {
-				logger.Errorf("[shutdown-firstSweep] %s", err.Error())
-				graceful = false
+			//当进程非重启状态时候，才需要执行清理动作
+			if !isReboot {
+				if err := that.firstSweep(); err != nil {
+					logger.Errorf("[结束进程 - 执行前置方法失败] %s", err.Error())
+					graceful = false
+				}
 			}
-
 			graceful = that.shutdown(ctxTimeout, "shutdown") && graceful
-
 			if graceful {
-				logger.Info("process is shutdown gracefully!")
+				logger.Info("进程结束了.")
 			} else {
-				logger.Info("process is shutdown, but not gracefully!")
+				logger.Info("进程结束了,但是非平滑模式.")
 			}
 		}()
 		return endCh
@@ -103,7 +106,7 @@ func (that *Graceful) contextExec(timeout []time.Duration, action string, deferC
 
 //执行后置函数
 func (that *Graceful) shutdown(ctxTimeout context.Context, action string) bool {
-	logger.Infof("[%s-beforeExiting]", action)
+	logger.Info("[结束进程中 - 正在执行后置函数]")
 	if err := that.beforeExiting(); err != nil {
 		logger.Errorf("[%s-beforeExiting] %v", action, err)
 		return false
