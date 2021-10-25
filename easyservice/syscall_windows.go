@@ -4,7 +4,7 @@ package easyservice
 
 import "syscall"
 
-var syscallSIGUSR2 = syscall.Signal(0)
+var syscallSIGUSR1 = syscall.Signal(0)
 
 func syscallKill(pid int, sig syscall.Signal) (err error) {
 	return nil

@@ -19,7 +19,7 @@ var isReboot = false
 
 func (that *Graceful) GraceSignal() {
 	// subscribe to SIGINT signals
-	signal.Notify(that.signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR2)
+	signal.Notify(that.signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 	for {
 		sig := <-that.signal
 		switch sig {
@@ -27,8 +27,8 @@ func (that *Graceful) GraceSignal() {
 			signal.Reset(syscall.SIGINT, syscall.SIGTERM)
 			logger.Infof("收到了关闭信号%v", sig)
 			that.Shutdown()
-		case syscall.SIGUSR2:
-			signal.Reset(syscall.SIGUSR2)
+		case syscall.SIGUSR1:
+			signal.Reset(syscall.SIGUSR1)
 			logger.Infof("收到了重启信号%v", sig)
 			isReboot = true
 			that.Reboot()

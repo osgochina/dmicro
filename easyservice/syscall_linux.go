@@ -7,7 +7,7 @@ import (
 	"syscall"
 )
 
-var syscallSIGUSR2 = syscall.SIGUSR2
+var syscallSIGUSR1 = syscall.SIGUSR1
 
 func syscallKill(pid int, sig syscall.Signal) (err error) {
 	return syscall.Kill(pid, sig)
