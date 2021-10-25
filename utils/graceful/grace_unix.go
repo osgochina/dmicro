@@ -5,7 +5,6 @@ package graceful
 import (
 	"context"
 	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/os/gfile"
 	"github.com/osgochina/dmicro/logger"
 	"os"
 	"os/exec"
@@ -97,9 +96,8 @@ func (that *Graceful) startProcess() (int, error) {
 			}()
 		}
 	}
-
 	//获取进程启动的原始
-	path := gfile.SelfPath()
+	path := os.Args[0]
 	err := genv.SetMap(that.inheritedEnv)
 	if err != nil {
 		return 0, err

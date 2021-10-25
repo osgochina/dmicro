@@ -114,7 +114,8 @@ func (that *EasyService) stop(parser *gcmd.Parser, signal string) {
 		serverPid = gconv.Int(gstr.Trim(gfile.GetContents(pidFile)))
 	}
 	if serverPid == 0 {
-		logger.Fatalf("Server is not running.")
+		fmt.Println("Server is not running.")
+		os.Exit(0)
 	}
 
 	var sigNo syscall.Signal
@@ -126,7 +127,8 @@ func (that *EasyService) stop(parser *gcmd.Parser, signal string) {
 	case "quit":
 		sigNo = syscall.SIGQUIT
 	default:
-		logger.Fatalf("signal cmd `%s' not found", signal)
+		fmt.Printf("signal cmd `%s' not found", signal)
+		os.Exit(0)
 	}
 	err := syscallKill(serverPid, sigNo)
 	if err != nil {

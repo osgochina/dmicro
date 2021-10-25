@@ -14,3 +14,6 @@ func syscallKill(pid int, sig syscall.Signal) (err error) {
 func checkStart(pid int) bool {
 	return false
 }
+
+func setProcessName(name string) {
+}

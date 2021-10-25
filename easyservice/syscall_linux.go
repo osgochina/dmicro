@@ -3,6 +3,7 @@
 package easyservice
 
 import (
+	"github.com/osgochina/dmicro/utils/gspt"
 	"syscall"
 )
 
@@ -19,4 +20,9 @@ func checkStart(pid int) bool {
 		return true
 	}
 	return false
+}
+
+//设置进程名
+func setProcessName(name string) {
+	gspt.SetProcTitle(name)
 }

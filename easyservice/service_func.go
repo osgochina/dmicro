@@ -58,3 +58,8 @@ func RemoveSandBox(sandBoxID int) error {
 func Shutdown() {
 	defaultService.Shutdown()
 }
+
+// SetProcessName 设置进程名称
+func SetProcessName(name string) {
+	defaultService.setProcessName(name)
+}

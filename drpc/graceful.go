@@ -27,6 +27,11 @@ func GraceSignal() {
 	drpcGraceful.GraceSignal()
 }
 
+// GraceOnStart 启动成功，发送信号
+func GraceOnStart() {
+	onServeListener(nil)
+}
+
 var endpointList = struct {
 	list map[*endpoint]struct{}
 	rwMu sync.RWMutex

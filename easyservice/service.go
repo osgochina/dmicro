@@ -54,7 +54,7 @@ func (that *EasyService) SetPidFile(pidFile string) {
 }
 
 // SetProcessName 设置进程名字
-func (that *EasyService) SetProcessName(processName string) {
+func (that *EasyService) setProcessName(processName string) {
 	that.processName = processName
 }
 
@@ -102,7 +102,10 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	that.sList.Iterator(func(k int, v interface{}) bool {
 		sandbox := v.(ISandBox)
 		go func() {
-			logger.Info(sandbox.Setup())
+			e := sandbox.Setup()
+			if e != nil {
+				logger.Warning(e)
+			}
 		}()
 		return true
 	})
@@ -110,7 +113,13 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	//设置优雅退出时候需要做的工作
 	drpc.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 	//等待服务结束
-	logger.Noticef("服务已经初始化完成, %d 个协程被创建.\n", runtime.NumGoroutine())
+	logger.Noticef("服务已经初始化完成, %d 个协程被创建.", runtime.NumGoroutine())
+	//设置进程名
+	if len(that.processName) > 0 {
+		setProcessName(that.processName)
+	}
+	//发送启动成功信号
+	drpc.GraceOnStart()
 	//监听重启信号
 	drpc.GraceSignal()
 }
@@ -162,7 +171,7 @@ func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 	// 开启debug模式
 	debug := config.GetBool("Debug", false)
 	if debug {
-		logger.SetDebug(debug)
+		_ = logger.SetLevelStr("ALL")
 	}
 	return nil
 }
@@ -240,9 +249,9 @@ func (that *EasyService) firstSweep() error {
 	}
 	if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
 		if e := gfile.Remove(that.pidFile); e != nil {
-			logger.Errorf("os.Remove: %v\n", e)
+			logger.Errorf("os.Remove: %v", e)
 		}
-		logger.Infof("Remove pidFile %s successful\n", that.pidFile)
+		logger.Infof("删除pid文件[%s]成功", that.pidFile)
 	}
 	return nil
 }
