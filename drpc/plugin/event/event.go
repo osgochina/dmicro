@@ -17,6 +17,7 @@ type eventPlugin struct{}
 var (
 	_ drpc.AfterAcceptPlugin        = new(eventPlugin)
 	_ drpc.AfterDialPlugin          = new(eventPlugin)
+	_ drpc.AfterDialFailPlugin      = new(eventPlugin)
 	_ drpc.AfterDisconnectPlugin    = new(eventPlugin)
 	_ drpc.AfterReadCallBodyPlugin  = new(eventPlugin)
 	_ drpc.AfterReadPushBodyPlugin  = new(eventPlugin)
@@ -47,7 +48,19 @@ func (that *eventPlugin) AfterAccept(sess drpc.EarlySession) *drpc.Status {
 func (that *eventPlugin) AfterDial(sess drpc.EarlySession, isRedial bool) *drpc.Status {
 	eventBus := sess.Endpoint().EventBus()
 	if eventBus.HasListeners(OnConnectEvent) {
-		err := eventBus.Publish(newOnConnect(sess, isRedial))
+		err := eventBus.Publish(newOnConnect(true, sess, isRedial, nil))
+		if err != nil {
+			logger.Warning(err)
+		}
+	}
+	return nil
+}
+
+// AfterDialFail 链接失败后，触发onConnect事件
+func (that *eventPlugin) AfterDialFail(sess drpc.EarlySession, err error, isRedial bool) *drpc.Status {
+	eventBus := sess.Endpoint().EventBus()
+	if eventBus.HasListeners(OnConnectEvent) {
+		err := eventBus.Publish(newOnConnect(false, sess, isRedial, err))
 		if err != nil {
 			logger.Warning(err)
 		}

@@ -6,17 +6,21 @@ import (
 )
 
 type OnConnect struct {
-	Session  drpc.EarlySession
-	IsRedial bool
-	aborted  bool
+	Session   drpc.EarlySession
+	IsSuccess bool
+	Err       error
+	IsRedial  bool
+	aborted   bool
 }
 
 var _ eventbus.IEvent = new(OnConnect)
 
-func newOnConnect(sess drpc.EarlySession, isRedial bool) *OnConnect {
+func newOnConnect(isSuccess bool, sess drpc.EarlySession, isRedial bool, err error) *OnConnect {
 	return &OnConnect{
-		Session:  sess,
-		IsRedial: isRedial,
+		Session:   sess,
+		IsSuccess: isSuccess,
+		IsRedial:  isRedial,
+		Err:       err,
 	}
 }
 
