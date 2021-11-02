@@ -71,6 +71,14 @@ func (that *BoxConf) InnerIpPort() string {
 	return fmt.Sprintf("%s:%s", host, that.ListenPort())
 }
 
+func (that *BoxConf) SetId(id int) {
+	that.id = id
+}
+
+func (that *BoxConf) GetId() int {
+	return that.id
+}
+
 // EndpointConfig 返回rpc服务要用的配置文件
 func (that *BoxConf) EndpointConfig() drpc.EndpointConfig {
 	var c = drpc.EndpointConfig{

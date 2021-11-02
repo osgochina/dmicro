@@ -39,8 +39,7 @@ type StopFunc func(service *EasyService) bool
 // NewEasyService  创建服务
 func NewEasyService(processName ...string) *EasyService {
 	svr := &EasyService{
-		processName: "easy-service",
-		sList:       gmap.NewIntAnyMap(true),
+		sList: gmap.NewIntAnyMap(true),
 	}
 	if len(processName) > 0 {
 		svr.processName = processName[0]
