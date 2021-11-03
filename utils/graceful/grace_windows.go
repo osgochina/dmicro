@@ -3,10 +3,13 @@
 package graceful
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
 )
+
+var isReboot = false
 
 func (that *Graceful) GraceSignal() {
 	// subscribe to SIGINT signals
@@ -18,7 +21,7 @@ func (that *Graceful) GraceSignal() {
 
 func (that *Graceful) Reboot(timeout ...time.Duration) {
 	defer os.Exit(0)
-	that.logger.Infof("windows system doesn't support reboot! call Shutdown() is recommended.")
+	fmt.Println("windows system doesn't support reboot! call Shutdown() is recommended.")
 }
 
 func (that *Graceful) AddInherited(procFiles []*os.File, envs map[string]string) {}
