@@ -119,3 +119,8 @@ func (that *Graceful) startProcess() (int, error) {
 	}
 	return cmd.Process.Pid, nil
 }
+
+// SyscallKillSIGTERM 发送结束信号给进程
+func SyscallKillSIGTERM(pid int) error {
+	return syscall.Kill(pid, syscall.SIGTERM)
+}

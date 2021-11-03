@@ -25,3 +25,8 @@ func (that *Graceful) Reboot(timeout ...time.Duration) {
 }
 
 func (that *Graceful) AddInherited(procFiles []*os.File, envs map[string]string) {}
+
+// 发送结束信号给进程
+func SyscallKillSIGTERM(pid int) error {
+	return nil
+}

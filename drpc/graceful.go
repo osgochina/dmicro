@@ -62,7 +62,7 @@ func onServeListener(lis net.Listener) {
 	}
 	pPid := syscall.Getppid()
 	if pPid != 1 {
-		if err := syscall.Kill(pPid, syscall.SIGTERM); err != nil {
+		if err := graceful.SyscallKillSIGTERM(pPid); err != nil {
 			logger.Errorf("[reboot-killOldProcess] %s", err.Error())
 			return
 		}
