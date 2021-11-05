@@ -1,128 +1,144 @@
 package drpc
 
 import (
-	"github.com/osgochina/dmicro/logger"
+	"github.com/gogf/gf/container/gset"
 	"github.com/osgochina/dmicro/utils/errors"
-	"github.com/osgochina/dmicro/utils/graceful"
-	"github.com/osgochina/dmicro/utils/inherit"
-	"net"
-	"sync"
-	"syscall"
-	"time"
+	"github.com/osgochina/dmicro/utils/gracefulv2"
 )
 
-var drpcGraceful *graceful.ChangeProcessGraceful
-
 func init() {
-	drpcGraceful = graceful.NewChangeProcessGraceful()
-	drpcGraceful.InitParentAddrList()
-	inherit.AddInheritedFunc(drpcGraceful.AddInherited)
-	SetShutdown(5*time.Second, nil, nil)
+	gracefulv2.GetGraceful().SetShutdownEndpoint(func(endpointList *gset.Set) error {
+		var count int
+		var errCh = make(chan error, endpointList.Size())
+		//异步关闭端点
+		for _, val := range endpointList.Slice() {
+			count++
+			e := val.(*endpoint)
+			go func(e *endpoint) {
+				errCh <- e.Close()
+			}(e)
+		}
+		var err error
+		for i := 0; i < count; i++ {
+			err = errors.Merge(err, <-errCh)
+		}
+		close(errCh)
+		return err
+	})
 }
 
-func GraceSignal() {
-	drpcGraceful.GraceSignal()
-}
+//var drpcGraceful *graceful.ChangeProcessGraceful
+//
+//func init() {
+//	drpcGraceful = graceful.NewChangeProcessGraceful()
+//	drpcGraceful.InitParentAddrList()
+//	inherit.AddInheritedFunc(drpcGraceful.AddInherited)
+//	SetShutdown(5*time.Second, nil, nil)
+//}
+//
+//func GraceSignal() {
+//	drpcGraceful.GraceSignal()
+//}
+//
+//// GraceOnStart 启动成功，发送信号
+//func GraceOnStart() {
+//	onServeListener(nil)
+//}
 
-// GraceOnStart 启动成功，发送信号
-func GraceOnStart() {
-	onServeListener(nil)
-}
-
-var endpointList = struct {
-	list map[*endpoint]struct{}
-	rwMu sync.RWMutex
-}{
-	list: make(map[*endpoint]struct{}),
-}
-
-// 新增一个端点
-func addEndpoint(e *endpoint) {
-	endpointList.rwMu.Lock()
-	endpointList.list[e] = struct{}{}
-	endpointList.rwMu.Unlock()
-}
-
-//删除一个端点
-func deleteEndpoint(e *endpoint) {
-	endpointList.rwMu.Lock()
-	delete(endpointList.list, e)
-	endpointList.rwMu.Unlock()
-}
+//var endpointList = struct {
+//	list map[*endpoint]struct{}
+//	rwMu sync.RWMutex
+//}{
+//	list: make(map[*endpoint]struct{}),
+//}
+//
+//// 新增一个端点
+//func addEndpoint(e *endpoint) {
+//	endpointList.rwMu.Lock()
+//	endpointList.list[e] = struct{}{}
+//	endpointList.rwMu.Unlock()
+//}
+//
+////删除一个端点
+//func deleteEndpoint(e *endpoint) {
+//	endpointList.rwMu.Lock()
+//	delete(endpointList.list, e)
+//	endpointList.rwMu.Unlock()
+//}
 
 // 服务监听成功的情况下，调用该方法。
 //如果是在平滑重启的子进程中，则子进程会发送信号给父进程，让父进程退出。
-func onServeListener(lis net.Listener) {
-	//非子进程，则什么都不走
-	if drpcGraceful.IsWorker() == false {
-		return
-	}
-	pPid := syscall.Getppid()
-	if pPid != 1 {
-		if err := graceful.SyscallKillSIGTERM(pPid); err != nil {
-			logger.Errorf("[reboot-killOldProcess] %s", err.Error())
-			return
-		}
-		logger.Infof("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
-	}
-}
+//func onServeListener(lis net.Listener) {
+//	//非子进程，则什么都不走
+//	if drpcGraceful.IsWorker() == false {
+//		return
+//	}
+//	pPid := syscall.Getppid()
+//	if pPid != 1 {
+//		if err := graceful.SyscallKillSIGTERM(pPid); err != nil {
+//			logger.Errorf("[reboot-killOldProcess] %s", err.Error())
+//			return
+//		}
+//		logger.Infof("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
+//	}
+//}
 
-//关闭服务
-func shutdown() error {
-	endpointList.rwMu.Lock()
+////关闭服务
+//func shutdown() error {
+//	endpointList.rwMu.Lock()
+//
+//	var list []*endpoint
+//	var count int
+//	var errCh = make(chan error, len(list))
+//	for e := range endpointList.list {
+//		list = append(list, e)
+//	}
+//	endpointList.rwMu.Unlock()
+//
+//	//异步关闭端点
+//	for _, e := range list {
+//		count++
+//		go func(e *endpoint) {
+//			errCh <- e.Close()
+//		}(e)
+//	}
+//	var err error
+//	for i := 0; i < count; i++ {
+//		err = errors.Merge(err, <-errCh)
+//	}
+//	close(errCh)
+//	return err
+//}
 
-	var list []*endpoint
-	var count int
-	var errCh = make(chan error, len(list))
-	for e := range endpointList.list {
-		list = append(list, e)
-	}
-	endpointList.rwMu.Unlock()
-
-	//异步关闭端点
-	for _, e := range list {
-		count++
-		go func(e *endpoint) {
-			errCh <- e.Close()
-		}(e)
-	}
-	var err error
-	for i := 0; i < count; i++ {
-		err = errors.Merge(err, <-errCh)
-	}
-	close(errCh)
-	return err
-}
-
-// SetShutdown 设置优化退出方案基本参数
-func SetShutdown(timeout time.Duration, firstFunc, beforeExitingFunc func() error) {
-	//退出之前执行的方法
-	if firstFunc == nil {
-		firstFunc = func() error {
-			return nil
-		}
-	}
-	//退出之后执行的方法
-	if beforeExitingFunc == nil {
-		beforeExitingFunc = func() error {
-			return nil
-		}
-	}
-	//设置
-	drpcGraceful.SetShutdown(
-		timeout,
-		func() error {
-			drpcGraceful.SetParentAddrList()
-			return errors.Merge(
-				firstFunc(),            //执行自定义方法
-				inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
-			)
-		},
-		func() error {
-			return errors.Merge(shutdown(), beforeExitingFunc())
-			//return beforeExitingFunc()
-		})
-}
+//// SetShutdown 设置优化退出方案基本参数
+//func SetShutdown(timeout time.Duration, firstFunc, beforeExitingFunc func() error) {
+//	//退出之前执行的方法
+//	if firstFunc == nil {
+//		firstFunc = func() error {
+//			return nil
+//		}
+//	}
+//	//退出之后执行的方法
+//	if beforeExitingFunc == nil {
+//		beforeExitingFunc = func() error {
+//			return nil
+//		}
+//	}
+//	//设置
+//	drpcGraceful.SetShutdown(
+//		timeout,
+//		func() error {
+//			drpcGraceful.SetParentAddrList()
+//			return errors.Merge(
+//				firstFunc(),            //执行自定义方法
+//				inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
+//			)
+//		},
+//		func() error {
+//			return errors.Merge(shutdown(), beforeExitingFunc())
+//			//return beforeExitingFunc()
+//		})
+//}
 
 //// Shutdown 关闭服务
 //func Shutdown(timeout ...time.Duration) {

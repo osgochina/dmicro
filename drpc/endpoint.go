@@ -14,6 +14,7 @@ import (
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	errors2 "github.com/osgochina/dmicro/utils/errors"
+	"github.com/osgochina/dmicro/utils/gracefulv2"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"sync"
@@ -173,7 +174,9 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 		}
 	}
 
-	addEndpoint(e)
+	//addEndpoint(e)
+	// 平滑重启添加endpoint
+	gracefulv2.GetGraceful().AddEndpoint(e)
 	//触发事件
 	e.pluginContainer.afterNewEndpoint(e)
 	return e
@@ -449,8 +452,9 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 	logger.Printf("listen and serve (network:%s, addr:%s)", network, addr)
 	that.pluginContainer.afterListen(lis.Addr())
 
-	// 监听成功
-	onServeListener(lis)
+	// 监听成功,触发事件
+	//onServeListener(lis)
+	gracefulv2.GetGraceful().OnListen(lis.Addr())
 
 	var tempDelay time.Duration
 	var closeCh = that.closeCh
@@ -541,7 +545,9 @@ func (that *endpoint) Close() (err error) {
 	for lis := range that.listeners {
 		_ = lis.Close()
 	}
-	deleteEndpoint(that)
+	//deleteEndpoint(that)
+	// 平滑重启移除endpoint
+	gracefulv2.GetGraceful().DeleteEndpoint(that)
 	var (
 		count int
 		errCh = make(chan error, 1024)

@@ -9,8 +9,8 @@ import (
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
-	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/gracefulv2"
 	"os"
 	"os/exec"
 	"runtime"
@@ -62,6 +62,14 @@ func (that *EasyService) BeforeStop(f StopFunc) {
 	that.beforeStopFunc = f
 }
 
+func (that *EasyService) SetGracefulModel(model gracefulv2.GracefulModel, address ...[]string) {
+	graceful := gracefulv2.GetGraceful()
+	graceful.SetModel(model)
+	if model == gracefulv2.GracefulMasterWorker {
+		//graceful.InheritedListener()
+	}
+}
+
 // Setup 启动服务，并执行传入的启动方法
 func (that *EasyService) Setup(startFunction StartFunc) {
 	//解析命令行
@@ -110,17 +118,17 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	})
 
 	//设置优雅退出时候需要做的工作
-	drpc.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
+	gracefulv2.GetGraceful().SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 	//等待服务结束
 	logger.Noticef("服务已经初始化完成, %d 个协程被创建.", runtime.NumGoroutine())
 	//设置进程名
 	if len(that.processName) > 0 {
 		setProcessName(that.processName)
 	}
-	//发送启动成功信号
-	drpc.GraceOnStart()
+	////发送启动成功信号
+	gracefulv2.GetGraceful().OnStart()
 	//监听重启信号
-	drpc.GraceSignal()
+	gracefulv2.GetGraceful().GraceSignal()
 }
 
 func (that *EasyService) AddSandBox(s ISandBox) {

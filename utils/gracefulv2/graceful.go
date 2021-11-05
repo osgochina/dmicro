@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gerror"
@@ -15,11 +16,10 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"time"
 )
 
-// NewGraceful 创建对象
-func NewGraceful(model GracefulModel) *Graceful {
+// newGraceful 创建对象
+func newGraceful(model GracefulModel) *Graceful {
 	return &Graceful{
 		model:              model,
 		processStatus:      gtype.NewInt(statusActionNone),
@@ -30,7 +30,13 @@ func NewGraceful(model GracefulModel) *Graceful {
 		active:             make([]net.Listener, 0),
 		firstSweep:         func() error { return nil },
 		beforeExiting:      func() error { return nil },
+		endpointList:       gset.New(true),
 	}
+}
+
+// SetModel 设置模式
+func (that *Graceful) SetModel(model GracefulModel) {
+	that.model = model
 }
 
 // IsChild 判断当前进程是在子进程还是父进程
@@ -43,26 +49,6 @@ func (that *Graceful) IsChild() bool {
 		return true
 	}
 	return false
-}
-
-// SetShutdown 设置退出的基本参数
-// timeout 传入负数，表示永远不过期
-func (that *Graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func() error) {
-	if timeout < 0 {
-		that.shutdownTimeout = 1<<63 - 1
-	} else if timeout < minShutdownTimeout {
-		that.shutdownTimeout = minShutdownTimeout
-	} else {
-		that.shutdownTimeout = timeout
-	}
-	if firstSweepFunc == nil {
-		firstSweepFunc = func() error { return nil }
-	}
-	if beforeExitingFunc == nil {
-		beforeExitingFunc = func() error { return nil }
-	}
-	that.firstSweep = firstSweepFunc
-	that.beforeExiting = beforeExitingFunc
 }
 
 // SetParentListenAddrList 设置已监听的地址列表到环境变量，在子进程启动的时候，把该环境变量注入到启动参数中
@@ -186,7 +172,9 @@ func (that *Graceful) InheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 	if that.model != GracefulMasterWorker {
 		return gerror.New("必须为GracefulMasterWorker模式才可以调用InheritedListener方法")
 	}
-
+	if that.IsChild() {
+		return nil
+	}
 	addrStr := addr.String()
 	network := addr.Network()
 	var host, port string
@@ -248,4 +236,32 @@ func (that *Graceful) listen(nett, addr string) (net.Listener, error) {
 		}
 		return l, nil
 	}
+}
+
+func (that *Graceful) OnStart() {
+	that.OnListen(nil)
+}
+
+func (that *Graceful) MasterWorkerModelStart() {
+	if !that.IsChild() {
+		go that.GraceSignal()
+		that.SetParentListenAddrList()
+		//inherit.SetInherited()
+		for {
+			var err error
+			that.masterWorkerChildCmd, err = that.startProcessWait()
+			if err != nil {
+				logger.Errorf("启动子进程失败，error:%v", err)
+				return
+			}
+			logger.Infof("Master-Worker模式启动子进程成功，父进程:%d子进程:%d", os.Getpid(), that.masterWorkerChildCmd.Process.Pid)
+			err = that.masterWorkerChildCmd.Wait()
+			if err != nil {
+				logger.Warningf("子进程:%d 非正常退出，退出原因:%v", that.masterWorkerChildCmd.Process.Pid, err)
+			} else {
+				logger.Infof("子进程:%d 正常退出", that.masterWorkerChildCmd.Process.Pid)
+			}
+		}
+	}
+	logger.Infof("Master-Worker模式:子进程pid:%d", os.Getpid())
 }

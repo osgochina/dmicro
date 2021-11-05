@@ -27,7 +27,46 @@ func (that *Graceful) AddInherited(procFiles []*os.File, envs map[string]string)
 }
 
 func (that *Graceful) GraceSignal() {
-	// subscribe to SIGINT signals
+	if that.model == GracefulNormal {
+		that.graceSignalGracefulNormal()
+		return
+	}
+	if that.model == GracefulChangeProcess {
+		that.graceSignalGracefulChangeProcess()
+		return
+	}
+	if that.model == GracefulMasterWorker {
+		that.graceSignalGracefulMasterWorker()
+		return
+	}
+}
+
+// 不需要平滑重启
+func (that *Graceful) graceSignalGracefulNormal() {
+	signal.Notify(
+		that.signal,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGKILL,
+		syscall.SIGTERM,
+		syscall.SIGABRT,
+	)
+	for {
+		sig := <-that.signal
+		logger.Infof(`收到信号: %s`, sig.String())
+		switch sig {
+		// 强制关闭服务
+		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM:
+			// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
+			that.Shutdown(time.Second)
+			continue
+		default:
+		}
+	}
+}
+
+// 父子进程模式平滑重启
+func (that *Graceful) graceSignalGracefulChangeProcess() {
 	signal.Notify(
 		that.signal,
 		syscall.SIGINT,
@@ -40,23 +79,86 @@ func (that *Graceful) GraceSignal() {
 	)
 	for {
 		sig := <-that.signal
-		logger.Printf(`收到信号: %s`, sig.String())
+		logger.Infof(`收到信号: %s`, sig.String())
 		switch sig {
 		// 强制关闭服务
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
 			// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
 			that.Shutdown(time.Second)
-			return
+			continue
 		// 平滑的关闭服务
 		case syscall.SIGTERM:
 			// 平滑重启的时候使用默认超时时间，能够等待业务处理完毕，优雅的结束
 			that.Shutdown()
-			return
+			continue
 		// 平滑重启服务
 		case syscall.SIGUSR1:
 			that.Reboot()
-			return
+			continue
 		default:
+		}
+	}
+}
+
+// MasterWorker模式平滑重启
+func (that *Graceful) graceSignalGracefulMasterWorker() {
+	if that.IsChild() {
+		signal.Notify(
+			that.signal,
+			syscall.SIGINT,
+			syscall.SIGQUIT,
+			syscall.SIGKILL,
+			syscall.SIGTERM,
+			syscall.SIGABRT,
+		)
+		for {
+			sig := <-that.signal
+			logger.Infof(`收到信号: %s`, sig.String())
+			switch sig {
+			// 强制关闭服务
+			case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
+				// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
+				that.ShutdownMasterWorker(time.Second)
+				continue
+			// 平滑的关闭服务
+			case syscall.SIGTERM:
+				// 平滑重启的时候使用默认超时时间，能够等待业务处理完毕，优雅的结束
+				that.ShutdownMasterWorker()
+				continue
+			default:
+			}
+		}
+	} else {
+		signal.Notify(
+			that.signal,
+			syscall.SIGINT,
+			syscall.SIGQUIT,
+			syscall.SIGKILL,
+			syscall.SIGTERM,
+			syscall.SIGABRT,
+			syscall.SIGUSR1,
+			syscall.SIGUSR2,
+		)
+		for {
+			sig := <-that.signal
+			logger.Infof(`收到信号: %s`, sig.String())
+			switch sig {
+			// 强制关闭服务
+			case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
+				// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
+				that.ShutdownMasterWorkerV2()
+				continue
+			// 平滑的关闭服务
+			case syscall.SIGTERM:
+				// 平滑重启的时候使用默认超时时间，能够等待业务处理完毕，优雅的结束
+				that.ShutdownMasterWorkerV2()
+				continue
+			// 平滑重启服务
+			case syscall.SIGUSR1:
+				that.RebootMasterWorker()
+				continue
+			default:
+			}
 		}
 	}
 }
@@ -85,6 +187,19 @@ func (that *Graceful) Reboot(timeout ...time.Duration) {
 		return endCh
 	})
 	logger.Infof("进程已进行平滑重启,等待子进程的信号...")
+}
+
+func (that *Graceful) RebootMasterWorker() {
+	pid := that.masterWorkerChildCmd.Process.Pid
+	logger.Infof(`向子进程: %d 发送信号SIGTERM`, pid)
+	_ = SyscallKillSIGTERM(pid)
+}
+
+func (that *Graceful) ShutdownMasterWorkerV2() {
+	defer os.Exit(0)
+	pid := that.masterWorkerChildCmd.Process.Pid
+	logger.Infof(`向子进程: %d 发送信号SIGTERM`, pid)
+	_ = SyscallKillSIGTERM(pid)
 }
 
 //启动新的进程
@@ -118,4 +233,41 @@ func (that *Graceful) startProcess() (int, error) {
 		return 0, err
 	}
 	return cmd.Process.Pid, nil
+}
+
+func (that *Graceful) startProcessWait() (*exec.Cmd, error) {
+	var extraFiles []*os.File
+	that.inheritedProcFiles.Iterator(func(k int, v interface{}) bool {
+		extraFiles = append(extraFiles, v.(*os.File))
+		return true
+	})
+
+	//获取进程启动的原始
+	path := os.Args[0]
+	err := genv.SetMap(that.inheritedEnv.Map())
+	if err != nil {
+		return nil, err
+	}
+
+	var args []string
+	if len(os.Args) > 1 {
+		args = os.Args[1:]
+	}
+	envs := genv.All()
+	cmd := exec.Command(path, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.ExtraFiles = extraFiles
+	cmd.Env = envs
+	cmd.Dir = originalWD
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+	return cmd, nil
+}
+
+// SyscallKillSIGTERM 发送结束信号给进程
+func SyscallKillSIGTERM(pid int) error {
+	return syscall.Kill(pid, syscall.SIGTERM)
 }

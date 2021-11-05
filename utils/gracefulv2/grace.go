@@ -3,19 +3,22 @@ package gracefulv2
 import (
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/osgochina/dmicro/utils/errors"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
+	"os/exec"
 	"time"
 )
 
 var defaultGraceful *Graceful
 
 func init() {
-	defaultGraceful = NewGraceful(GracefulNormal)
+	defaultGraceful = newGraceful(GracefulNormal)
 	inherit.AddInheritedFunc(defaultGraceful.AddInherited)
+	defaultGraceful.SetShutdown(minShutdownTimeout, nil, nil)
 }
 
 //  进程收到结束或重启信号后，存活的最大时间
@@ -78,43 +81,51 @@ type Graceful struct {
 	beforeExiting func() error
 	// 退出与重启流程最大等待时间
 	shutdownTimeout time.Duration
+
+	// 启动的endpoint列表
+	endpointList *gset.Set
+
+	shutdownCallback func(set *gset.Set) error
+
+	// master worker模式下的子进程pid
+	masterWorkerChildCmd *exec.Cmd
 }
 
 type filer interface {
 	File() (*os.File, error)
 }
 
-// GracefulSignal 监听信号
-func GracefulSignal() {
-	defaultGraceful.GraceSignal()
+// GetGraceful 获取graceful对象
+func GetGraceful() *Graceful {
+	return defaultGraceful
 }
 
-// SetShutdown 设置进程结束时候的前置方法
-func SetShutdown(timeout time.Duration, firstFunc, beforeExitingFunc func() error) {
+// SetShutdown 设置退出的基本参数
+// timeout 传入负数，表示永远不过期
+func (that *Graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func() error) {
+	if timeout < 0 {
+		that.shutdownTimeout = 1<<63 - 1
+	} else if timeout < minShutdownTimeout {
+		that.shutdownTimeout = minShutdownTimeout
+	} else {
+		that.shutdownTimeout = timeout
+	}
 	//进程收到退出或重启信号后，需要执行的方法
-	if firstFunc == nil {
-		firstFunc = func() error { return nil }
+	if firstSweepFunc == nil {
+		firstSweepFunc = func() error { return nil }
 	}
 	//退出与重启流程最大等待时间
 	if beforeExitingFunc == nil {
 		beforeExitingFunc = func() error { return nil }
 	}
-	//设置
-	defaultGraceful.SetShutdown(
-		timeout,
-		func() error {
-			defaultGraceful.SetParentListenAddrList()
-			return errors.Merge(
-				firstFunc(),            //执行自定义方法
-				inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
-			)
-		},
-		func() error {
-			return errors.Merge(shutdown(), beforeExitingFunc())
-		})
-}
-
-//关闭服务
-func shutdown() error {
-	return nil
+	that.firstSweep = func() error {
+		defaultGraceful.SetParentListenAddrList()
+		return errors.Merge(
+			firstSweepFunc(),       //执行自定义方法
+			inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
+		)
+	}
+	that.beforeExiting = func() error {
+		return errors.Merge(defaultGraceful.shutdownEndpoint(), beforeExitingFunc())
+	}
 }
