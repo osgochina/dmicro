@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/socket"
+	"github.com/osgochina/dmicro/utils/inherit"
 	"math"
 	"net"
 	"strconv"
@@ -107,7 +108,7 @@ func (that *EndpointConfig) check() (err error) {
 	//network 可以赋值也可以使用默认
 	//LocalIP 可以赋值也可以使用默认
 	//ListenPort 可以使用0，随机获取
-	that.listenAddr = NewFakeAddr(that.Network, that.ListenIP, gconv.String(that.ListenPort))
+	that.listenAddr = inherit.NewFakeAddr(that.Network, that.ListenIP, gconv.String(that.ListenPort))
 
 	//慢请求的配置值，请求消耗时间大于该值，被定义为慢请求，默认为最大数字
 	that.slowCometDuration = math.MaxInt64
@@ -146,13 +147,16 @@ func (that *EndpointConfig) newAddr(network, ip, port string) (net.Addr, error) 
 		if network == "quic" {
 			n = "quic"
 		}
-		return &FakeAddr{
-			network: n,
-			addr:    udpAddr.String(),
-			host:    ip,
-			port:    strconv.Itoa(udpAddr.Port),
-			udpAddr: udpAddr,
-		}, nil
+		a := inherit.NewFakeAddr(n, ip, strconv.Itoa(udpAddr.Port))
+		a.SetUdpAddr(udpAddr)
+		return a, nil
+		//return &inherit.FakeAddr{
+		//	network: n,
+		//	addr:    udpAddr.String(),
+		//	host:    ip,
+		//	port:    strconv.Itoa(udpAddr.Port),
+		//	udpAddr: udpAddr,
+		//}, nil
 	}
 }
 

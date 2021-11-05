@@ -1,8 +1,9 @@
 package graceful
 
 import (
-	"context"
-	"github.com/osgochina/dmicro/logger"
+	"encoding/json"
+	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/gf/util/gconv"
 	"os"
 	"sync"
 	"time"
@@ -11,105 +12,94 @@ import (
 // MinShutdownTimeout 最小停止超时时间
 const MinShutdownTimeout = 15 * time.Second
 
+// 当前是否是在子进程
+const isWorkerKey = "GRACEFUL_IS_WORKER"
+
+// 父进程的监听列表| Master进程的监听列表
+const parentAddrKey = "GRACEFUL_INHERIT_LISTEN_PARENT_ADDR"
+
+// Graceful 优雅重启
 type Graceful struct {
-	shutdownTimeout              time.Duration
-	firstSweep                   func() error
-	beforeExiting                func() error
+	// network:host:[host:port]
+	parentAddrList               map[string]map[string][]string
+	parentAddrListMutex          sync.Mutex
 	locker                       sync.Mutex
-	signal                       chan os.Signal
 	inheritedEnv                 map[string]string
 	inheritedProcFiles           []*os.File
 	defaultInheritedProcFilesLen int
 }
 
-func NewGraceful() *Graceful {
-	graceful := &Graceful{
-		signal: make(chan os.Signal),
-		firstSweep: func() error {
-			return nil
-		},
-		beforeExiting: func() error {
-			return nil
-		},
-		inheritedEnv:       make(map[string]string),
-		inheritedProcFiles: []*os.File{},
-	}
-	graceful.defaultInheritedProcFilesLen = len(graceful.inheritedProcFiles)
-	return graceful
-}
-
-// Shutdown 执行进程关闭任务
-func (that *Graceful) Shutdown(timeout ...time.Duration) {
-	defer os.Exit(0)
-	if isReboot {
-		logger.Infof("平滑重启，正在结束父进程...")
-	} else {
-		logger.Infof("正在结束进程...")
-	}
-	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
-		endCh := make(chan struct{})
-		go func() {
-			defer close(endCh)
-			var graceful = true
-			//当进程非重启状态时候，才需要执行清理动作
-			if !isReboot {
-				if err := that.firstSweep(); err != nil {
-					logger.Errorf("[结束进程 - 执行前置方法失败] %s", err.Error())
-					graceful = false
-				}
-			}
-			graceful = that.shutdown(ctxTimeout, "shutdown") && graceful
-			if graceful {
-				logger.Info("进程结束了.")
-			} else {
-				logger.Info("进程结束了,但是非平滑模式.")
-			}
-		}()
-		return endCh
-	})
-}
-
-// SetShutdown 设置退出的基本参数
-func (that *Graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func() error) {
-	if timeout < 0 {
-		that.shutdownTimeout = 1<<63 - 1
-	} else if timeout < MinShutdownTimeout {
-		that.shutdownTimeout = MinShutdownTimeout
-	} else {
-		that.shutdownTimeout = timeout
-	}
-	if firstSweepFunc == nil {
-		firstSweepFunc = func() error { return nil }
-	}
-	if beforeExitingFunc == nil {
-		beforeExitingFunc = func() error { return nil }
-	}
-	that.firstSweep = firstSweepFunc
-	that.beforeExiting = beforeExitingFunc
-}
-
-// 执行shutdown和reboot命令，并且计时，在规定的时候内为执行完收尾动作，则强制结束进程
-func (that *Graceful) contextExec(timeout []time.Duration, action string, deferCallback func(ctxTimeout context.Context) <-chan struct{}) {
-	if len(timeout) > 0 {
-		that.SetShutdown(timeout[0], that.firstSweep, that.beforeExiting)
-	}
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), that.shutdownTimeout)
-	defer cancel()
-	select {
-	case <-ctxTimeout.Done():
-		if err := ctxTimeout.Err(); err != nil {
-			logger.Errorf("[%s-timeout] %s", action, err.Error())
-		}
-	case <-deferCallback(ctxTimeout):
-	}
-}
-
-//执行后置函数
-func (that *Graceful) shutdown(ctxTimeout context.Context, action string) bool {
-	logger.Info("[结束进程中 - 正在执行后置函数]")
-	if err := that.beforeExiting(); err != nil {
-		logger.Errorf("[%s-beforeExiting] %v", action, err)
+// IsWorker 判断当前进程是在worker进程还是master进程
+func (that *Graceful) IsWorker() bool {
+	isWorker := genv.GetVar(isWorkerKey, nil)
+	if isWorker.IsNil() {
 		return false
 	}
-	return true
+	if isWorker.Bool() == true {
+		return true
+	}
+	return false
+}
+
+// IsMaster 判断当前进程是在worker进程还是master进程
+func (that *Graceful) IsMaster() bool {
+	return !that.IsWorker()
+}
+
+// InitParentAddrList 通过环境变量，初始化父进程监听的端口
+//在服务启动的时候，首先从环境变量中获取父进程监听的地址端口，
+//如果是首次启动，则不会获取到这些数据
+//如果是优雅的无缝重启，则能通过环境变量获取到这些数据，从而复用链接，做到无缝重启
+func (that *Graceful) InitParentAddrList() {
+	parentAddr := os.Getenv(parentAddrKey)
+	_ = json.Unmarshal(gconv.Bytes(parentAddr), &that.parentAddrList)
+}
+
+// SetParentAddrList 服务将要重启之前，把当前进程监听的地址端口序列化写入环境变量
+func (that *Graceful) SetParentAddrList() {
+	b, _ := json.Marshal(that.parentAddrList)
+	env := make(map[string]string)
+	env[parentAddrKey] = gconv.String(b)
+	env[isWorkerKey] = "true"
+	that.AddInherited(nil, env)
+}
+
+// PushParentAddr 把监听的地址端口写入到变量，优雅结束的时候写入到环境变量，让子进程使用
+func (that *Graceful) PushParentAddr(network, host, addr string) {
+	that.parentAddrListMutex.Lock()
+	defer that.parentAddrListMutex.Unlock()
+	that.unifyLocalhost(&host)
+	nw, found := that.parentAddrList[network]
+	if !found {
+		nw = make(map[string][]string)
+		that.parentAddrList[network] = nw
+	}
+	nw[host] = append(nw[host], addr)
+}
+
+// PopParentAddr 从监听变量中出栈指定的地址端口
+func (that *Graceful) PopParentAddr(network, host, addr string) string {
+	that.parentAddrListMutex.Lock()
+	defer that.parentAddrListMutex.Unlock()
+	that.unifyLocalhost(&host)
+	nw, found := that.parentAddrList[network]
+	if !found {
+		return addr
+	}
+	h, ok := nw[host]
+	if !ok || len(h) == 0 {
+		return addr
+	}
+	nw[host] = h[1:]
+	return h[0]
+}
+
+// 针对地址格式做统一的转换
+func (that *Graceful) unifyLocalhost(host *string) {
+	switch *host {
+	case "localhost":
+		*host = "127.0.0.1"
+	case "0.0.0.0":
+		*host = "::"
+	}
 }

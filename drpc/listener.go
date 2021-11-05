@@ -13,7 +13,7 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 	network := addr.Network()
 	var host, port string
 	switch addrF := addr.(type) {
-	case *FakeAddr:
+	case *inherit.FakeAddr:
 		host, port = addrF.Host(), addrF.Port()
 	default:
 		host, port, err = net.SplitHostPort(addrStr)
@@ -22,7 +22,7 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 		}
 	}
 	if port == "0" {
-		addrStr = PopParentAddr(network, host, addrStr)
+		addrStr = drpcGraceful.PopParentAddr(network, host, addrStr)
 	}
 
 	//if _network := asQUIC(network); _network != "" {
@@ -46,7 +46,7 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 	//}
 
 	if err == nil {
-		PushParentAddr(network, host, lis.Addr().String())
+		drpcGraceful.PushParentAddr(network, host, lis.Addr().String())
 	}
 	return
 }

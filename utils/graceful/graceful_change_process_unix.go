@@ -17,7 +17,7 @@ import (
 var originalWD, _ = os.Getwd()
 var isReboot = false
 
-func (that *Graceful) GraceSignal() {
+func (that *ChangeProcessGraceful) GraceSignal() {
 	// subscribe to SIGINT signals
 	signal.Notify(that.signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 	for {
@@ -37,7 +37,7 @@ func (that *Graceful) GraceSignal() {
 }
 
 // Reboot 开启优雅的重启流程
-func (that *Graceful) Reboot(timeout ...time.Duration) {
+func (that *ChangeProcessGraceful) Reboot(timeout ...time.Duration) {
 	//defer os.Exit(0)
 	logger.Info("平滑重启中...")
 
@@ -64,29 +64,29 @@ func (that *Graceful) Reboot(timeout ...time.Duration) {
 	logger.Infof("进程已进行平滑重启,等待子进程的信号...")
 }
 
-// AddInherited 添加需要给重启后新进程继承的文件句柄和环境变量
-func (that *Graceful) AddInherited(procFiles []*os.File, envs map[string]string) {
-	that.locker.Lock()
-	defer that.locker.Unlock()
-	for _, f := range procFiles {
-		var had bool
-		for _, ff := range that.inheritedProcFiles {
-			if ff == f {
-				had = true
-				break
-			}
-		}
-		if !had {
-			that.inheritedProcFiles = append(that.inheritedProcFiles, f)
-		}
-	}
-	for k, v := range envs {
-		that.inheritedEnv[k] = v
-	}
-}
+//// AddInherited 添加需要给重启后新进程继承的文件句柄和环境变量
+//func (that *ChangeProcessGraceful) AddInherited(procFiles []*os.File, envs map[string]string) {
+//	that.locker.Lock()
+//	defer that.locker.Unlock()
+//	for _, f := range procFiles {
+//		var had bool
+//		for _, ff := range that.inheritedProcFiles {
+//			if ff == f {
+//				had = true
+//				break
+//			}
+//		}
+//		if !had {
+//			that.inheritedProcFiles = append(that.inheritedProcFiles, f)
+//		}
+//	}
+//	for k, v := range envs {
+//		that.inheritedEnv[k] = v
+//	}
+//}
 
 //启动新的进程
-func (that *Graceful) startProcess() (int, error) {
+func (that *ChangeProcessGraceful) startProcess() (int, error) {
 
 	//关闭当前进程的指定默认句柄，为了给新进程让路
 	for i, f := range that.inheritedProcFiles {

@@ -231,7 +231,7 @@ func (that *EasyService) putPidFile() {
 
 // Shutdown 主动结束进程
 func (that *EasyService) Shutdown(timeout ...time.Duration) {
-	drpc.Shutdown(timeout...)
+	//drpc.Shutdown(timeout...)
 }
 
 func (that *EasyService) firstSweep() error {
