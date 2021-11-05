@@ -1,9 +1,9 @@
+// +build !windows
+
 package gspt
 
 /*
-
 #include "setproctitle.h"
-
 */
 import "C"
 
