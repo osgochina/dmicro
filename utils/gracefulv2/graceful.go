@@ -244,9 +244,9 @@ func (that *Graceful) OnStart() {
 
 func (that *Graceful) MasterWorkerModelStart() {
 	if !that.IsChild() {
+
 		go that.GraceSignal()
 		that.SetParentListenAddrList()
-		//inherit.SetInherited()
 		for {
 			var err error
 			that.masterWorkerChildCmd, err = that.startProcessWait()
@@ -263,5 +263,6 @@ func (that *Graceful) MasterWorkerModelStart() {
 			}
 		}
 	}
+	go that.GraceSignal()
 	logger.Infof("Master-Worker模式:子进程pid:%d", os.Getpid())
 }

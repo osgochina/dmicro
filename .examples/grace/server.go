@@ -18,7 +18,6 @@ func main() {
 		return
 	}
 	gracefulv2.GetGraceful().MasterWorkerModelStart()
-	go gracefulv2.GetGraceful().GraceSignal()
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		CountTime:   true,
 		LocalIP:     "127.0.0.1",
