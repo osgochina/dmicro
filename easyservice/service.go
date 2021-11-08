@@ -9,8 +9,8 @@ import (
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
-	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/graceful"
 	"os"
 	"os/exec"
 	"runtime"
@@ -95,6 +95,9 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	//启动自定义方法
 	startFunction(that)
 
+	//设置优雅退出时候需要做的工作
+	graceful.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
+
 	//写入pid文件
 	that.putPidFile()
 
@@ -109,18 +112,14 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 		return true
 	})
 
-	//设置优雅退出时候需要做的工作
-	drpc.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 	//等待服务结束
 	logger.Noticef("服务已经初始化完成, %d 个协程被创建.", runtime.NumGoroutine())
 	//设置进程名
 	if len(that.processName) > 0 {
 		setProcessName(that.processName)
 	}
-	//发送启动成功信号
-	drpc.GraceOnStart()
 	//监听重启信号
-	drpc.GraceSignal()
+	graceful.GraceSignal()
 }
 
 func (that *EasyService) AddSandBox(s ISandBox) {
@@ -231,7 +230,7 @@ func (that *EasyService) putPidFile() {
 
 // Shutdown 主动结束进程
 func (that *EasyService) Shutdown(timeout ...time.Duration) {
-	drpc.Shutdown(timeout...)
+	graceful.Graceful().Shutdown(timeout...)
 }
 
 func (that *EasyService) firstSweep() error {

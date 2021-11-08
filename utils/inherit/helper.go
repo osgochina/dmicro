@@ -1,4 +1,4 @@
-package drpc
+package inherit
 
 import (
 	"crypto/tls"
@@ -99,4 +99,12 @@ func (f *FakeAddr) Host() string {
 
 func (f *FakeAddr) Port() string {
 	return f.port
+}
+
+func (f *FakeAddr) UdpAddr() *net.UDPAddr {
+	return f.udpAddr
+}
+
+func (f *FakeAddr) SetUdpAddr(udpAddr *net.UDPAddr) {
+	f.udpAddr = udpAddr
 }

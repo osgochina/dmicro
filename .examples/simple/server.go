@@ -5,13 +5,12 @@ import (
 	"github.com/gogf/gf/os/glog"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/ignorecase"
+	"github.com/osgochina/dmicro/utils/graceful"
 	"time"
 )
 
 func main() {
-	//开启信号监听
-	go drpc.GraceSignal()
-
+	go graceful.GraceSignal()
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		CountTime:   true,
 		LocalIP:     "127.0.0.1",
