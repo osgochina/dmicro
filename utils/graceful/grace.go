@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
@@ -85,8 +86,11 @@ type graceful struct {
 
 	shutdownCallback func(set *gset.Set) error
 
+	// master worker模式下子进程命令句柄
+	mwChildCmd chan *exec.Cmd
 	// master worker模式下的子进程pid
-	mwChildCmd *exec.Cmd
+	mwPid       int
+	enableGHttp bool
 }
 
 type filer interface {
@@ -123,6 +127,11 @@ func SetInheritListener(address []InheritAddr) error {
 			}
 		}
 		defaultGraceful.SetParentListenAddrList()
+		cmd, err := defaultGraceful.startProcess()
+		if err != nil {
+			return gerror.Newf("启动子进程失败，error:%v", err)
+		}
+		defaultGraceful.mwChildCmd <- cmd
 		defaultGraceful.MWWait()
 	}
 	return nil

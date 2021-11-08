@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 )
@@ -33,12 +35,23 @@ func newGraceful() *graceful {
 		firstSweep:         func() error { return nil },
 		beforeExiting:      func() error { return nil },
 		endpointList:       gset.New(true),
+		mwChildCmd:         make(chan *exec.Cmd, 1),
+		enableGHttp:        false,
 	}
 }
 
 // SetModel 设置模式
 func (that *graceful) SetModel(model GraceModel) {
 	that.model = model
+}
+
+// EnableGHttp 开启关闭 ghttp 服务
+func (that *graceful) EnableGHttp(enable ...bool) {
+	if len(enable) > 0 {
+		that.enableGHttp = enable[0]
+	} else {
+		that.enableGHttp = true
+	}
 }
 
 // isChild 判断当前进程是在子进程还是父进程
@@ -258,7 +271,11 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 		)
 	}
 	that.beforeExiting = func() error {
-		return errors.Merge(defaultGraceful.shutdownEndpoint(), beforeExitingFunc())
+		var err error
+		if that.enableGHttp {
+			err = ghttp.ShutdownAllServer()
+		}
+		return errors.Merge(defaultGraceful.shutdownEndpoint(), err, beforeExitingFunc())
 	}
 }
 
@@ -266,17 +283,20 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 func (that *graceful) MWWait() {
 	for {
 		var err error
-		that.mwChildCmd, err = that.startProcess()
-		if err != nil {
-			logger.Errorf("启动子进程失败，error:%v", err)
-			return
-		}
-		logger.Infof("Master-Worker模式启动子进程成功，父进程:%d子进程:%d", os.Getpid(), that.mwChildCmd.Process.Pid)
-		err = that.mwChildCmd.Wait()
-		if err != nil {
-			logger.Warningf("子进程:%d 非正常退出，退出原因:%v", that.mwChildCmd.Process.Pid, err)
-		} else {
-			logger.Infof("子进程:%d 正常退出", that.mwChildCmd.Process.Pid)
+		select {
+		case mwCmd, ok := <-that.mwChildCmd:
+			if !ok {
+				logger.Fatalf("Master-Worker模式主进程出错")
+				return
+			}
+			that.mwPid = mwCmd.Process.Pid
+			logger.Infof("Master-Worker模式启动子进程成功，父进程:%d子进程:%d", os.Getpid(), that.mwPid)
+			err = mwCmd.Wait()
+			if err != nil {
+				logger.Warningf("子进程:%d 非正常退出，退出原因:%v", that.mwPid, err)
+			} else {
+				logger.Infof("子进程:%d 正常退出", that.mwPid)
+			}
 		}
 	}
 }

@@ -68,7 +68,6 @@ func (that *graceful) graceSignalGracefulChangeProcess() {
 			continue
 		// 平滑重启服务
 		case syscall.SIGUSR1:
-			signal.Reset(syscall.SIGUSR1)
 			that.Reboot()
 			continue
 		default:
@@ -135,7 +134,6 @@ func (that *graceful) graceSignalGracefulMW() {
 				continue
 			// 平滑重启服务
 			case syscall.SIGUSR1:
-				signal.Reset(syscall.SIGUSR1)
 				that.Reboot()
 				continue
 			default:
@@ -176,15 +174,22 @@ func (that *graceful) Reboot(timeout ...time.Duration) {
 
 // master worker模式重启，就是对子进程发送退出信号
 func (that *graceful) rebootMasterWorker() {
-	pid := that.mwChildCmd.Process.Pid
+	pid := that.mwPid
+
+	cmd, err := that.startProcess()
+	if err != nil {
+		logger.Errorf("MasterWorker模式下重启子进程失败,err:%v", err)
+		return
+	}
 	logger.Infof(`向子进程: %d 发送信号SIGTERM`, pid)
 	_ = syscallKillSIGTERM(pid)
+	that.mwChildCmd <- cmd
 }
 
 //master worker进程模式，退出master进程方法
 func (that *graceful) shutdownMaster() {
 	defer os.Exit(0)
-	pid := that.mwChildCmd.Process.Pid
+	pid := that.mwPid
 	logger.Infof(`向子进程: %d 发送信号SIGTERM`, pid)
 	_ = syscallKillSIGTERM(pid)
 }
