@@ -70,8 +70,14 @@ func SetHelpContent(content string) {
 // 解析命令行，根据返回值判断是否继续执行
 // 返回false，则结束进程，返回true继续执行
 func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
+	var pidFile string
+	if len(that.processName) > 0 {
+		pidFile = fmt.Sprintf("%s.pid", that.processName)
+	} else {
+		pidFile = "easyservice.pid"
+	}
 	//设置pid文件
-	that.pidFile = parser.GetOpt("pid", gfile.TempDir(fmt.Sprintf("%s.pid", that.processName)))
+	that.pidFile = parser.GetOpt("pid", gfile.TempDir(pidFile))
 
 	command := gcmd.GetArg(1)
 	switch strings.ToLower(command) {

@@ -216,10 +216,13 @@ func (that *EasyService) demonize(config *gcfg.Config) error {
 
 //写入pid文件
 func (that *EasyService) putPidFile() {
-	//如果
-	if !graceful.IsMaster() {
-		return
+	pid := os.Getpid()
+
+	//在GraceMasterWorker模型下，只有子进程才会执行到该逻辑，所以需要把pid设置为父进程的id
+	if graceful.GetModel() == graceful.GraceMasterWorker && graceful.IsChild() {
+		pid = os.Getppid()
 	}
+
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)
@@ -227,7 +230,7 @@ func (that *EasyService) putPidFile() {
 	if e := os.Truncate(that.pidFile, 0); e != nil {
 		logger.Fatalf("os.Truncate: %v.", e)
 	}
-	if _, e := fmt.Fprintf(f, "%d", os.Getpid()); e != nil {
+	if _, e := fmt.Fprintf(f, "%d", pid); e != nil {
 		logger.Fatalf("Unable to write pid %d to file: %s.", os.Getpid(), e)
 	}
 }

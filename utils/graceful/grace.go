@@ -144,14 +144,12 @@ func Shutdown(timeout ...time.Duration) {
 	defaultGraceful.Shutdown(timeout...)
 }
 
-// IsMaster 当前进程环境是否是master进程
-func IsMaster() bool {
-	//ChangeProcess进程模型下，一定返回true
-	if defaultGraceful.model == GraceChangeProcess {
-		return true
-	}
-	if defaultGraceful.isChild() {
-		return false
-	}
-	return true
+// GetModel 当前进程模型
+func GetModel() GraceModel {
+	return defaultGraceful.model
+}
+
+// IsChild 判断当前是否是子进程
+func IsChild() bool {
+	return defaultGraceful.isChild()
 }
