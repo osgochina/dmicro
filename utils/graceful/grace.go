@@ -1,11 +1,11 @@
-package gracefulv2
+package graceful
 
 import (
+	"crypto/tls"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/osgochina/dmicro/utils/errors"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
@@ -13,10 +13,10 @@ import (
 	"time"
 )
 
-var defaultGraceful *Graceful
+var defaultGraceful *graceful
 
 func init() {
-	defaultGraceful = newGraceful(GracefulNormal)
+	defaultGraceful = newGraceful()
 	inherit.AddInheritedFunc(defaultGraceful.AddInherited)
 	defaultGraceful.SetShutdown(minShutdownTimeout, nil, nil)
 }
@@ -24,16 +24,14 @@ func init() {
 //  进程收到结束或重启信号后，存活的最大时间
 const minShutdownTimeout = 15 * time.Second
 
-// GracefulModel 平滑重启模型
-type GracefulModel int
+// GraceModel 平滑重启模型
+type GraceModel int
 
 const (
-	// GracefulNormal 不适用平滑重启
-	GracefulNormal GracefulModel = 0
-	// GracefulChangeProcess 使用父子进程平滑重启
-	GracefulChangeProcess GracefulModel = 1
-	// GracefulMasterWorker 使用master worker进程平滑重启
-	GracefulMasterWorker GracefulModel = 2
+	// GraceChangeProcess 使用父子进程平滑重启
+	GraceChangeProcess GraceModel = 1
+	// GraceMasterWorker 使用master worker进程平滑重启
+	GraceMasterWorker GraceModel = 2
 )
 
 const (
@@ -55,9 +53,9 @@ const (
 	statusActionShuttingDown = 2
 )
 
-type Graceful struct {
+type graceful struct {
 	// 使用的模型
-	model GracefulModel
+	model GraceModel
 	// 当前进程的状态
 	processStatus *gtype.Int
 
@@ -88,44 +86,60 @@ type Graceful struct {
 	shutdownCallback func(set *gset.Set) error
 
 	// master worker模式下的子进程pid
-	masterWorkerChildCmd *exec.Cmd
+	mwChildCmd *exec.Cmd
 }
 
 type filer interface {
 	File() (*os.File, error)
 }
 
-// GetGraceful 获取graceful对象
-func GetGraceful() *Graceful {
+// Graceful 获取graceful对象
+func Graceful() *graceful {
 	return defaultGraceful
 }
 
-// SetShutdown 设置退出的基本参数
-// timeout 传入负数，表示永远不过期
-func (that *Graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func() error) {
-	if timeout < 0 {
-		that.shutdownTimeout = 1<<63 - 1
-	} else if timeout < minShutdownTimeout {
-		that.shutdownTimeout = minShutdownTimeout
-	} else {
-		that.shutdownTimeout = timeout
-	}
-	//进程收到退出或重启信号后，需要执行的方法
-	if firstSweepFunc == nil {
-		firstSweepFunc = func() error { return nil }
-	}
-	//退出与重启流程最大等待时间
-	if beforeExitingFunc == nil {
-		beforeExitingFunc = func() error { return nil }
-	}
-	that.firstSweep = func() error {
+// InheritAddr master进程需要监听的配置
+type InheritAddr struct {
+	Network   string
+	Host      string
+	Port      string
+	TlsConfig *tls.Config
+}
+
+// SetInheritListener 启动master worker模式的监听
+func SetInheritListener(address []InheritAddr) error {
+	defaultGraceful.SetModel(GraceMasterWorker)
+	if !defaultGraceful.IsChild() {
+		var ch = make(chan int, 1)
+		go func() {
+			ch <- 1
+			defaultGraceful.GraceSignal()
+		}()
+		<-ch
+		for _, addr := range address {
+			err := defaultGraceful.inheritedListener(inherit.NewFakeAddr(addr.Network, addr.Host, addr.Port), addr.TlsConfig)
+			if err != nil {
+				return err
+			}
+		}
 		defaultGraceful.SetParentListenAddrList()
-		return errors.Merge(
-			firstSweepFunc(),       //执行自定义方法
-			inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
-		)
+		defaultGraceful.MWWait()
 	}
-	that.beforeExiting = func() error {
-		return errors.Merge(defaultGraceful.shutdownEndpoint(), beforeExitingFunc())
-	}
+	return nil
+}
+
+// GraceSignal 监听信号
+func GraceSignal() {
+	defaultGraceful.onStart()
+	defaultGraceful.GraceSignal()
+}
+
+// SetShutdown 设置重启钩子
+func SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func() error) {
+	defaultGraceful.SetShutdown(timeout, firstSweepFunc, beforeExitingFunc)
+}
+
+// Shutdown 停止服务
+func Shutdown(timeout ...time.Duration) {
+	defaultGraceful.Shutdown(timeout...)
 }

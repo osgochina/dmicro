@@ -7,39 +7,22 @@ import (
 	"time"
 )
 
-type ChangeProcessGraceful struct {
-	Graceful
-	shutdownTimeout time.Duration
-	firstSweep      func() error
-	beforeExiting   func() error
-	signal          chan os.Signal
-}
-
-func NewChangeProcessGraceful() *ChangeProcessGraceful {
-	graceful := &ChangeProcessGraceful{
-		signal: make(chan os.Signal),
-		firstSweep: func() error {
-			return nil
-		},
-		beforeExiting: func() error {
-			return nil
-		},
-	}
-	graceful.defaultInheritedProcFilesLen = len(graceful.inheritedProcFiles)
-	graceful.parentAddrList = make(map[string]map[string][]string, 2)
-	graceful.inheritedEnv = make(map[string]string)
-	graceful.inheritedProcFiles = []*os.File{}
-	return graceful
-}
-
 // Shutdown 执行进程关闭任务
-func (that *ChangeProcessGraceful) Shutdown(timeout ...time.Duration) {
+func (that *graceful) Shutdown(timeout ...time.Duration) {
+	if that.model == GraceMasterWorker {
+		that.shutdownWorker(timeout...)
+		return
+	}
 	defer os.Exit(0)
-	if isReboot {
+	var isReboot = false
+	if that.processStatus.Val() == statusActionRestarting {
+		isReboot = true
 		logger.Infof("平滑重启，正在结束父进程...")
 	} else {
 		logger.Infof("正在结束进程...")
 	}
+	that.processStatus.Set(statusActionShuttingDown)
+
 	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 		go func() {
@@ -63,27 +46,34 @@ func (that *ChangeProcessGraceful) Shutdown(timeout ...time.Duration) {
 	})
 }
 
-// SetShutdown 设置退出的基本参数
-func (that *ChangeProcessGraceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func() error) {
-	if timeout < 0 {
-		that.shutdownTimeout = 1<<63 - 1
-	} else if timeout < MinShutdownTimeout {
-		that.shutdownTimeout = MinShutdownTimeout
-	} else {
-		that.shutdownTimeout = timeout
-	}
-	if firstSweepFunc == nil {
-		firstSweepFunc = func() error { return nil }
-	}
-	if beforeExitingFunc == nil {
-		beforeExitingFunc = func() error { return nil }
-	}
-	that.firstSweep = firstSweepFunc
-	that.beforeExiting = beforeExitingFunc
+// master worker进程模式，退出worker进程方法
+func (that *graceful) shutdownWorker(timeout ...time.Duration) {
+	defer os.Exit(0)
+	logger.Infof("正在结束进程...")
+	that.processStatus.Set(statusActionShuttingDown)
+
+	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
+		endCh := make(chan struct{})
+		go func() {
+			defer close(endCh)
+			var g = true
+			if err := that.firstSweep(); err != nil {
+				logger.Errorf("[结束进程 - 执行前置方法失败] %s", err.Error())
+				g = false
+			}
+			g = that.shutdown(ctxTimeout, "shutdown") && g
+			if g {
+				logger.Info("进程结束了.")
+			} else {
+				logger.Info("进程结束了,但是非平滑模式.")
+			}
+		}()
+		return endCh
+	})
 }
 
 // 执行shutdown和reboot命令，并且计时，在规定的时候内为执行完收尾动作，则强制结束进程
-func (that *ChangeProcessGraceful) contextExec(timeout []time.Duration, action string, deferCallback func(ctxTimeout context.Context) <-chan struct{}) {
+func (that *graceful) contextExec(timeout []time.Duration, action string, deferCallback func(ctxTimeout context.Context) <-chan struct{}) {
 	if len(timeout) > 0 {
 		that.SetShutdown(timeout[0], that.firstSweep, that.beforeExiting)
 	}
@@ -99,7 +89,7 @@ func (that *ChangeProcessGraceful) contextExec(timeout []time.Duration, action s
 }
 
 //执行后置函数
-func (that *ChangeProcessGraceful) shutdown(ctxTimeout context.Context, action string) bool {
+func (that *graceful) shutdown(ctxTimeout context.Context, action string) bool {
 	logger.Info("[结束进程中 - 正在执行后置函数]")
 	if err := that.beforeExiting(); err != nil {
 		logger.Errorf("[%s-beforeExiting] %v", action, err)
