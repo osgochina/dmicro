@@ -78,7 +78,7 @@ func (that *graceful) graceSignalGracefulChangeProcess() {
 
 // MasterWorker模式平滑重启
 func (that *graceful) graceSignalGracefulMW() {
-	if that.IsChild() {
+	if that.isChild() {
 		signal.Notify(
 			that.signal,
 			syscall.SIGINT,

@@ -216,6 +216,10 @@ func (that *EasyService) demonize(config *gcfg.Config) error {
 
 //写入pid文件
 func (that *EasyService) putPidFile() {
+	//如果
+	if !graceful.IsMaster() {
+		return
+	}
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)

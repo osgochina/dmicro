@@ -19,7 +19,7 @@ func (that *graceful) DeleteEndpoint(e interface{}) {
 // 父子进程模型下，当子进程启动成功，发送信号通知父进程
 func (that *graceful) onStart() {
 	//非子进程，则什么都不走
-	if that.IsChild() == false {
+	if that.isChild() == false {
 		return
 	}
 	if that.model != GraceChangeProcess {

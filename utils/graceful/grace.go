@@ -109,7 +109,7 @@ type InheritAddr struct {
 // SetInheritListener 启动master worker模式的监听
 func SetInheritListener(address []InheritAddr) error {
 	defaultGraceful.SetModel(GraceMasterWorker)
-	if !defaultGraceful.IsChild() {
+	if !defaultGraceful.isChild() {
 		var ch = make(chan int, 1)
 		go func() {
 			ch <- 1
@@ -142,4 +142,16 @@ func SetShutdown(timeout time.Duration, firstSweepFunc, beforeExitingFunc func()
 // Shutdown 停止服务
 func Shutdown(timeout ...time.Duration) {
 	defaultGraceful.Shutdown(timeout...)
+}
+
+// IsMaster 当前进程环境是否是master进程
+func IsMaster() bool {
+	//ChangeProcess进程模型下，一定返回true
+	if defaultGraceful.model == GraceChangeProcess {
+		return true
+	}
+	if defaultGraceful.isChild() {
+		return false
+	}
+	return true
 }

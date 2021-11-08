@@ -41,8 +41,8 @@ func (that *graceful) SetModel(model GraceModel) {
 	that.model = model
 }
 
-// IsChild 判断当前进程是在子进程还是父进程
-func (that *graceful) IsChild() bool {
+// isChild 判断当前进程是在子进程还是父进程
+func (that *graceful) isChild() bool {
 	isWorker := genv.GetVar(isChildKey, nil)
 	if isWorker.IsNil() {
 		return false
@@ -166,7 +166,7 @@ func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 	if that.model != GraceMasterWorker {
 		return gerror.New("必须为GracefulMasterWorker模式才可以调用InheritedListener方法")
 	}
-	if that.IsChild() {
+	if that.isChild() {
 		return nil
 	}
 	addrStr := addr.String()
