@@ -7,6 +7,7 @@ import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
@@ -125,6 +126,7 @@ func SetInheritListener(address []InheritAddr) error {
 			if err != nil {
 				return err
 			}
+			logger.Infof("Master Worker模式，主进程监听network: %s,host: %s,port: %s", addr.Network, addr.Host, addr.Port)
 		}
 		defaultGraceful.SetParentListenAddrList()
 		cmd, err := defaultGraceful.startProcess()
