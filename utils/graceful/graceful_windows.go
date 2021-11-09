@@ -4,6 +4,9 @@ package graceful
 
 import (
 	"os"
+	"os/exec"
+	"os/signal"
+	"time"
 )
 
 func (that *graceful) GraceSignal() {
@@ -18,8 +21,14 @@ func (that *graceful) shutdownMaster()                 {}
 func (that *graceful) rebootMasterWorker()             {}
 
 func (that *graceful) AddInherited(procFiles []*os.File, envs map[string]string) {}
+func SetInheritListener(address []InheritAddr) error {
+	return nil
+}
+func (that *graceful) startProcess() (*exec.Cmd, error) {
+	return nil, nil
+}
 
 // 发送结束信号给进程
-func SyscallKillSIGTERM(pid int) error {
+func syscallKillSIGTERM(pid int) error {
 	return nil
 }

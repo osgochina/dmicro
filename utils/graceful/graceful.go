@@ -278,25 +278,3 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 		return errors.Merge(defaultGraceful.shutdownEndpoint(), err, beforeExitingFunc())
 	}
 }
-
-// MWWait master worker 模式的主进程等待子进程运行
-func (that *graceful) MWWait() {
-	for {
-		var err error
-		select {
-		case mwCmd, ok := <-that.mwChildCmd:
-			if !ok {
-				logger.Fatalf("Master-Worker模式主进程出错")
-				return
-			}
-			that.mwPid = mwCmd.Process.Pid
-			logger.Infof("Master-Worker模式启动子进程成功，父进程:%d子进程:%d", os.Getpid(), that.mwPid)
-			err = mwCmd.Wait()
-			if err != nil {
-				logger.Warningf("子进程:%d 非正常退出，退出原因:%v", that.mwPid, err)
-			} else {
-				logger.Infof("子进程:%d 正常退出", that.mwPid)
-			}
-		}
-	}
-}

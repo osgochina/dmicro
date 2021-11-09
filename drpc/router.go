@@ -286,7 +286,7 @@ func (that *SubRouter) reg(
 		hadHandlers[h.name] = h
 		//触发路由注册事件
 		pluginContainer.afterRegRouter(h)
-		logger.Printf("register %s handler: %s", routerTypeName, h.name)
+		logger.Printf("注册 %s 路由名: %s", routerTypeName, h.name)
 		names = append(names, h.name)
 	}
 	return names

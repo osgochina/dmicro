@@ -6,8 +6,6 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
@@ -109,34 +107,6 @@ type InheritAddr struct {
 	Host      string
 	Port      string
 	TlsConfig *tls.Config
-}
-
-// SetInheritListener 启动master worker模式的监听
-func SetInheritListener(address []InheritAddr) error {
-	defaultGraceful.SetModel(GraceMasterWorker)
-	if !defaultGraceful.isChild() {
-		var ch = make(chan int, 1)
-		go func() {
-			ch <- 1
-			defaultGraceful.GraceSignal()
-		}()
-		<-ch
-		for _, addr := range address {
-			err := defaultGraceful.inheritedListener(inherit.NewFakeAddr(addr.Network, addr.Host, addr.Port), addr.TlsConfig)
-			if err != nil {
-				return err
-			}
-			logger.Infof("Master Worker模式，主进程监听network: %s,host: %s,port: %s", addr.Network, addr.Host, addr.Port)
-		}
-		defaultGraceful.SetParentListenAddrList()
-		cmd, err := defaultGraceful.startProcess()
-		if err != nil {
-			return gerror.Newf("启动子进程失败，error:%v", err)
-		}
-		defaultGraceful.mwChildCmd <- cmd
-		defaultGraceful.MWWait()
-	}
-	return nil
 }
 
 // GraceSignal 监听信号

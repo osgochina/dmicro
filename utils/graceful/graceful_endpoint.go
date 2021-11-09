@@ -28,10 +28,10 @@ func (that *graceful) onStart() {
 	pPid := syscall.Getppid()
 	if pPid != 1 {
 		if err := syscallKillSIGTERM(pPid); err != nil {
-			logger.Errorf("[reboot-killOldProcess] %s", err.Error())
+			logger.Errorf("子进程重启后向父进程发送信号失败，error: %s", err.Error())
 			return
 		}
-		logger.Infof("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
+		logger.Printf("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
 	}
 }
 

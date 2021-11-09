@@ -143,7 +143,7 @@ func (that *pluginSingleContainer) GetAll() []Plugin {
 // 通过插件名字在插件容器中移除插件
 func (that *pluginSingleContainer) remove(pluginName string) error {
 	if that.plugins == nil {
-		return errors.New("no plugins are registered yet")
+		return errors.New("已经没有注册的插件了")
 	}
 	if len(pluginName) == 0 {
 		//return error: cannot delete an unamed plugin

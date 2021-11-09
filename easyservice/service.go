@@ -267,9 +267,9 @@ func (that *EasyService) beforeExiting() error {
 	that.sList.Iterator(func(k int, v interface{}) bool {
 		service := v.(ISandBox)
 		if e := service.Shutdown(); e != nil {
-			logger.Errorf("Service %s .Shutdown: %v", service.Name(), e)
+			logger.Errorf("服务 %s .结束出错，error: %v", service.Name(), e)
 		} else {
-			logger.Infof("%s Service Stoped.", service.Name())
+			logger.Infof("%s 服务 已结束.", service.Name())
 		}
 		return true
 	})

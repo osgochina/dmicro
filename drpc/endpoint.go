@@ -449,12 +449,8 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 	//}
 
 	addr := lis.Addr().String()
-	logger.Printf("listen and serve (network:%s, addr:%s)", network, addr)
+	logger.Printf("启动监听并提供服务：(network:%s, addr:%s)", network, addr)
 	that.pluginContainer.afterListen(lis.Addr())
-
-	//// 监听成功,触发事件
-	////onServeListener(lis)
-	//gracefulv2.GetGraceful().OnListen(lis.Addr())
 
 	var tempDelay time.Duration
 	var closeCh = that.closeCh
