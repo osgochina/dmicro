@@ -21,6 +21,17 @@
 
 进程在不关闭其监听的端口情况下，进行重启，并且在重启的整个过程中保证所有的请求都被正确的处理。
 
+平滑重启有两种实现方式，
+1. 父子进程模式。
+2. Master - Worker进程模式。
+
+![](images/graceful.png)
+
+`DRPC`实现了以上两种模式，大家可以根据需要自行选择。
+
+
+
+### 父子进程模式重启步骤
 步骤如下：
 
 1. 新版本的进程发布到线上，并且替换需要执行的进程文件
@@ -31,22 +42,42 @@
 6. 父进程收到子进程已启动成功的信号后，开始关闭端口监听，并且等待正在处理的请求处理完毕。
 7. 所有请求处理完毕，父进程退出。至此，完成了平滑重启。
 
+> ps: 父子进程模式不能在`supervisor`下使用。
+
+### Master-Worker进程模式重启步骤
+
+步骤如下：
+1. `主进程`启动，监听指定的地址，并把`主进程`监听的`addr`列表赋值给环境变量，并fork出一个`子进程A`。
+2. `子进程A`通过环境变量获得`主进程`要监听的端口列表，继承`主进程`所监听的端口，完成初始化以后，，开始接收请求。
+3. 新版本的进程发布到线上，并且替换需要执行的进程文件
+4. 发送重启信号给到正在运行的主进程。
+5. `主进程`收到信号后，把`主进程`监听的`addr`列表赋值给环境变量，然后fork出一个`子进程B`，并使用被替换的可执行进程文件启动。
+6. `子进程B`通过环境变量获得`主进程`要监听的端口列表，继承`主进程`所监听的端口。
+7. `子进程B`完成初始化以后，开始接收新的请求。
+8. `主进程`发送退出信号给`子进程A`。
+9. 所有请求处理完毕，`子进程A`。至此，完成了平滑重启。
+
+> Master-Worker进程模式需要启动两个进程。
+
 ## 使用方式
 
-### 服务的使用方式
+### 父子进程模式的使用方式
 
 ```go
 // server.go
 package main
+
 import (
-    "github.com/osgochina/dmicro/drpc"
-    "github.com/osgochina/dmicro/logger"
-    "time"
+	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/graceful"
+	"time"
 )
+
 func main() {
 	//开启信号监听，注意，必须开启这个信号监听，才能平滑重启
-	go drpc.GraceSignal()
-    
+	go graceful.GraceSignal()
+
 	// 启动服务
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		CountTime:   true,
@@ -54,7 +85,7 @@ func main() {
 		ListenPort:  9091,
 		PrintDetail: true,
 	})
-    
+
 	// 注册处理方法
 	svr.RouteCall(new(Grace))
 	logger.Warning(svr.ListenAndServe())
@@ -77,6 +108,61 @@ func (m *Grace) Sleep(arg *int) (string, *drpc.Status) {
 }
 
 ```
+
+### Master-Worker进程模式的使用方式
+
+```go
+// server.go
+package main
+
+import (
+	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/graceful"
+	"time"
+)
+
+func main() {
+
+	// 使用master worker 进程模型实现平滑重启
+	// 必须要预先注册指定的端口，非注册的端口提供的服务无法平滑重启
+	err := graceful.SetInheritListener([]graceful.InheritAddr{{Network: "tcp", Host: "127.0.0.1", Port: "9091"}})
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	// 启动服务
+	svr := drpc.NewEndpoint(drpc.EndpointConfig{
+		CountTime:   true,
+		LocalIP:     "127.0.0.1",
+		ListenPort:  9091,
+		PrintDetail: true,
+	})
+	//开启信号监听，注意，必须开启这个信号监听，才能平滑重启
+	go graceful.GraceSignal()
+	// 注册处理方法
+	svr.RouteCall(new(Grace))
+	logger.Warning(svr.ListenAndServe())
+	time.Sleep(30 * time.Second)
+
+}
+
+type Grace struct {
+	drpc.CallCtx
+}
+
+func (m *Grace) Sleep(arg *int) (string, *drpc.Status) {
+	logger.Infof("sleep %d", *arg)
+	if *arg > 0 {
+		sleep := *arg
+		time.Sleep(time.Duration(sleep) * time.Second)
+	}
+	// response
+	return "sleep", nil
+}
+
+```
+
 
 ### 客户端的使用方式
 
