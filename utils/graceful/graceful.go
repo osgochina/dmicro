@@ -12,46 +12,33 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/errors"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
 	"os/exec"
-	"strconv"
+	"strings"
 	"time"
 )
 
 // newGraceful 创建对象
 func newGraceful() *graceful {
 	return &graceful{
-		model:              GraceChangeProcess,
-		processStatus:      gtype.NewInt(statusActionNone),
-		signal:             make(chan os.Signal),
-		listenAddrList:     gmap.NewStrAnyMap(true),
-		inheritedEnv:       gmap.NewStrStrMap(true),
-		inheritedProcFiles: garray.NewArray(true),
-		active:             make([]net.Listener, 0),
-		firstSweep:         func() error { return nil },
-		beforeExiting:      func() error { return nil },
-		endpointList:       gset.New(true),
-		mwChildCmd:         make(chan *exec.Cmd, 1),
-		enableGHttp:        false,
+		model:                 GraceChangeProcess,
+		processStatus:         gtype.NewInt(statusActionNone),
+		signal:                make(chan os.Signal),
+		inheritedEnv:          gmap.NewStrStrMap(true),
+		inheritedProcListener: garray.NewArray(true),
+		firstSweep:            func() error { return nil },
+		beforeExiting:         func() error { return nil },
+		endpointList:          gset.New(true),
+		mwChildCmd:            make(chan *exec.Cmd, 1),
 	}
 }
 
 // SetModel 设置模式
 func (that *graceful) SetModel(model GraceModel) {
 	that.model = model
-}
-
-// EnableGHttp 开启关闭 ghttp 服务
-func (that *graceful) EnableGHttp(enable ...bool) {
-	if len(enable) > 0 {
-		that.enableGHttp = enable[0]
-	} else {
-		that.enableGHttp = true
-	}
 }
 
 // isChild 判断当前进程是在子进程还是父进程
@@ -66,112 +53,30 @@ func (that *graceful) isChild() bool {
 	return false
 }
 
-// SetParentListenAddrList 设置已监听的地址列表到环境变量，在子进程启动的时候，把该环境变量注入到启动参数中
-// 在父进程收到平滑重启信号以后，会调用该方法
-func (that *graceful) SetParentListenAddrList() {
-	env := make(map[string]string)
-	env[isChildKey] = "true"
-	j, err := that.listenAddrList.MarshalJSON()
-	if err != nil {
-		logger.Error(err)
-	} else {
-		env[parentAddrKey] = gconv.String(j)
-	}
-	var procFiles []*os.File
-	// master-worker进程模型逻辑
-	if that.model == GraceMasterWorker && len(that.active) > 0 {
-		procFiles = make([]*os.File, 0, len(that.active))
-		for _, l := range that.active {
-			f, e := l.(filer).File()
-			if e != nil {
-				logger.Error(e)
-				continue
-			}
-			procFiles = append(procFiles, f)
-		}
-		env[envCountKey] = strconv.Itoa(len(procFiles))
-	}
-
-	that.AddInherited(procFiles, env)
-}
-
-// InitParentAddrList 通过环境变量，初始化父进程监听的端口
-// 在服务启动的时候，首先从环境变量中获取父进程监听的地址端口，
-// 如果是首次启动或者当前进程是父进程，则不会获取到这些数据
-// 如果是优雅的无缝重启的子进程，则能通过环境变量获取到这些数据，从而复用链接，做到无缝重启
-func (that *graceful) InitParentAddrList() {
+// GetInheritedFunc 获取继承的fd
+func (that *graceful) GetInheritedFunc() []int {
 	parentAddr := genv.GetVar(parentAddrKey, nil)
 	if parentAddr.IsNil() {
-		return
+		return nil
 	}
 	json := gjson.New(parentAddr)
 	if json.IsNil() {
-		return
+		return nil
 	}
-	err := that.listenAddrList.UnmarshalValue(json)
-	if err != nil {
-		logger.Error(err)
-	}
-}
-
-// PushParentAddr 把监听的地址端口写入到变量，优雅重启的时候写入到环境变量，让子进程使用
-// listenAddrList变量的格式是 gmap.StrAnyMap(network,gmap.StrAnyMap(host,garray.StrArray(addr)))
-func (that *graceful) PushParentAddr(network, host, addr string) {
-	that.unifyLocalhost(&host)
-	nw, found := that.listenAddrList.Search(network)
-	if !found {
-		nw = gmap.NewStrAnyMap(true)
-		that.listenAddrList.Set(network, nw)
-	}
-	if nwMap, ok := nw.(*gmap.StrAnyMap); ok {
-		hs, f := nwMap.Search(host)
-		if !f {
-			hs = garray.NewStrArray(true)
-			nwMap.Set(host, hs)
-		}
-		if ar, ok := hs.(*garray.StrArray); ok {
-			ar.Append(addr)
+	var fds []int
+	for _, v := range json.Map() {
+		fdv := gconv.String(v)
+		if len(fdv) > 0 {
+			for _, item := range gstr.SplitAndTrim(fdv, ",") {
+				array := strings.Split(item, "#")
+				fd := gconv.Int(array[1])
+				if fd > 0 {
+					fds = append(fds, fd)
+				}
+			}
 		}
 	}
-}
-
-// PopParentAddr 从监听变量中出栈指定的地址端口
-func (that *graceful) PopParentAddr(network, host, addr string) string {
-	that.unifyLocalhost(&host)
-	nw, found := that.listenAddrList.Search(network)
-	if !found {
-		return addr
-	}
-	nwMap, ok := nw.(*gmap.StrAnyMap)
-	if !ok {
-		return addr
-	}
-	hs, ok := nwMap.Search(host)
-	if !ok {
-		return addr
-	}
-	ar, ok := hs.(*garray.StrArray)
-	if !ok {
-		return addr
-	}
-	if ar.Len() == 0 {
-		return addr
-	}
-	a, f := ar.PopLeft()
-	if !f {
-		return addr
-	}
-	return a
-}
-
-// 针对地址格式做统一的转换
-func (that *graceful) unifyLocalhost(host *string) {
-	switch *host {
-	case "localhost":
-		*host = "127.0.0.1"
-	case "0.0.0.0":
-		*host = "::"
-	}
+	return fds
 }
 
 // inheritedListener 在GracefulMasterWorker模式下，调用该方法，预先初始化监听
@@ -184,12 +89,12 @@ func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 	}
 	addrStr := addr.String()
 	network := addr.Network()
-	var host, port string
+	var port string
 	switch addrF := addr.(type) {
 	case *inherit.FakeAddr:
-		host, port = addrF.Host(), addrF.Port()
+		_, port = addrF.Host(), addrF.Port()
 	default:
-		host, port, err = net.SplitHostPort(addrStr)
+		_, port, err = net.SplitHostPort(addrStr)
 		if err != nil {
 			return err
 		}
@@ -207,10 +112,7 @@ func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 	if err != nil {
 		return err
 	}
-	if err == nil {
-		that.PushParentAddr(network, host, lis.Addr().String())
-	}
-	that.active = append(that.active, lis)
+	that.inheritedProcListener.Append(lis)
 	return nil
 }
 
@@ -264,17 +166,12 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 		beforeExitingFunc = func() error { return nil }
 	}
 	that.firstSweep = func() error {
-		defaultGraceful.SetParentListenAddrList()
 		return errors.Merge(
 			firstSweepFunc(),       //执行自定义方法
 			inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
 		)
 	}
 	that.beforeExiting = func() error {
-		var err error
-		if that.enableGHttp {
-			err = ghttp.ShutdownAllServer()
-		}
-		return errors.Merge(defaultGraceful.shutdownEndpoint(), err, beforeExitingFunc())
+		return errors.Merge(beforeExitingFunc(), defaultGraceful.shutdownEndpoint(), ghttp.ShutdownAllServer())
 	}
 }

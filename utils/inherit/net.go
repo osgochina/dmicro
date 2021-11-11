@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -36,14 +35,19 @@ func SetInherited() error {
 	return globalInheritNet.SetInherited()
 }
 
-// AddInheritedFunc 添加继承保存方法
-func AddInheritedFunc(fn func([]*os.File, map[string]string)) {
-	globalInheritNet.AddInherited = fn
+// AddInheritedFunc 平滑重启的时候，会回调该方法，保存fd列表
+func AddInheritedFunc(fn func([]net.Listener, map[string]string)) {
+	globalInheritNet.addInherited = fn
+}
+
+// GetInheritedFunc 如果是平滑重启，可以获取到从父进程继承过来的fd列表
+func GetInheritedFunc(fn func() []int) {
+	globalInheritNet.getInherited = fn
 }
 
 var globalInheritNet = new(inheritNet)
 
-const envCountKey = "INHERIT_LISTEN_FDS"
+//const envCountKey = "INHERIT_LISTEN_FDS"
 
 type inheritNet struct {
 	//继承过来的监听句柄列表
@@ -54,10 +58,11 @@ type inheritNet struct {
 	inheritOnce sync.Once
 
 	//这个的作用是为了测试的时候能够精确得确定继承的监听句柄的起始未知，默认值是3
-	fdStart int
+	//fdStart int
 
 	//传递需要继承的文件句柄列表方法
-	AddInherited func([]*os.File, map[string]string)
+	addInherited func([]net.Listener, map[string]string)
+	getInherited func() []int
 }
 
 // 从父进程继承的句柄初始化
@@ -67,29 +72,28 @@ func (that *inheritNet) inherit() error {
 	that.inheritOnce.Do(func() {
 		that.mutex.Lock()
 		defer that.mutex.Unlock()
-		countStr := os.Getenv(envCountKey)
-		if countStr == "" {
+		if that.getInherited == nil {
 			return
 		}
-		count, err := strconv.Atoi(countStr)
-		if err != nil {
-			retErr = fmt.Errorf("found invalid count value: %s=%s", envCountKey, countStr)
+		fds := that.getInherited()
+		if len(fds) <= 0 {
 			return
 		}
-		fdStart := that.fdStart
-		if fdStart == 0 {
-			fdStart = 3
-		}
-		for i := fdStart; i < fdStart+count; i++ {
-			file := os.NewFile(uintptr(i), "listener")
+		//fdStart := that.fdStart
+		//if fdStart == 0 {
+		//	fdStart = 3
+		//}
+		for _, fd := range fds {
+			//for i := fdStart; i < fdStart+count; i++ {
+			file := os.NewFile(uintptr(fd), "listener")
 			l, e := net.FileListener(file)
 			if e != nil {
 				_ = file.Close()
-				retErr = fmt.Errorf("error inheriting socket fd %d: %s", i, e)
+				retErr = fmt.Errorf("error inheriting socket fd %d: %s", fd, e)
 				return
 			}
 			if e = file.Close(); e != nil {
-				retErr = fmt.Errorf("error closing inherited socket fd %d: %s", i, e)
+				retErr = fmt.Errorf("error closing inherited socket fd %d: %s", fd, e)
 				return
 			}
 			that.inherited = append(that.inherited, l)
@@ -218,15 +222,16 @@ func (that *inheritNet) SetInherited() error {
 	if err != nil {
 		return err
 	}
-	var files = make([]*os.File, 0, len(listeners))
-	for _, l := range listeners {
-		f, e := l.(filer).File()
-		if e != nil {
-			return e
-		}
-		files = append(files, f)
-	}
-	that.AddInherited(files, map[string]string{envCountKey: strconv.Itoa(len(listeners))})
+	//var files = make([]*os.File, 0, len(listeners))
+	//for _, l := range listeners {
+	//	f, e := l.(filer).File()
+	//	if e != nil {
+	//		return e
+	//	}
+	//	files = append(files, f)
+	//}
+	//that.AddInherited(files, map[string]string{envCountKey: strconv.Itoa(len(listeners))})
+	that.addInherited(listeners, nil)
 	return nil
 }
 
@@ -264,6 +269,6 @@ func isSameAddr(addOne, addTwo net.Addr) bool {
 	return addOneStr == addTwoStr
 }
 
-type filer interface {
-	File() (*os.File, error)
-}
+//type filer interface {
+//	File() (*os.File, error)
+//}

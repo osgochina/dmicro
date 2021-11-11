@@ -7,7 +7,6 @@ import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/osgochina/dmicro/utils/inherit"
-	"net"
 	"os"
 	"os/exec"
 	"time"
@@ -18,6 +17,7 @@ var defaultGraceful *graceful
 func init() {
 	defaultGraceful = newGraceful()
 	inherit.AddInheritedFunc(defaultGraceful.AddInherited)
+	inherit.GetInheritedFunc(defaultGraceful.GetInheritedFunc)
 	defaultGraceful.SetShutdown(minShutdownTimeout, nil, nil)
 }
 
@@ -40,7 +40,9 @@ const (
 	// 父进程的监听列表
 	parentAddrKey = "GRACEFUL_INHERIT_LISTEN_PARENT_ADDR"
 	// 继承过来的fd有多少个
-	envCountKey = "INHERIT_LISTEN_FDS"
+	//envCountKey = "INHERIT_LISTEN_FDS"
+	// gf框架的ghttp服务平滑重启key
+	adminActionReloadEnvKey = "GF_SERVER_RELOAD"
 )
 
 //当前进程的状态
@@ -63,15 +65,15 @@ type graceful struct {
 	signal chan os.Signal
 	// 进程监听的地址列表，格式为 map[network][host]array[host:port]
 	// 如：{"tcp":{"127.0.0.1":["127.0.0.1:8200","127.0.0.1:9980"]}}
-	listenAddrList *gmap.StrAnyMap
+	//listenAddrList *gmap.StrAnyMap
 
 	// 将要被子进程继承的环境变量
 	inheritedEnv *gmap.StrStrMap
 	// 将要被子进程继承的监听列表
-	inheritedProcFiles *garray.Array
+	inheritedProcListener *garray.Array
 
 	// GracefulMasterWorker 模型使用，初始化需要监听的地址端口，方便子进程继承
-	active []net.Listener
+	//active []net.Listener
 
 	// 进程收到退出或重启信号后，需要执行的方法
 	firstSweep func() error
@@ -88,8 +90,9 @@ type graceful struct {
 	// master worker模式下子进程命令句柄
 	mwChildCmd chan *exec.Cmd
 	// master worker模式下的子进程pid
-	mwPid       int
-	enableGHttp bool
+	mwPid int
+	//  master worker模式 监听的地址列表
+	mwListenAddr *gmap.StrAnyMap
 }
 
 type filer interface {
@@ -107,6 +110,8 @@ type InheritAddr struct {
 	Host      string
 	Port      string
 	TlsConfig *tls.Config
+	// ghttp服务专用
+	ServerName string
 }
 
 // GraceSignal 监听信号

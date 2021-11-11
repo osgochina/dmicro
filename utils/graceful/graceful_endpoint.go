@@ -2,7 +2,9 @@ package graceful
 
 import (
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/logger"
+	"net"
 	"syscall"
 )
 
@@ -45,4 +47,80 @@ func (that *graceful) shutdownEndpoint() error {
 		return nil
 	}
 	return that.shutdownCallback(that.endpointList)
+}
+
+// 获取监听列表
+func (that *graceful) getEndpointListenerFdMap() map[string]string {
+	if that.model == GraceMasterWorker {
+		return that.getEndpointListenerFdMasterWorker()
+	}
+	return that.getEndpointListenerFdMapChangeProcess()
+}
+
+// 获取父子进程模式下的监听fd列表
+func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string {
+	if that.inheritedProcListener.Len() <= 0 {
+		return nil
+	}
+	m := map[string]string{
+		"tcp": "",
+	}
+	that.inheritedProcListener.Iterator(func(k int, v interface{}) bool {
+		lis, ok := v.(net.Listener)
+		if !ok {
+			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			return false
+		}
+		f, e := lis.(filer).File()
+		if e != nil {
+			logger.Error(e)
+			return false
+		}
+		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+		if len(m["tcp"]) > 0 {
+			m["tcp"] += ","
+		}
+		m["tcp"] += str
+		return true
+	})
+	return m
+}
+
+// 获取master worker 进程模型下的监听列表
+func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
+	if that.inheritedProcListener.Len() <= 0 {
+		return nil
+	}
+	m := map[string]string{
+		"tcp": "",
+	}
+	that.inheritedProcListener.Iterator(func(k int, v interface{}) bool {
+		lis, ok := v.(net.Listener)
+		if !ok {
+			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			return true
+		}
+		if that.mwListenAddr != nil {
+			// 判断监听的是否是http协议。如果是http协议则不返回
+			data := that.mwListenAddr.Get(lis.Addr().String())
+			if d, ok := data.(InheritAddr); ok {
+				if d.Network == "http" || d.Network == "https" {
+					return true
+				}
+			}
+		}
+		f, e := lis.(filer).File()
+		if e != nil {
+			logger.Error(e)
+			return true
+		}
+		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+		if len(m["tcp"]) > 0 {
+			m["tcp"] += ","
+		}
+		m["tcp"] += str
+		return true
+	})
+
+	return m
 }

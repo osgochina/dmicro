@@ -3,7 +3,6 @@ package drpc
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/osgochina/dmicro/utils/graceful"
 	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 )
@@ -12,19 +11,19 @@ import (
 func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listener, err error) {
 	addrStr := addr.String()
 	network := addr.Network()
-	var host, port string
-	switch addrF := addr.(type) {
-	case *inherit.FakeAddr:
-		host, port = addrF.Host(), addrF.Port()
-	default:
-		host, port, err = net.SplitHostPort(addrStr)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if port == "0" {
-		addrStr = graceful.Graceful().PopParentAddr(network, host, addrStr)
-	}
+	//var host, port string
+	//switch addrF := addr.(type) {
+	//case *inherit.FakeAddr:
+	//	host, port = addrF.Host(), addrF.Port()
+	//default:
+	//	host, port, err = net.SplitHostPort(addrStr)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
+	//if port == "0" {
+	//	addrStr = graceful.Graceful().PopParentAddr(network, host, addrStr)
+	//}
 
 	//if _network := asQUIC(network); _network != "" {
 	//	if tlsConfig == nil {
@@ -46,8 +45,8 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 	}
 	//}
 
-	if err == nil {
-		graceful.Graceful().PushParentAddr(network, host, lis.Addr().String())
-	}
+	//if err == nil {
+	//	graceful.Graceful().PushParentAddr(network, host, lis.Addr().String())
+	//}
 	return
 }

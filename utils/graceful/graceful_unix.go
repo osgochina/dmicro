@@ -4,13 +4,20 @@ package graceful
 
 import (
 	"context"
+	"fmt"
+	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/inherit"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -28,13 +35,17 @@ func SetInheritListener(address []InheritAddr) error {
 		}()
 		<-ch
 		for _, addr := range address {
-			err := defaultGraceful.inheritedListener(inherit.NewFakeAddr(addr.Network, addr.Host, addr.Port), addr.TlsConfig)
+			network := defaultGraceful.translateNetwork(addr.Network)
+			if addr.Network == "https" && addr.TlsConfig == nil {
+				return gerror.Newf("https 协议，必须传入证书")
+			}
+			err := defaultGraceful.inheritedListener(inherit.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
 			if err != nil {
 				return err
 			}
+			defaultGraceful.setMWListenAddr(addr)
 			logger.Printf("Master Worker模式，主进程监听(network: %s,host: %s,port: %s)", addr.Network, addr.Host, addr.Port)
 		}
-		defaultGraceful.SetParentListenAddrList()
 		cmd, err := defaultGraceful.startProcess()
 		if err != nil {
 			return gerror.Newf("启动子进程失败，error:%v", err)
@@ -43,6 +54,26 @@ func SetInheritListener(address []InheritAddr) error {
 		defaultGraceful.MWWait()
 	}
 	return nil
+}
+
+// 转换协议
+func (that *graceful) translateNetwork(network string) string {
+	switch network {
+	case "tcp", "tcp4", "tcp6", "http", "https":
+		return "tcp"
+	case "unix", "unixpacket", "invalid_unix_net_for_test":
+		return "unix"
+	default:
+		return "tcp"
+	}
+}
+
+// 保存监听的地址
+func (that *graceful) setMWListenAddr(addr InheritAddr) {
+	if that.mwListenAddr == nil {
+		that.mwListenAddr = gmap.NewStrAnyMap(true)
+	}
+	that.mwListenAddr.Set(fmt.Sprintf("%s:%s", addr.Host, addr.Port), addr)
 }
 
 // MWWait master worker 模式的主进程等待子进程运行
@@ -68,14 +99,18 @@ func (that *graceful) MWWait() {
 }
 
 // AddInherited 添加需要给重启后新进程继承的文件句柄和环境变量
-func (that *graceful) AddInherited(procFiles []*os.File, envs map[string]string) {
-	for _, f := range procFiles {
-		// 判断需要添加的文件句柄是否已经存在,不存在才能追加
-		if that.inheritedProcFiles.Search(f) == -1 {
-			that.inheritedProcFiles.Append(f)
+func (that *graceful) AddInherited(procListener []net.Listener, envs map[string]string) {
+	if len(procListener) > 0 {
+		for _, f := range procListener {
+			// 判断需要添加的文件句柄是否已经存在,不存在才能追加
+			if that.inheritedProcListener.Search(f) == -1 {
+				that.inheritedProcListener.Append(f)
+			}
 		}
 	}
-	that.inheritedEnv.Sets(envs)
+	if len(envs) > 0 {
+		that.inheritedEnv.Sets(envs)
+	}
 }
 
 // GraceSignal 监听信号
@@ -253,19 +288,17 @@ func (that *graceful) shutdownMaster() {
 
 //启动新的进程
 func (that *graceful) startProcess() (*exec.Cmd, error) {
-	var extraFiles []*os.File
-	that.inheritedProcFiles.Iterator(func(k int, v interface{}) bool {
-		extraFiles = append(extraFiles, v.(*os.File))
-		return true
-	})
-
-	//获取进程启动的原始
-	path := os.Args[0]
-	err := genv.SetMap(that.inheritedEnv.Map())
+	extraFiles, err := that.getExtraFiles()
 	if err != nil {
 		return nil, err
 	}
-
+	that.inheritedEnv.Set(isChildKey, "true")
+	//获取进程启动的原始
+	path := os.Args[0]
+	err = genv.SetMap(that.inheritedEnv.Map())
+	if err != nil {
+		return nil, err
+	}
 	var args []string
 	if len(os.Args) > 1 {
 		args = os.Args[1:]
@@ -282,6 +315,58 @@ func (that *graceful) startProcess() (*exec.Cmd, error) {
 		return nil, err
 	}
 	return cmd, nil
+}
+
+// 获取要继承的fd列表
+func (that *graceful) getExtraFiles() ([]*os.File, error) {
+	var extraFiles []*os.File
+	endpointFM := that.getEndpointListenerFdMap()
+	if len(endpointFM) > 0 {
+		for fdk, fdv := range endpointFM {
+			if len(fdv) > 0 {
+				s := ""
+				for _, item := range gstr.SplitAndTrim(fdv, ",") {
+					array := strings.Split(item, "#")
+					fd := uintptr(gconv.Uint(array[1]))
+					if fd > 0 {
+						s += fmt.Sprintf("%s#%d,", array[0], 3+len(extraFiles))
+						extraFiles = append(extraFiles, os.NewFile(fd, ""))
+					} else {
+						s += fmt.Sprintf("%s#%d,", array[0], 0)
+					}
+				}
+				endpointFM[fdk] = strings.TrimRight(s, ",")
+			}
+		}
+		buffer, _ := gjson.Encode(endpointFM)
+		that.inheritedEnv.Set(parentAddrKey, string(buffer))
+	}
+
+	gHttpSFM := that.getGHttpListenerFdMap()
+	if len(gHttpSFM) > 0 {
+		for name, m := range gHttpSFM {
+			for fdk, fdv := range m {
+				if len(fdv) > 0 {
+					s := ""
+					for _, item := range gstr.SplitAndTrim(fdv, ",") {
+						array := strings.Split(item, "#")
+						fd := uintptr(gconv.Uint(array[1]))
+						if fd > 0 {
+							s += fmt.Sprintf("%s#%d,", array[0], 3+len(extraFiles))
+							extraFiles = append(extraFiles, os.NewFile(fd, ""))
+						} else {
+							s += fmt.Sprintf("%s#%d,", array[0], 0)
+						}
+					}
+					gHttpSFM[name][fdk] = strings.TrimRight(s, ",")
+				}
+			}
+		}
+		buffer, _ := gjson.Encode(gHttpSFM)
+		that.inheritedEnv.Set(adminActionReloadEnvKey, string(buffer))
+	}
+
+	return extraFiles, nil
 }
 
 // 发送结束信号给进程
