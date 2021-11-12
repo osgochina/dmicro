@@ -129,7 +129,7 @@ func (that *EasyService) stop(parser *gcmd.Parser, signal string) {
 	case "stop":
 		sigNo = syscall.SIGTERM
 	case "reload":
-		sigNo = syscallSIGUSR1
+		sigNo = syscallSIGUSR
 	case "quit":
 		sigNo = syscall.SIGQUIT
 	default:

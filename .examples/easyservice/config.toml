@@ -1,0 +1,12 @@
+
+Debug = true
+Daemon = false
+[default.sandbox]
+    Name = "rpc-server"
+    Host = "127.0.0.1"
+    Port = "8199"
+
+[logger]
+    Path        = "/tmp/log/test-server"
+    Level       = "all"
+    Stdout      = true

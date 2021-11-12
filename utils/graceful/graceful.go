@@ -8,7 +8,6 @@ import (
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -172,6 +171,6 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 		)
 	}
 	that.beforeExiting = func() error {
-		return errors.Merge(beforeExitingFunc(), defaultGraceful.shutdownEndpoint(), ghttp.ShutdownAllServer())
+		return errors.Merge(beforeExitingFunc(), defaultGraceful.shutdownEndpoint())
 	}
 }

@@ -113,7 +113,7 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	})
 
 	//等待服务结束
-	logger.Noticef("服务已经初始化完成, %d 个协程被创建.", runtime.NumGoroutine())
+	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 	//设置进程名
 	if len(that.processName) > 0 {
 		setProcessName(that.processName)

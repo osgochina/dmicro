@@ -155,7 +155,7 @@ func (that *graceful) graceSignalGracefulChangeProcess() {
 			that.Shutdown()
 			continue
 		// 平滑重启服务
-		case syscall.SIGUSR1:
+		case syscall.SIGUSR2:
 			that.Reboot()
 			continue
 		default:
@@ -222,7 +222,7 @@ func (that *graceful) graceSignalGracefulMW() {
 				that.shutdownMaster()
 				continue
 			// 平滑重启服务
-			case syscall.SIGUSR1:
+			case syscall.SIGUSR2:
 				that.Reboot()
 				continue
 			default:
