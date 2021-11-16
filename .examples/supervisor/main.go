@@ -17,7 +17,7 @@ func main() {
 
 func runServer() {
 	m := process.NewManager()
-	entry := process.NewEntry(fmt.Sprintf("%s/../simple/server", gfile.MainPkgPath()))
+	entry := process.NewProcEntry(fmt.Sprintf("%s/../simple/server", gfile.MainPkgPath()))
 	entry.SetName("simpleserver")
 	entry.SetUser("lzm")
 	entry.SetDirectory(fmt.Sprintf("%s/../", gfile.MainPkgPath()))

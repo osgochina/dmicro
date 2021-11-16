@@ -36,7 +36,7 @@ func (that *Manager) NewProcess(path string, args []string, environment []string
 
 // NewProcessByEntry 创建进程
 // entry: 配置对象
-func (that *Manager) NewProcessByEntry(entry *Entry) (*Process, error) {
+func (that *Manager) NewProcessByEntry(entry *ProcEntry) (*Process, error) {
 	p := NewProcessByEntry(entry)
 	if _, found := that.processes.Search(p.GetName()); found {
 		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
