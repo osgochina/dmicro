@@ -3,6 +3,7 @@
 package graceful
 
 import (
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
