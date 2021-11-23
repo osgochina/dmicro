@@ -21,8 +21,8 @@ func (that *graceful) GraceSignal() {
 	signal.Stop(that.signal)
 	that.Shutdown()
 }
-func (that *graceful) Reboot(timeout ...time.Duration)                           {}
-func (that *graceful) shutdownMaster()                                           {}
-func (that *graceful) rebootMasterWorker()                                       {}
-func (that *graceful) AddInherited(procFiles []*os.File, envs map[string]string) {}
-func (that *graceful) startProcess() (*exec.Cmd, error)                          { return nil, nil }
+func (that *graceful) Reboot(timeout ...time.Duration)                                  {}
+func (that *graceful) shutdownMaster()                                                  {}
+func (that *graceful) rebootMasterWorker()                                              {}
+func (that *graceful) AddInherited(procListener []net.Listener, envs map[string]string) {}
+func (that *graceful) startProcess() (*exec.Cmd, error)                                 { return nil, nil }
