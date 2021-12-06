@@ -227,6 +227,7 @@ func (that *EasyService) putPidFile() {
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)
 	}
+	defer f.Close()
 	if e := os.Truncate(that.pidFile, 0); e != nil {
 		logger.Fatalf("os.Truncate: %v.", e)
 	}

@@ -9,8 +9,6 @@ import (
 )
 
 func main() {
-	//开启信号监听
-	go drpc.GraceSignal()
 	endpoint := drpc.NewEndpoint(drpc.EndpointConfig{
 		ListenIP:    "127.0.0.1",
 		ListenPort:  9091,

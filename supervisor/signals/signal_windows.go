@@ -22,10 +22,10 @@ func ToSignal(signalName string) (os.Signal, error) {
 	} else if signalName == "KILL" {
 		return syscall.SIGKILL, nil
 	} else if signalName == "USR1" {
-		logger.Warn("signal USR1 is not supported in windows")
+		logger.Warning("signal USR1 is not supported in windows")
 		return nil, errors.New("signal USR1 is not supported in windows")
 	} else if signalName == "USR2" {
-		logger.Warn("signal USR2 is not supported in windows")
+		logger.Warning("signal USR2 is not supported in windows")
 		return nil, errors.New("signal USR2 is not supported in windows")
 	} else {
 		return syscall.SIGTERM, nil

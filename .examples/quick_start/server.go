@@ -6,8 +6,6 @@ import (
 )
 
 func main() {
-	//开启信号监听
-	go drpc.GraceSignal()
 	// 创建一个rpc服务
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		CountTime:   true,
