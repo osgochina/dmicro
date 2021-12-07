@@ -31,11 +31,17 @@
   * [插件 - Plugin](drpc/plugin.md)
   * [平滑重启 - Graceful](drpc/graceful.md)
 
+* 组件库
+  * [EventBus(事件总线)](component/eventBus.md)
+  
+* EasyService简单服务
+  * [启动服务](easyservice/start.md)
+  * [启动命令选项](easyservice/option.md)
+  * [服务沙盒](easyservice/sandbox.md)
+  * [平滑重启](easyservice/graceful.md)
+  
 * Supervisor进程监控管理
   * [快速开始](supervisor/info.md)
-
-* 组件库
-  * [eventBus(事件总线)](component/eventBus.md)
 
 * 性能测试
 
