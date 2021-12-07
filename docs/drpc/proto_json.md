@@ -1,3 +1,23 @@
+### 概述
+
+jsonproto是实现JSON套接字通信协议。
+
+### 消息的格式说明
+
+`{length bytes}` `{xferPipe length byte}` `{xferPipe bytes}` `{JSON bytes}`
+
+- `{length bytes}`: uint32, 4 bytes, big endian
+- `{xferPipe length byte}`: 1 byte
+- `{xferPipe bytes}`: one byte one xfer
+- `{JSON bytes}`: {"seq":%d,"mtype":%d,"serviceMethod":%q,"status":%q,"meta":%q,"bodyCodec":%d,"body":"%s"}
+
+### 如何引用
+
+`import "github.com/osgochina/dmicro/drpc/proto/jsonproto"`
+
+#### 使用示例
+
+```go
 package jsonproto_test
 
 import (
@@ -64,3 +84,13 @@ func (p *Push) Test(arg *map[string]string) *drpc.Status {
 	logger.Infof("receive push(%s):\narg: %#v\n", p.IP(), arg)
 	return nil
 }
+
+
+```
+
+执行以下命令测试:
+
+```sh
+$ cd dmicro/drpc/proto/jsonproto
+$ go test -v -run=TestJSONProto
+```

@@ -19,14 +19,14 @@ type Home struct {
 }
 
 func (h *Home) Test(arg *map[string]string) (map[string]interface{}, *drpc.Status) {
-	logger.Infof("peer_id: %s", gconv.String(h.PeekMeta("peer_id")))
+	logger.Infof("endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
 	return map[string]interface{}{
 		"arg": *arg,
 	}, nil
 }
 
 func (h *Home) TestError(arg *map[string]string) (map[string]interface{}, *drpc.Status) {
-	return nil, drpc.NewStatus(1, "test error", "this is test:"+gconv.String(h.PeekMeta("peer_id")))
+	return nil, drpc.NewStatus(1, "test error", "this is test:"+gconv.String(h.PeekMeta("endpoint_id")))
 }
 
 func TestHTTProto(t *testing.T) {
@@ -49,7 +49,7 @@ func TestHTTProto(t *testing.T) {
 			"author": "liuzhiming",
 		}
 
-		testUrl := "http://localhost:9090/home/test?peer_id=110"
+		testUrl := "http://localhost:9090/home/test?endpoint_id=110"
 		stat = sess.Call(testUrl, arg, &result).Status()
 		if !stat.OK() {
 			t.Fatal(stat)
@@ -68,7 +68,7 @@ func TestHTTProto(t *testing.T) {
 		t.Logf("http client response: %s", b)
 
 		{
-			testErrURL := "http://localhost:9090/home/test_error?peer_id=110"
+			testErrURL := "http://localhost:9090/home/test_error?endpoint_id=110"
 			result = nil
 			stat = sess.Call(
 				testErrURL,
