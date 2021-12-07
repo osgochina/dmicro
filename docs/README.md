@@ -1,5 +1,5 @@
 ## dmicro简介
-<img src="./logo.svg" width="200" height="160" alt="dmicro logo"/>
+![logo](logo.svg ':size=180x140')
 
 > dmicro是一个高效、可扩展且简单易用的微服务框架。包含drpc,easyserver等组件。
 
