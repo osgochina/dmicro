@@ -22,12 +22,12 @@ func (that *OnReceive) Name() string {
 	return OnReceiveEvent
 }
 
-func (that *OnReceive) Get(key interface{}) interface{} {
+func (that *OnReceive) Get(_ interface{}) interface{} {
 	return nil
 }
 
 // Set 设置元素
-func (that *OnReceive) Set(key interface{}, val interface{}) {
+func (that *OnReceive) Set(_ interface{}, _ interface{}) {
 
 }
 
@@ -37,7 +37,7 @@ func (that *OnReceive) Data() map[interface{}]interface{} {
 }
 
 // SetData 设置事件的全部参数
-func (that *OnReceive) SetData(data map[interface{}]interface{}) eventbus.IEvent {
+func (that *OnReceive) SetData(_ map[interface{}]interface{}) eventbus.IEvent {
 
 	return that
 }

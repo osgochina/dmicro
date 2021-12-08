@@ -26,7 +26,7 @@ func NewManager() *Manager {
 func (that *Manager) NewProcess(path string, args []string, environment []string) (*Process, error) {
 	p := NewProcess(path, args, environment)
 	if _, found := that.processes.Search(p.GetName()); found {
-		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
+		return nil, gerror.Newf(errorProcessExist, p.GetName())
 	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
@@ -39,7 +39,7 @@ func (that *Manager) NewProcess(path string, args []string, environment []string
 func (that *Manager) NewProcessByEntry(entry *ProcEntry) (*Process, error) {
 	p := NewProcessByEntry(entry)
 	if _, found := that.processes.Search(p.GetName()); found {
-		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
+		return nil, gerror.Newf(errorProcessExist, p.GetName())
 	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
@@ -53,7 +53,7 @@ func (that *Manager) NewProcessByEntry(entry *ProcEntry) (*Process, error) {
 func (that *Manager) NewProcessCmd(cmd string, environment ...[]string) (*Process, error) {
 	p := NewProcessCmd(cmd, environment...)
 	if _, found := that.processes.Search(p.GetName()); found {
-		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
+		return nil, gerror.Newf(errorProcessExist, p.GetName())
 	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
@@ -84,7 +84,7 @@ func (that *Manager) Clear() {
 
 // ForEachProcess 迭代进程列表
 func (that *Manager) ForEachProcess(procFunc func(p *Process)) {
-	that.processes.Iterator(func(k string, v interface{}) bool {
+	that.processes.Iterator(func(_ string, v interface{}) bool {
 		procFunc(v.(*Process))
 		return true
 	})

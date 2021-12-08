@@ -21,7 +21,7 @@ func (that *graceful) getGHttpListenerFdMap() map[string]listenerFdMap {
 		"https": "",
 		"http":  "",
 	}
-	that.inheritedProcListener.Iterator(func(k int, v interface{}) bool {
+	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
 			logger.Warningf("inheritedProcListener 不是 net.Listener类型")

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestGraceful_PushParentAddr(t *testing.T) {
+func TestGracefulPushParentAddr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 	})
 }

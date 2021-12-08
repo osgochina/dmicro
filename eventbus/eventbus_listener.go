@@ -88,7 +88,7 @@ func (that *ListenerQueue) Items() []*ListenerItem {
 func (that *ListenerQueue) Remove(listener BaseListener) {
 	ptrVal := fmt.Sprintf("%p", listener)
 	var newData *garray.SortedArray
-	that.data.Iterator(func(k int, v interface{}) bool {
+	that.data.Iterator(func(_ int, v interface{}) bool {
 		liPtrVal := fmt.Sprintf("%p", v.(*ListenerItem).Listener)
 		if liPtrVal == ptrVal {
 			return true

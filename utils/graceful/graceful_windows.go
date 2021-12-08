@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-func SetInheritListener(address []InheritAddr) error { return nil }
+func SetInheritListener(_ []InheritAddr) error { return nil }
 
 // 发送结束信号给进程
-func syscallKillSIGTERM(pid int) error { return nil }
+func syscallKillSIGTERM(_ int) error { return nil }
 
 func (that *graceful) GraceSignal() {
 	// subscribe to SIGINT signals
@@ -22,8 +22,8 @@ func (that *graceful) GraceSignal() {
 	signal.Stop(that.signal)
 	that.Shutdown()
 }
-func (that *graceful) Reboot(timeout ...time.Duration)                                  {}
-func (that *graceful) shutdownMaster()                                                  {}
-func (that *graceful) rebootMasterWorker()                                              {}
-func (that *graceful) AddInherited(procListener []net.Listener, envs map[string]string) {}
-func (that *graceful) startProcess() (*exec.Cmd, error)                                 { return nil, nil }
+func (that *graceful) Reboot(_ ...time.Duration)                          {}
+func (that *graceful) shutdownMaster()                                    {}
+func (that *graceful) rebootMasterWorker()                                {}
+func (that *graceful) AddInherited(_ []net.Listener, _ map[string]string) {}
+func (that *graceful) startProcess() (*exec.Cmd, error)                   { return nil, nil }

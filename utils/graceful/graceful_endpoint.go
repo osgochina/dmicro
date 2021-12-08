@@ -21,7 +21,7 @@ func (that *graceful) DeleteEndpoint(e interface{}) {
 // 父子进程模型下，当子进程启动成功，发送信号通知父进程
 func (that *graceful) onStart() {
 	//非子进程，则什么都不走
-	if that.isChild() == false {
+	if !that.isChild() {
 		return
 	}
 	if that.model != GraceChangeProcess {
@@ -65,7 +65,7 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 	m := map[string]string{
 		"tcp": "",
 	}
-	that.inheritedProcListener.Iterator(func(k int, v interface{}) bool {
+	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
 			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
@@ -94,7 +94,7 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 	m := map[string]string{
 		"tcp": "",
 	}
-	that.inheritedProcListener.Iterator(func(k int, v interface{}) bool {
+	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
 			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
@@ -103,10 +103,8 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 		if that.mwListenAddr != nil {
 			// 判断监听的是否是http协议。如果是http协议则不返回
 			data := that.mwListenAddr.Get(lis.Addr().String())
-			if d, ok := data.(InheritAddr); ok {
-				if d.Network == "http" || d.Network == "https" {
-					return true
-				}
+			if d, ok := data.(InheritAddr); ok && (d.Network == "http" || d.Network == "https") {
+				return true
 			}
 		}
 		f, e := lis.(filer).File()

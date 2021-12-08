@@ -28,12 +28,12 @@ func (that *OnConnect) Name() string {
 	return OnConnectEvent
 }
 
-func (that *OnConnect) Get(key interface{}) interface{} {
+func (that *OnConnect) Get(_ interface{}) interface{} {
 	return nil
 }
 
 // Set 设置元素
-func (that *OnConnect) Set(key interface{}, val interface{}) {
+func (that *OnConnect) Set(_ interface{}, _ interface{}) {
 
 }
 
@@ -43,7 +43,7 @@ func (that *OnConnect) Data() map[interface{}]interface{} {
 }
 
 // SetData 设置事件的全部参数
-func (that *OnConnect) SetData(data map[interface{}]interface{}) eventbus.IEvent {
+func (that *OnConnect) SetData(_ map[interface{}]interface{}) eventbus.IEvent {
 	return that
 }
 

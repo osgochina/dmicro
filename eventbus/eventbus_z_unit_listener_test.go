@@ -15,7 +15,7 @@ var emptyListener2 = func(e IEvent) error {
 	return nil
 }
 
-func TestListenerQueue_Remove(t *testing.T) {
+func TestListenerQueueRemove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		obj := newListenerQueue()
 		obj.Add(NewListenerItem(ListenerFunc(emptyListener2), 1))

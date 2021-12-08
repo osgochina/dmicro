@@ -118,7 +118,7 @@ func (that *httpProto) Pack(msg proto.Message) error {
 		return err
 	}
 	var header = make(http.Header, msg.Meta().Size())
-	msg.PipeTFilter().Iterator(func(idx int, filter tfilter.TransferFilter) bool {
+	msg.PipeTFilter().Iterator(func(_ int, filter tfilter.TransferFilter) bool {
 		//是否支持gzip
 		if !gzip.Is(filter.ID()) {
 			err = fmt.Errorf("unsupport tfilter : %s", filter.Name())

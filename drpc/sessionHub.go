@@ -41,7 +41,7 @@ func (that *SessionHub) get(id string) (*session, bool) {
 
 //迭代session对象池
 func (that *SessionHub) rangeCallback(fn func(*session) bool) {
-	that.sessions.Range(func(key, value interface{}) bool {
+	that.sessions.Range(func(_, value interface{}) bool {
 		return fn(value.(*session))
 	})
 }

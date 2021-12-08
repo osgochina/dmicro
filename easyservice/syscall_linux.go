@@ -22,7 +22,7 @@ func checkStart(pid int) bool {
 }
 
 //设置进程名
-func setProcessName(name string) {
+func setProcessName(_ string) {
 	// TODO 该依赖库有点问题，在golang:alpine中无法引入stdlib.h，暂时不支持，后续想到办法
 	//gspt.SetProcTitle(name)
 }

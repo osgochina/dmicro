@@ -63,10 +63,8 @@ func TryOptimize(conn net.Conn) {
 			_ = c.SetWriteBuffer(writeBuffer)
 		}
 	}
-	if c, ok := conn.(setNoDelayInterface); ok {
-		if !noDelay {
-			_ = c.SetNoDelay(noDelay)
-		}
+	if c, ok := conn.(setNoDelayInterface); ok && !noDelay {
+		_ = c.SetNoDelay(noDelay)
 	}
 }
 

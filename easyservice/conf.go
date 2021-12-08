@@ -36,7 +36,7 @@ func NewBoxConf() *BoxConf {
 func DefaultBoxConf(parser *gcmd.Parser, config *gcfg.Config) *BoxConf {
 	cfg := NewBoxConf()
 	cfg.Network = config.GetString("default.sandbox.Network", "tcp")
-	host := parser.GetOptVar("host", config.GetString("default.sandbox.Host", "127.0.0.1"))
+	host := parser.GetOptVar("host", config.GetString("default.sandbox.Host", "0.0.0.0"))
 	port := parser.GetOptVar("port", config.GetInt("default.sandbox.Port", 0))
 	debug := parser.GetOptVar("debug", config.GetBool("Debug", false))
 	cfg.ListenAddress = fmt.Sprintf("%s:%d", host.String(), port.Int())

@@ -28,7 +28,7 @@ func (that *testListener) Listen() []interface{} {
 	return that.listen
 }
 
-func TestManager_Listen(t *testing.T) {
+func TestManagerListen(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		manager := New("default")
 		defer manager.Clear()
@@ -45,7 +45,7 @@ func TestManager_Listen(t *testing.T) {
 	})
 }
 
-func TestManager_Fire(t *testing.T) {
+func TestManagerFire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		manager := New("default")
 		defer manager.Clear()
@@ -87,7 +87,7 @@ func TestManager_Fire(t *testing.T) {
 	})
 }
 
-func TestManager_Publish(t *testing.T) {
+func TestManagerPublish(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		manager := New("default")
 		defer manager.Clear()
@@ -121,7 +121,7 @@ func TestManager_Publish(t *testing.T) {
 	})
 }
 
-func TestManager_Publish2(t *testing.T) {
+func TestManagerPublish2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		manager := New("default")
 		defer manager.Clear()
@@ -147,7 +147,7 @@ func TestManager_Publish2(t *testing.T) {
 	})
 }
 
-func TestManager_Fire_WithWildcard(t *testing.T) {
+func TestManagerFireWithWildcard(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		manager := New("default")
 		defer manager.Clear()
@@ -245,7 +245,7 @@ func TestListenGroupEvent(t *testing.T) {
 	})
 }
 
-func TestManager_AsyncFire(t *testing.T) {
+func TestManagerAsyncFire(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		manager := New("default")

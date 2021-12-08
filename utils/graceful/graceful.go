@@ -46,7 +46,7 @@ func (that *graceful) isChild() bool {
 	if isWorker.IsNil() {
 		return false
 	}
-	if isWorker.Bool() == true {
+	if isWorker.Bool() {
 		return true
 	}
 	return false

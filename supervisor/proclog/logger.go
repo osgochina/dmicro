@@ -22,8 +22,8 @@ type NullLocker struct{}
 func NewNullLocker() *NullLocker {
 	return &NullLocker{}
 }
-func (that *NullLocker) Lock()   {}
-func (that *NullLocker) Unlock() {}
+func (that *NullLocker) Lock()   { return }
+func (that *NullLocker) Unlock() { return }
 
 // NewLogger 新建日志对象
 func NewLogger(programName string, logFile string, locker sync.Locker, maxBytes int64, backups int, props map[string]string) Logger {

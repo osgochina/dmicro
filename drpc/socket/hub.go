@@ -40,7 +40,7 @@ func (that *HubSocket) Get(id string) (Socket, bool) {
 
 // Range 遍历socket
 func (that *HubSocket) Range(f func(Socket) bool) {
-	that.sockets.Iterator(func(key, value interface{}) bool {
+	that.sockets.Iterator(func(_, value interface{}) bool {
 		return f(value.(Socket))
 	})
 }

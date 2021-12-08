@@ -38,7 +38,7 @@ func ToSignal(signalName string) (os.Signal, error) {
 // process: 进程对象
 // sig: 信号
 // sigChildren: windows 下会忽略这个参数
-func Kill(process *os.Process, sig os.Signal, sigChilren bool) error {
+func Kill(process *os.Process, sig os.Signal, sigChildren bool) error {
 	//Signal command can't kill children processes, call  taskkill command to kill them
 	cmd := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprintf("%d", process.Pid))
 	err := cmd.Start()

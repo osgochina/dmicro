@@ -547,7 +547,7 @@ func (that *session) EarlyCall(serviceMethod string, args, replay interface{}, c
 	}
 	//接收消息
 	ctx := output.Context()
-	return that.EarlyReceive(func(header message.Header) interface{} {
+	return that.EarlyReceive(func(_ message.Header) interface{} {
 		return replay
 	}, ctx).Status()
 }

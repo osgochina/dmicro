@@ -52,7 +52,7 @@ type MsgSetting func(Message)
 
 // WithNothing 什么也不做
 func WithNothing() MsgSetting {
-	return func(Message) {}
+	return func(Message) { return }
 }
 
 // WithContext 设置消息的上下文对象

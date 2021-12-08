@@ -18,18 +18,16 @@ var (
 	_ drpc.AfterReadPushHeaderPlugin = new(ignoreCase)
 )
 
-func (i *ignoreCase) Name() string {
+func (that *ignoreCase) Name() string {
 	return "ignoreCase"
 }
 
-func (i *ignoreCase) AfterReadCallHeader(ctx drpc.ReadCtx) *drpc.Status {
+func (that *ignoreCase) AfterReadCallHeader(ctx drpc.ReadCtx) *drpc.Status {
 	// Dynamic transformation path is lowercase
 	ctx.ResetServiceMethod(strings.ToLower(ctx.ServiceMethod()))
 	return nil
 }
 
-func (i *ignoreCase) AfterReadPushHeader(ctx drpc.ReadCtx) *drpc.Status {
-	// Dynamic transformation path is lowercase
-	ctx.ResetServiceMethod(strings.ToLower(ctx.ServiceMethod()))
-	return nil
+func (that *ignoreCase) AfterReadPushHeader(ctx drpc.ReadCtx) *drpc.Status {
+	return that.AfterReadCallHeader(ctx)
 }

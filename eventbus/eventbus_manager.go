@@ -224,7 +224,7 @@ func (that *EventBus) Fire(name string, params map[interface{}]interface{}) (e I
 	}
 
 	// 判断要触发的事件名是否存在,如果存在监听"*"所有事件的触发器。则继续执行
-	if that.HasListeners(name) == false && that.HasListeners(Wildcard) == false {
+	if !that.HasListeners(name) && !that.HasListeners(Wildcard) {
 		return nil, nil
 	}
 

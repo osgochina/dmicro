@@ -94,24 +94,10 @@ func (that *eventPlugin) AfterReadCallBody(ctx drpc.ReadCtx) *drpc.Status {
 
 // AfterReadPushBody 读取PUSH消息body之后触发该事件
 func (that *eventPlugin) AfterReadPushBody(ctx drpc.ReadCtx) *drpc.Status {
-	eventBus := ctx.Endpoint().EventBus()
-	if eventBus.HasListeners(OnReceiveEvent) {
-		err := eventBus.Publish(newOnReceive(ctx))
-		if err != nil {
-			logger.Warning(err)
-		}
-	}
-	return nil
+	return that.AfterReadCallBody(ctx)
 }
 
 // AfterReadReplyBody 读取REPLY消息body之后触发该事件
 func (that *eventPlugin) AfterReadReplyBody(ctx drpc.ReadCtx) *drpc.Status {
-	eventBus := ctx.Endpoint().EventBus()
-	if eventBus.HasListeners(OnReceiveEvent) {
-		err := eventBus.Publish(newOnReceive(ctx))
-		if err != nil {
-			logger.Warning(err)
-		}
-	}
-	return nil
+	return that.AfterReadCallBody(ctx)
 }

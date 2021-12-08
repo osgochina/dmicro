@@ -101,7 +101,7 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	//写入pid文件
 	that.putPidFile()
 
-	that.sList.Iterator(func(k int, v interface{}) bool {
+	that.sList.Iterator(func(_ int, v interface{}) bool {
 		sandbox := v.(ISandBox)
 		go func() {
 			e := sandbox.Setup()
@@ -227,7 +227,9 @@ func (that *EasyService) putPidFile() {
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	if e := os.Truncate(that.pidFile, 0); e != nil {
 		logger.Fatalf("os.Truncate: %v.", e)
 	}
@@ -265,7 +267,7 @@ func (that *EasyService) firstSweep() error {
 //进行结束收尾工作
 func (that *EasyService) beforeExiting() error {
 	//结束各组件
-	that.sList.Iterator(func(k int, v interface{}) bool {
+	that.sList.Iterator(func(_ int, v interface{}) bool {
 		service := v.(ISandBox)
 		if e := service.Shutdown(); e != nil {
 			logger.Errorf("服务 %s .结束出错，error: %v", service.Name(), e)

@@ -99,8 +99,7 @@ func (that *heartPong) AfterReadCallHeader(ctx drpc.ReadCtx) *drpc.Status {
 
 // AfterReadPushHeader 读取PUSH消息的头后执行该事件
 func (that *heartPong) AfterReadPushHeader(ctx drpc.ReadCtx) *drpc.Status {
-	that.update(ctx)
-	return nil
+	return that.AfterReadCallHeader(ctx)
 }
 
 // 更新心跳元数据

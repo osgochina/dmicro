@@ -609,14 +609,12 @@ func (that *handlerCtx) handlePush() {
 		}
 	}()
 	//消息状态正确，且有注册的处理函数
-	if that.stat.OK() && that.handler != nil {
+	if that.stat.OK() && that.handler != nil && that.pluginContainer.afterReadPushBody(that) == nil {
 		//执行处理事件
-		if that.pluginContainer.afterReadPushBody(that) == nil {
-			if that.handler.IsUnknown() {
-				that.handler.unknownHandleFunc(that)
-			} else {
-				that.handler.handleFunc(that, that.arg)
-			}
+		if that.handler.IsUnknown() {
+			that.handler.unknownHandleFunc(that)
+		} else {
+			that.handler.handleFunc(that, that.arg)
 		}
 	}
 	if !that.stat.OK() {

@@ -22,12 +22,12 @@ func (that *OnAccept) Name() string {
 	return OnAcceptEvent
 }
 
-func (that *OnAccept) Get(key interface{}) interface{} {
+func (that *OnAccept) Get(_ interface{}) interface{} {
 	return nil
 }
 
 // Set 设置元素
-func (that *OnAccept) Set(key interface{}, val interface{}) {
+func (that *OnAccept) Set(_ interface{}, _ interface{}) {
 }
 
 // Data 获取事件的全部参数
@@ -36,7 +36,7 @@ func (that *OnAccept) Data() map[interface{}]interface{} {
 }
 
 // SetData 设置事件的全部参数
-func (that *OnAccept) SetData(data map[interface{}]interface{}) eventbus.IEvent {
+func (that *OnAccept) SetData(_ map[interface{}]interface{}) eventbus.IEvent {
 	return that
 }
 

@@ -6,14 +6,13 @@ import "syscall"
 
 var syscallSIGUSR = syscall.Signal(0)
 
-func syscallKill(pid int, sig syscall.Signal) (err error) {
+func syscallKill(_ int, _ syscall.Signal) error {
 	return nil
 }
 
 // 检查进程是否存在
-func checkStart(pid int) bool {
+func checkStart(_ int) bool {
 	return false
 }
 
-func setProcessName(name string) {
-}
+func setProcessName(_ string) {}

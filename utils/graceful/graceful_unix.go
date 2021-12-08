@@ -209,16 +209,10 @@ func (that *graceful) graceSignalGracefulMW() {
 			sig := <-that.signal
 			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
-			// 强制关闭服务
-			case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
+			// 关闭服务
+			case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM:
 				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
 				// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
-				that.shutdownMaster()
-				continue
-			// 平滑的关闭服务
-			case syscall.SIGTERM:
-				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
-				// 平滑重启的时候使用默认超时时间，能够等待业务处理完毕，优雅的结束
 				that.shutdownMaster()
 				continue
 			// 平滑重启服务
@@ -240,7 +234,7 @@ func (that *graceful) Reboot(timeout ...time.Duration) {
 	}
 	pid := os.Getpid()
 	logger.Printf("进程:%d,平滑重启中...", pid)
-	that.contextExec(timeout, "reboot", func(ctxTimeout context.Context) <-chan struct{} {
+	that.contextExec(timeout, "reboot", func(_ context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 
 		go func() {
