@@ -41,13 +41,12 @@ func TestPbProto(t *testing.T) {
 	gzip.Reg('g', "gizp-5", 5)
 
 	// server
-	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})
+	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090, DefaultBodyCodec: codec.NameProtobuf})
 	srv.RouteCall(new(Home))
 	go srv.ListenAndServe(pbproto.NewPbProtoFunc())
 	time.Sleep(1e9)
-	_ = drpc.SetDefaultBodyCodec(codec.IdProtobuf)
 	// client
-	cli := drpc.NewEndpoint(drpc.EndpointConfig{})
+	cli := drpc.NewEndpoint(drpc.EndpointConfig{DefaultBodyCodec: codec.NameProtobuf})
 	cli.RoutePush(new(Push))
 
 	sess, stat := cli.Dial(":9090", pbproto.NewPbProtoFunc())
