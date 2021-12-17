@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+option go_package="./;codec";
+package codec;
+message PbEmpty {}

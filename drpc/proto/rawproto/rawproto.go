@@ -32,6 +32,10 @@ rpc协议的原始格式 使用网络字节序，大端
 {body}
 **/
 
+func NewRawProtoFunc() proto.ProtoFunc {
+	return RawProtoFunc
+}
+
 var RawProtoFunc = func(rw proto.IOWithReadBuffer) proto.Proto {
 	return &rawProto{
 		id:   6,

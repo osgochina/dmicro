@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+func NewRedisProtoFunc() proto.ProtoFunc {
+	return RedisProtoFunc
+}
+
 var RedisProtoFunc = func(rw proto.IOWithReadBuffer) proto.Proto {
 	return &redisProto{
 		id:   'r',

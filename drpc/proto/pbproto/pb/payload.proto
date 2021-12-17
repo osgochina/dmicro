@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package="./;pb";
+package pb;
+
+message payload {
+  int32  seq = 1;
+  int32  mtype = 2;
+  string serviceMethod = 3;
+  bytes  status = 4;
+  bytes  meta = 5;
+  int32  bodyCodec = 6;
+  bytes  body = 7;
+}
