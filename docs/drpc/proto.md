@@ -5,7 +5,7 @@
 为了提升框架的生命力，那么就需要做到最简单的支持一种新的协议。
 得益于`drpc框架`科学的架构，它支持一种新的协议是如此的清晰简单。
 
-目前`drpc框架`已经内置支持了`http`，`json`,`jsonrpc`，`raw`，`redis`协议，后续计划支持`protobuf`，`thrift`协议。
+目前`drpc框架`已经内置支持了`http`，`json`,`jsonrpc`，`raw`，`redis`,`protobuf`协议，后续计划支持`thrift`协议。
 
 #### 协议结构的定义
 
@@ -30,7 +30,7 @@ type Proto interface {
 [jsonrpc协议](drpc/proto_jsonrpc.md) | 3   | jsonrpc
 [raw协议](drpc/proto_raw.md) | 6   | raw
 redis协议 | r   | redis
-protobuf协议 | p   | protobuf
+[protobuf协议](drpc/proto_protobuf.md) | p   | protobuf
 thrift-binary协议 | b   | thrift-binary
 
 

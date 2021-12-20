@@ -29,6 +29,7 @@
     * [Json协议](drpc/proto_json.md)
     * [Raw协议](drpc/proto_raw.md)
     * [JsonRPC协议](drpc/proto_jsonrpc.md)
+    * [ProtoBuf协议](drpc/proto_protobuf.md)
   * [编解码器 - Codec](drpc/codec.md)
   * [传输管道过滤器 - TFilter](drpc/tfilter.md)
   * [钩子 - Hook](drpc/hook.md)
