@@ -1,0 +1,9 @@
+syntax = "proto3";
+option go_package="./;securebody";
+
+package securebody;
+
+message Encrypt {
+	string cipherVersion = 1;
+	string ciphertext = 2;
+}

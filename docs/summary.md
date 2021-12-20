@@ -30,9 +30,13 @@
     * [Raw协议](drpc/proto_raw.md)
     * [JsonRPC协议](drpc/proto_jsonrpc.md)
   * [编解码器 - Codec](drpc/codec.md)
-  * [传输过滤器 - TFilter](drpc/tfilter.md)
+  * [传输管道过滤器 - TFilter](drpc/tfilter.md)
   * [钩子 - Hook](drpc/hook.md)
   * [插件 - Plugin](drpc/plugin.md)
+    * [Auth认证](drpc/plugin_auth.md)
+    * [心跳](drpc/plugin_heartbeat.md)
+    * [忽略大小写](drpc/plugin_ignorecase.md)
+    * [安全传输](drpc/plugin_securebody.md)
   * [平滑重启 - Graceful](drpc/graceful.md)
 
 * 组件库

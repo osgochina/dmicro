@@ -31,7 +31,7 @@ const (
 	CodeInternalServerError int32 = 500
 	CodeBadGateway          int32 = 502
 
-	// CodeConflict                      int32 = 409
+	CodeConflict int32 = 409
 	// CodeUnsupportedTx                 int32 = 410
 	// CodeUnsupportedCodecType          int32 = 415
 	// CodeServiceUnavailable            int32 = 503

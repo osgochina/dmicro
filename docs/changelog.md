@@ -1,5 +1,10 @@
 ## 更新日志
 
+### v0.2.0
+1. 支持`ProtoBuf`协议.
+2. 增加安全传输`SecureBodyPlugin`插件.
+3. 完善文档，增加框架`logo`.
+
 ### v0.1.4
 1. MacOS 支持
 2. Windows 支持
