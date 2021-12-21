@@ -38,6 +38,7 @@
     * [心跳](drpc/plugin_heartbeat.md)
     * [忽略大小写](drpc/plugin_ignorecase.md)
     * [安全传输](drpc/plugin_securebody.md)
+    * [代理proxy](drpc/plugin_proxy.md)
   * [平滑重启 - Graceful](drpc/graceful.md)
 
 * 组件库

@@ -29,18 +29,18 @@ type (
 	}
 )
 
-// NewCallPlugin 创建call方法的代理插件
-func NewCallPlugin(fn func(*Label) CallForwarder) drpc.Plugin {
+// NewProxyCallPlugin 创建call方法的代理插件
+func NewProxyCallPlugin(fn func(*Label) CallForwarder) drpc.Plugin {
 	return &proxy{callForwarder: fn}
 }
 
-// NewPushPlugin 创建push方法的代理插件
-func NewPushPlugin(fn func(*Label) PushForwarder) drpc.Plugin {
+// NewProxyPushPlugin 创建push方法的代理插件
+func NewProxyPushPlugin(fn func(*Label) PushForwarder) drpc.Plugin {
 	return &proxy{pushForwarder: fn}
 }
 
-// NewPlugin 创建代理插件，支持call方法和push方法
-func NewPlugin(fn func(*Label) Forwarder) drpc.Plugin {
+// NewProxyPlugin 创建代理插件，支持call方法和push方法
+func NewProxyPlugin(fn func(*Label) Forwarder) drpc.Plugin {
 	return &proxy{
 		callForwarder: func(label *Label) CallForwarder {
 			return fn(label)
@@ -55,20 +55,25 @@ var (
 	_ drpc.AfterNewEndpointPlugin = new(proxy)
 )
 
+// Name 插件名称
 func (that *proxy) Name() string {
 	return "proxy"
 }
 
+// AfterNewEndpoint 创建Endpoint后触发
 func (that *proxy) AfterNewEndpoint(peer drpc.EarlyEndpoint) error {
+	// 请求的call方法不存在时候
 	if that.callForwarder != nil {
 		peer.SetUnknownCall(that.call)
 	}
+	// 请求的push方法不存在时候
 	if that.pushForwarder != nil {
 		peer.SetUnknownPush(that.push)
 	}
 	return nil
 }
 
+// 请求的call方法不存在时候，则执行该方法
 func (that *proxy) call(ctx drpc.UnknownCallCtx) (interface{}, *drpc.Status) {
 	var (
 		label    Label
@@ -103,6 +108,7 @@ func (that *proxy) call(ctx drpc.UnknownCallCtx) (interface{}, *drpc.Status) {
 	return result, stat
 }
 
+// 请求的push方法不存在时候，则执行该方法
 func (that *proxy) push(ctx drpc.UnknownPushCtx) *drpc.Status {
 	var (
 		label    Label
