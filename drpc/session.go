@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/os/grpool"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -174,6 +175,8 @@ type session struct {
 
 	//链接如果断开，重新拨号，只有作为客户端角色的时候才有效果
 	redialForClientLocked func() bool
+	// 记录当前sess最大dial重试次数
+	redialMaxRedialTimes *gtype.Int
 }
 
 var (
@@ -811,6 +814,7 @@ func (that *session) closeLocked() error {
 	err := that.socket.Close()
 	// 执行链接关闭插件
 	that.endpoint.pluginContainer.afterDisconnect(that)
+	that.redialMaxRedialTimes = nil
 	return err
 }
 

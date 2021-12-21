@@ -3,6 +3,7 @@ package drpc
 import (
 	"crypto/tls"
 	"errors"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/grpool"
 	"github.com/gogf/gf/util/grand"
@@ -327,11 +328,24 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 
 	//如果重试次数不为0，则设置重试方法
 	if that.dialer.RedialTimes() != 0 {
+		sess.redialMaxRedialTimes = gtype.NewInt(0)
 		sess.redialForClientLocked = func() bool {
 			//获取链接的原始信息
 			oldID := sess.ID()
 			oldIP := sess.LocalAddr().String()
 			oldConn := sess.getConn()
+
+			// 达到了最大重试次数,该逻辑是为了兼容 dial成功，但是对端在dial成功后，马上关闭了链接，这样就会造成redial死循环
+			if sess.redialMaxRedialTimes.Add(1) > that.dialer.RedialTimes() {
+				//链接失败触发事件
+				_ = that.pluginContainer.afterDialFail(sess, err, true)
+				_ = sess.closeLocked()
+				//防止状态没有修改成功，再次尝试修改状态
+				sess.tryChangeStatus(statusRedialFailed, statusRedialing)
+				logger.Warningf("redial fail,the maximum number of reconnections has been reached. (network:%s, addr:%s, id:%s,maxredial:%d)",
+					that.network, addr, oldID, that.dialer.RedialTimes())
+				return false
+			}
 			//连接到服务端之前，触发事件
 			_ = that.pluginContainer.beforeDial(addr, true)
 			//重新链接服务器端
