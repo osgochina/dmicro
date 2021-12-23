@@ -73,7 +73,15 @@ func (that *graceful) setMWListenAddr(addr InheritAddr) {
 	if that.mwListenAddr == nil {
 		that.mwListenAddr = gmap.NewStrAnyMap(true)
 	}
-	that.mwListenAddr.Set(fmt.Sprintf("%s:%s", addr.Host, addr.Port), addr)
+	// 做一次地址转换
+	host := addr.Host
+	if len(host) == 0 {
+		host = "0.0.0.0"
+	}
+	if host == "0.0.0.0" {
+		host = "[::]"
+	}
+	that.mwListenAddr.Set(fmt.Sprintf("%s:%s", host, addr.Port), addr)
 }
 
 // MWWait master worker 模式的主进程等待子进程运行
