@@ -248,6 +248,14 @@ func (that *EasyService) firstSweep() error {
 		return nil
 	}
 	that.shutting = true
+
+	if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
+		if e := gfile.Remove(that.pidFile); e != nil {
+			logger.Errorf("os.Remove: %v", e)
+		}
+		logger.Infof("删除pid文件[%s]成功", that.pidFile)
+	}
+
 	//结束服务前调用该方法,如果结束回调方法返回false，则中断结束
 	if that.beforeStopFunc != nil && !that.beforeStopFunc(that) {
 		err := gerror.New("执行完服务停止前的回调方法，该方法强制中断了服务结束流程！")
@@ -255,12 +263,7 @@ func (that *EasyService) firstSweep() error {
 		that.shutting = false
 		return err
 	}
-	if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
-		if e := gfile.Remove(that.pidFile); e != nil {
-			logger.Errorf("os.Remove: %v", e)
-		}
-		logger.Infof("删除pid文件[%s]成功", that.pidFile)
-	}
+
 	return nil
 }
 
