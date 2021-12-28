@@ -40,6 +40,7 @@ func DefaultBoxConf(parser *gcmd.Parser, config *gcfg.Config) *BoxConf {
 	port := parser.GetOptVar("port", config.GetInt("default.sandbox.Port", 0))
 	debug := parser.GetOptVar("debug", config.GetBool("Debug", false))
 	cfg.ListenAddress = fmt.Sprintf("%s:%d", host.String(), port.Int())
+	cfg.id = config.GetInt("default.sandbox.Id", 0)
 	cfg.SandBoxName = config.GetString("default.sandbox.Name", "")
 	cfg.PrintDetail = debug.Bool()
 	cfg.SessionMaxTimeout = config.GetDuration("default.sandbox.SessionMaxTimeout", 0)
