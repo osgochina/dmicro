@@ -1,4 +1,4 @@
-package inherit
+package utils
 
 import (
 	"crypto/rand"

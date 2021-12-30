@@ -3,12 +3,13 @@ package drpc
 import (
 	"crypto/tls"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/osgochina/dmicro/drpc/netproto/normal"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
-	"github.com/osgochina/dmicro/utils/inherit"
+	"github.com/osgochina/dmicro/utils"
 	"net"
 )
 
-var testTLSConfig = inherit.GenerateTLSConfigForServer()
+var testTLSConfig = utils.GenerateTLSConfigForServer()
 
 // NewInheritedListener 创建一个支持优雅重启，支持继承监听的监听器
 func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listener, err error) {
@@ -38,7 +39,7 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 		//	lis, err = kcp.InheritedListen(_network, laddr, tlsConfig, dataShards, parityShards)
 		//
 	} else {
-		lis, err = inherit.Listen(network, addrStr)
+		lis, err = normal.Listen(network, addrStr)
 		if err == nil && tlsConfig != nil {
 			if len(tlsConfig.Certificates) == 0 && tlsConfig.GetCertificate == nil {
 				return nil, gerror.New("tls: neither Certificates nor GetCertificate set in Config")

@@ -14,10 +14,10 @@ import (
 	"github.com/osgochina/dmicro/drpc/status"
 	"github.com/osgochina/dmicro/eventbus"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	errors2 "github.com/osgochina/dmicro/utils/errors"
 	"github.com/osgochina/dmicro/utils/graceful"
-	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"sync"
 	"time"
@@ -205,7 +205,7 @@ func (that *endpoint) SetTLSConfig(tlsConfig *tls.Config) {
 
 // SetTLSConfigFromFile 通过文件生成端点的证书信息
 func (that *endpoint) SetTLSConfigFromFile(tlsCertFile, tlsKeyFile string, insecureSkipVerifyForClient ...bool) error {
-	tlsConfig, err := inherit.NewTLSConfigFromFile(tlsCertFile, tlsKeyFile, insecureSkipVerifyForClient...)
+	tlsConfig, err := utils.NewTLSConfigFromFile(tlsCertFile, tlsKeyFile, insecureSkipVerifyForClient...)
 	if err == nil {
 		that.SetTLSConfig(tlsConfig)
 	}

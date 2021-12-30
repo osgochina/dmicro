@@ -6,7 +6,8 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/osgochina/dmicro/utils/inherit"
+	"github.com/osgochina/dmicro/drpc/netproto/normal"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"os"
 	"os/exec"
 	"time"
@@ -16,8 +17,10 @@ var defaultGraceful *graceful
 
 func init() {
 	defaultGraceful = newGraceful()
-	inherit.AddInheritedFunc(defaultGraceful.AddInherited)
-	inherit.GetInheritedFunc(defaultGraceful.GetInheritedFunc)
+	normal.AddInheritedFunc(defaultGraceful.AddInherited)
+	normal.GetInheritedFunc(defaultGraceful.GetInheritedFunc)
+	quic.AddInheritedFunc(defaultGraceful.AddInheritedQUIC)
+	quic.GetInheritedFunc(defaultGraceful.GetInheritedFuncQUIC)
 	defaultGraceful.SetShutdown(minShutdownTimeout, nil, nil)
 }
 

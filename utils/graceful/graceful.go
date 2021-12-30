@@ -11,8 +11,10 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/normal"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
+	"github.com/osgochina/dmicro/utils"
 	"github.com/osgochina/dmicro/utils/errors"
-	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"os"
 	"os/exec"
@@ -63,7 +65,41 @@ func (that *graceful) GetInheritedFunc() []int {
 		return nil
 	}
 	var fds []int
-	for _, v := range json.Map() {
+	for k, v := range json.Map() {
+		// 只能使用tcp协议
+		if k != "tcp" {
+			continue
+		}
+		fdv := gconv.String(v)
+		if len(fdv) > 0 {
+			for _, item := range gstr.SplitAndTrim(fdv, ",") {
+				array := strings.Split(item, "#")
+				fd := gconv.Int(array[1])
+				if fd > 0 {
+					fds = append(fds, fd)
+				}
+			}
+		}
+	}
+	return fds
+}
+
+// GetInheritedFuncQUIC 获取继承的fd
+func (that *graceful) GetInheritedFuncQUIC() []int {
+	parentAddr := genv.GetVar(parentAddrKey, nil)
+	if parentAddr.IsNil() {
+		return nil
+	}
+	json := gjson.New(parentAddr)
+	if json.IsNil() {
+		return nil
+	}
+	var fds []int
+	for k, v := range json.Map() {
+		// 只能使用quic协议
+		if k != "quic" {
+			continue
+		}
 		fdv := gconv.String(v)
 		if len(fdv) > 0 {
 			for _, item := range gstr.SplitAndTrim(fdv, ",") {
@@ -90,7 +126,7 @@ func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 	network := addr.Network()
 	var port string
 	switch addrF := addr.(type) {
-	case *inherit.FakeAddr:
+	case *utils.FakeAddr:
 		_, port = addrF.Host(), addrF.Port()
 	default:
 		_, port, err = net.SplitHostPort(addrStr)
@@ -166,8 +202,9 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 	}
 	that.firstSweep = func() error {
 		return errors.Merge(
-			firstSweepFunc(),       //执行自定义方法
-			inherit.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
+			firstSweepFunc(),      //执行自定义方法
+			normal.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
+			quic.SetInherited(),   // 把quic协议监听的文件句柄写入环境变量，方便子进程使用
 		)
 	}
 	that.beforeExiting = func() error {

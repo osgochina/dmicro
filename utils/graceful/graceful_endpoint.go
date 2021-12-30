@@ -3,6 +3,7 @@ package graceful
 import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"net"
 	"syscall"
@@ -63,13 +64,28 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 		return nil
 	}
 	m := map[string]string{
-		"tcp": "",
+		"tcp":  "",
+		"quic": "",
 	}
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
 			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
-			return false
+			return true
+		}
+		quicLis, ok := v.(*quic.Listener)
+		if ok {
+			f, e := quicLis.PacketConn().(filer).File()
+			if e != nil {
+				logger.Error(e)
+				return false
+			}
+			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+			if len(m["quic"]) > 0 {
+				m["quic"] += ","
+			}
+			m["quic"] += str
+			return true
 		}
 		f, e := lis.(filer).File()
 		if e != nil {
@@ -92,7 +108,8 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 		return nil
 	}
 	m := map[string]string{
-		"tcp": "",
+		"tcp":  "",
+		"quic": "",
 	}
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
@@ -106,6 +123,20 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 			if d, ok := data.(InheritAddr); ok && (d.Network == "http" || d.Network == "https") {
 				return true
 			}
+		}
+		quicLis, ok := v.(*quic.Listener)
+		if ok {
+			f, e := quicLis.PacketConn().(filer).File()
+			if e != nil {
+				logger.Error(e)
+				return false
+			}
+			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+			if len(m["quic"]) > 0 {
+				m["quic"] += ","
+			}
+			m["quic"] += str
+			return true
 		}
 		f, e := lis.(filer).File()
 		if e != nil {

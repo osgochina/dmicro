@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/container/gtype"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/osgochina/dmicro/utils/inherit"
+	"github.com/osgochina/dmicro/utils"
 	"net"
 	"time"
 )
@@ -120,9 +120,9 @@ func (that *Dialer) dialOne(addr string) (net.Conn, error) {
 		}
 		var tlsConf = that.tlsConfig
 		if tlsConf == nil {
-			tlsConf = inherit.GenerateTLSConfigForClient()
+			tlsConf = utils.GenerateTLSConfigForClient()
 		}
-		return quic.DialAddrContext(ctx, network, that.localAddr.(*inherit.FakeAddr).UdpAddr(), addr, tlsConf, nil)
+		return quic.DialAddrContext(ctx, network, that.localAddr.(*utils.FakeAddr).UdpAddr(), addr, tlsConf, nil)
 	}
 
 	//if network := asKCP(d.network); network != "" {

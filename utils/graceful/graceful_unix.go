@@ -11,8 +11,9 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/osgochina/dmicro/utils/inherit"
+	"github.com/osgochina/dmicro/utils"
 	"net"
 	"os"
 	"os/exec"
@@ -39,7 +40,7 @@ func SetInheritListener(address []InheritAddr) error {
 			if addr.Network == "https" && addr.TlsConfig == nil {
 				return gerror.Newf("https 协议，必须传入证书")
 			}
-			err := defaultGraceful.inheritedListener(inherit.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
+			err := defaultGraceful.inheritedListener(utils.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
 			if err != nil {
 				return err
 			}
@@ -108,6 +109,21 @@ func (that *graceful) MWWait() {
 
 // AddInherited 添加需要给重启后新进程继承的文件句柄和环境变量
 func (that *graceful) AddInherited(procListener []net.Listener, envs map[string]string) {
+	if len(procListener) > 0 {
+		for _, f := range procListener {
+			// 判断需要添加的文件句柄是否已经存在,不存在才能追加
+			if that.inheritedProcListener.Search(f) == -1 {
+				that.inheritedProcListener.Append(f)
+			}
+		}
+	}
+	if len(envs) > 0 {
+		that.inheritedEnv.Sets(envs)
+	}
+}
+
+// AddInheritedQUIC 添加quic协议的监听句柄
+func (that *graceful) AddInheritedQUIC(procListener []*quic.Listener, envs map[string]string) {
 	if len(procListener) > 0 {
 		for _, f := range procListener {
 			// 判断需要添加的文件句柄是否已经存在,不存在才能追加

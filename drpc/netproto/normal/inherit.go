@@ -1,4 +1,4 @@
-package inherit
+package normal
 
 import (
 	"fmt"
@@ -47,8 +47,6 @@ func GetInheritedFunc(fn func() []int) {
 
 var globalInheritNet = new(inheritNet)
 
-//const envCountKey = "INHERIT_LISTEN_FDS"
-
 type inheritNet struct {
 	//继承过来的监听句柄列表
 	inherited []net.Listener
@@ -56,9 +54,6 @@ type inheritNet struct {
 	active      []net.Listener
 	mutex       sync.Mutex
 	inheritOnce sync.Once
-
-	//这个的作用是为了测试的时候能够精确得确定继承的监听句柄的起始未知，默认值是3
-	//fdStart int
 
 	//传递需要继承的文件句柄列表方法
 	addInherited func([]net.Listener, map[string]string)
@@ -255,7 +250,3 @@ func isSameAddr(addOne, addTwo net.Addr) bool {
 	//判断去掉前缀后的地址是否相等
 	return addOneStr == addTwoStr
 }
-
-//type filer interface {
-//	File() (*os.File, error)
-//}
