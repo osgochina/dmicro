@@ -210,3 +210,25 @@ var SetSocketWriteBuffer = socket.SetWriteBuffer
 
 // SetSocketNoDelay 开启关闭no delay算法
 var SetSocketNoDelay = socket.SetNoDelay
+
+// 判断是否使用quic协议
+func asQUIC(network string) string {
+	switch network {
+	case "quic":
+		return "udp"
+	default:
+		return ""
+	}
+}
+
+// 判断是否使用kcp协议
+func asKCP(network string) string {
+	switch network {
+	case "kcp":
+		return "udp"
+	case "udp", "udp4", "udp6":
+		return network
+	default:
+		return ""
+	}
+}

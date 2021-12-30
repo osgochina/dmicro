@@ -1,9 +1,12 @@
 package drpc
 
 import (
+	"context"
 	"crypto/tls"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/inherit"
 	"net"
 	"time"
 )
@@ -110,18 +113,18 @@ func (that *Dialer) dialWithRetry(addr, sessID string, fn func(conn net.Conn) er
 
 //拨号一次
 func (that *Dialer) dialOne(addr string) (net.Conn, error) {
-	//if network := asQUIC(d.network); network != "" {
-	//	ctx := context.Background()
-	//	if d.dialTimeout > 0 {
-	//		ctx, _ = context.WithTimeout(ctx, d.dialTimeout)
-	//	}
-	//	var tlsConf = d.tlsConfig
-	//	if tlsConf == nil {
-	//		tlsConf = GenerateTLSConfigForClient()
-	//	}
-	//	return quic.DialAddrContext(ctx, network, d.localAddr.(*FakeAddr).udpAddr, addr, tlsConf, nil)
-	//}
-	//
+	if network := asQUIC(that.network); network != "" {
+		ctx := context.Background()
+		if that.dialTimeout > 0 {
+			ctx, _ = context.WithTimeout(ctx, that.dialTimeout)
+		}
+		var tlsConf = that.tlsConfig
+		if tlsConf == nil {
+			tlsConf = inherit.GenerateTLSConfigForClient()
+		}
+		return quic.DialAddrContext(ctx, network, that.localAddr.(*inherit.FakeAddr).UdpAddr(), addr, tlsConf, nil)
+	}
+
 	//if network := asKCP(d.network); network != "" {
 	//	return kcp.DialAddrContext(network, d.localAddr.(*FakeAddr).udpAddr, addr, d.tlsConfig, dataShards, parityShards)
 	//}

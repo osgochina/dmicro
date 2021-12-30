@@ -79,12 +79,8 @@ func (that *inheritNet) inherit() error {
 		if len(fds) <= 0 {
 			return
 		}
-		//fdStart := that.fdStart
-		//if fdStart == 0 {
-		//	fdStart = 3
-		//}
+
 		for _, fd := range fds {
-			//for i := fdStart; i < fdStart+count; i++ {
 			file := os.NewFile(uintptr(fd), "listener")
 			l, e := net.FileListener(file)
 			if e != nil {
@@ -222,15 +218,6 @@ func (that *inheritNet) SetInherited() error {
 	if err != nil {
 		return err
 	}
-	//var files = make([]*os.File, 0, len(listeners))
-	//for _, l := range listeners {
-	//	f, e := l.(filer).File()
-	//	if e != nil {
-	//		return e
-	//	}
-	//	files = append(files, f)
-	//}
-	//that.AddInherited(files, map[string]string{envCountKey: strconv.Itoa(len(listeners))})
 	that.addInherited(listeners, nil)
 	return nil
 }
