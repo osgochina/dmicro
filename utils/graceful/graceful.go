@@ -168,30 +168,22 @@ func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 		return gerror.New("必须明确的指定要监听的端口，不能使用随机端口")
 	}
 
-	if network == "quic" || network == "kcp" {
-		lis, err := that.listen(network, addrStr, tlsConfig)
-		if err != nil {
-			return err
+	lis, err := that.listen(network, addrStr)
+	if err == nil && tlsConfig != nil {
+		if len(tlsConfig.Certificates) == 0 && tlsConfig.GetCertificate == nil {
+			return gerror.New("tls: neither Certificates nor GetCertificate set in Config")
 		}
-		that.inheritedProcListener.Append(lis)
-	} else {
-		lis, err := that.listen(network, addrStr)
-		if err == nil && tlsConfig != nil {
-			if len(tlsConfig.Certificates) == 0 && tlsConfig.GetCertificate == nil {
-				return gerror.New("tls: neither Certificates nor GetCertificate set in Config")
-			}
-			lis = tls.NewListener(lis, tlsConfig)
-		}
-		if err != nil {
-			return err
-		}
-		that.inheritedProcListener.Append(lis)
+		lis = tls.NewListener(lis, tlsConfig)
 	}
+	if err != nil {
+		return err
+	}
+	that.inheritedProcListener.Append(lis)
 	return nil
 }
 
 // 在GracefulMasterWorker模式下，master进程预先监听地址
-func (that *graceful) listen(nett, addr string, tlsConfig ...*tls.Config) (net.Listener, error) {
+func (that *graceful) listen(nett, addr string) (net.Listener, error) {
 	if that.model != GraceMasterWorker {
 		return nil, gerror.New("必须为GracefulMasterWorker模式才可以调用listen方法")
 	}
@@ -214,24 +206,6 @@ func (that *graceful) listen(nett, addr string, tlsConfig ...*tls.Config) (net.L
 			return nil, err
 		}
 		l, err := net.ListenUnix(nett, unixAddr)
-		if err != nil {
-			return nil, err
-		}
-		return l, nil
-	case "quic":
-		if len(tlsConfig) == 0 {
-			return nil, gerror.New("使用quic协议必须传入tls cofnig配置")
-		}
-		l, err := quic.ListenAddr("udp", addr, tlsConfig[0], nil)
-		if err != nil {
-			return nil, err
-		}
-		return l, nil
-	case "kcp":
-		if len(tlsConfig) == 0 {
-			return nil, gerror.New("使用kcp协议必须传入tls cofnig配置")
-		}
-		l, err := kcp.ListenAddr("udp", addr, tlsConfig[0], kcp.DefaultDataShards, kcp.DefaultParityShards)
 		if err != nil {
 			return nil, err
 		}

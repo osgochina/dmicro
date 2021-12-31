@@ -20,6 +20,7 @@ import (
 	errors2 "github.com/osgochina/dmicro/utils/errors"
 	"github.com/osgochina/dmicro/utils/graceful"
 	"net"
+	"os"
 	"sync"
 	"time"
 )
@@ -457,15 +458,15 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 	that.listeners[lis] = struct{}{}
 
 	network := lis.Addr().Network()
-	//switch lis.(type) {
-	//case *quic.Listener:
-	//	network = "quic"
-	//case *kcp.Listener:
-	//	network = "kcp"
-	//}
+	switch lis.(type) {
+	case *quic.Listener:
+		network = "quic"
+	case *kcp.Listener:
+		network = "kcp"
+	}
 
 	addr := lis.Addr().String()
-	logger.Printf("启动监听并提供服务：(network:%s, addr:%s)", network, addr)
+	logger.Printf("pid:%d,启动监听并提供服务：(network:%s, addr:%s)", os.Getpid(), network, addr)
 	that.pluginContainer.afterListen(lis.Addr())
 
 	var tempDelay time.Duration

@@ -37,9 +37,12 @@ func SetInheritListener(address []InheritAddr) error {
 		}()
 		<-ch
 		for _, addr := range address {
+			if addr.Network == "quic" || addr.Network == "kcp" {
+				return gerror.Newf("Master-Worker进程模式不支持 quic,kcp协议")
+			}
 			network := defaultGraceful.translateNetwork(addr.Network)
-			if (addr.Network == "https" || addr.Network == "quic" || addr.Network == "kcp") && addr.TlsConfig == nil {
-				return gerror.Newf("https|quic|kcp协议，必须传入证书")
+			if addr.Network == "https" && addr.TlsConfig == nil {
+				return gerror.Newf("使用https协议，必须传入证书")
 			}
 			err := defaultGraceful.inheritedListener(utils.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
 			if err != nil {
@@ -65,10 +68,6 @@ func (that *graceful) translateNetwork(network string) string {
 		return "tcp"
 	case "unix", "unixpacket", "invalid_unix_net_for_test":
 		return "unix"
-	case "quic":
-		return "quic"
-	case "kcp":
-		return "kcp"
 	default:
 		return "tcp"
 	}

@@ -29,8 +29,6 @@ func main() {
 		// 使用master worker 进程模型实现平滑重启
 		err = graceful.SetInheritListener([]graceful.InheritAddr{
 			{Network: "tcp", Host: "127.0.0.1", Port: "8199"},
-			{Network: "quic", Host: "127.0.0.1", Port: "8198", TlsConfig: tlsConfigQUIC},
-			{Network: "kcp", Host: "127.0.0.1", Port: "8197", TlsConfig: tlsConfigKCP},
 			{Network: "http", Host: "127.0.0.1", Port: "8080", ServerName: "default"},
 		})
 		if err != nil {
