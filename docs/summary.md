@@ -49,6 +49,7 @@
   * [启动命令选项](easyservice/option.md)
   * [服务沙盒](easyservice/sandbox.md)
   * [平滑重启](easyservice/graceful.md)
+  * [使用编译脚本](easyservice/build.md)
   
 * Supervisor进程监控管理
   * [快速开始](supervisor/info.md)
