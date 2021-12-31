@@ -12,12 +12,6 @@ import (
 	"time"
 )
 
-// kcp 协议的配置
-const (
-	dataShards   = 10
-	parityShards = 3
-)
-
 // Dialer 拨号器
 type Dialer struct {
 	//网络类型
@@ -133,7 +127,7 @@ func (that *Dialer) dialOne(addr string) (net.Conn, error) {
 	}
 
 	if network := asKCP(that.network); network != "" {
-		return kcp.DialAddrContext(network, that.localAddr.(*utils.FakeAddr).UdpAddr(), addr, that.tlsConfig, dataShards, parityShards)
+		return kcp.DialAddrContext(network, that.localAddr.(*utils.FakeAddr).UdpAddr(), addr, that.tlsConfig, kcp.DefaultDataShards, kcp.DefaultParityShards)
 	}
 
 	dialer := &net.Dialer{

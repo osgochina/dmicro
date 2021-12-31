@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/normal"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/utils"
@@ -114,6 +115,35 @@ func (that *graceful) GetInheritedFuncQUIC() []int {
 	return fds
 }
 
+func (that *graceful) GetInheritedFuncKCP() []int {
+	parentAddr := genv.GetVar(parentAddrKey, nil)
+	if parentAddr.IsNil() {
+		return nil
+	}
+	json := gjson.New(parentAddr)
+	if json.IsNil() {
+		return nil
+	}
+	var fds []int
+	for k, v := range json.Map() {
+		// 只能使用kcp协议
+		if k != "kcp" {
+			continue
+		}
+		fdv := gconv.String(v)
+		if len(fdv) > 0 {
+			for _, item := range gstr.SplitAndTrim(fdv, ",") {
+				array := strings.Split(item, "#")
+				fd := gconv.Int(array[1])
+				if fd > 0 {
+					fds = append(fds, fd)
+				}
+			}
+		}
+	}
+	return fds
+}
+
 // inheritedListener 在GracefulMasterWorker模式下，调用该方法，预先初始化监听
 func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (err error) {
 	if that.model != GraceMasterWorker {
@@ -138,7 +168,7 @@ func (that *graceful) inheritedListener(addr net.Addr, tlsConfig *tls.Config) (e
 		return gerror.New("必须明确的指定要监听的端口，不能使用随机端口")
 	}
 
-	if network == "quic" {
+	if network == "quic" || network == "kcp" {
 		lis, err := that.listen(network, addrStr, tlsConfig)
 		if err != nil {
 			return err
@@ -197,6 +227,15 @@ func (that *graceful) listen(nett, addr string, tlsConfig ...*tls.Config) (net.L
 			return nil, err
 		}
 		return l, nil
+	case "kcp":
+		if len(tlsConfig) == 0 {
+			return nil, gerror.New("使用kcp协议必须传入tls cofnig配置")
+		}
+		l, err := kcp.ListenAddr("udp", addr, tlsConfig[0], kcp.DefaultDataShards, kcp.DefaultParityShards)
+		if err != nil {
+			return nil, err
+		}
+		return l, nil
 	}
 }
 
@@ -223,6 +262,7 @@ func (that *graceful) SetShutdown(timeout time.Duration, firstSweepFunc, beforeE
 			firstSweepFunc(),      //执行自定义方法
 			normal.SetInherited(), //把监听的文件句柄数量写入环境变量，方便子进程使用
 			quic.SetInherited(),   // 把quic协议监听的文件句柄写入环境变量，方便子进程使用
+			kcp.SetInherited(),    // 把kcp协议监听的文件句柄写入环境变量，方便子进程使用
 		)
 	}
 	that.beforeExiting = func() error {

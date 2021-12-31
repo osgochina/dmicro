@@ -23,7 +23,7 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 		lis, err = quic.InheritedListen(_network, addrStr, tlsConfig, nil)
 
 	} else if _network := asKCP(network); _network != "" {
-		lis, err = kcp.InheritedListen(_network, addrStr, tlsConfig, dataShards, parityShards)
+		lis, err = kcp.InheritedListen(_network, addrStr, tlsConfig, kcp.DefaultDataShards, kcp.DefaultParityShards)
 	} else {
 		lis, err = normal.Listen(network, addrStr)
 		if err == nil && tlsConfig != nil {

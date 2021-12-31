@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
@@ -37,8 +38,8 @@ func SetInheritListener(address []InheritAddr) error {
 		<-ch
 		for _, addr := range address {
 			network := defaultGraceful.translateNetwork(addr.Network)
-			if (addr.Network == "https" || addr.Network == "quic") && addr.TlsConfig == nil {
-				return gerror.Newf("https或quic协议，必须传入证书")
+			if (addr.Network == "https" || addr.Network == "quic" || addr.Network == "kcp") && addr.TlsConfig == nil {
+				return gerror.Newf("https|quic|kcp协议，必须传入证书")
 			}
 			err := defaultGraceful.inheritedListener(utils.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
 			if err != nil {
@@ -66,6 +67,8 @@ func (that *graceful) translateNetwork(network string) string {
 		return "unix"
 	case "quic":
 		return "quic"
+	case "kcp":
+		return "kcp"
 	default:
 		return "tcp"
 	}
@@ -126,6 +129,21 @@ func (that *graceful) AddInherited(procListener []net.Listener, envs map[string]
 
 // AddInheritedQUIC 添加quic协议的监听句柄
 func (that *graceful) AddInheritedQUIC(procListener []*quic.Listener, envs map[string]string) {
+	if len(procListener) > 0 {
+		for _, f := range procListener {
+			// 判断需要添加的文件句柄是否已经存在,不存在才能追加
+			if that.inheritedProcListener.Search(f) == -1 {
+				that.inheritedProcListener.Append(f)
+			}
+		}
+	}
+	if len(envs) > 0 {
+		that.inheritedEnv.Sets(envs)
+	}
+}
+
+// AddInheritedKCP 添加kcp协议的监听句柄
+func (that *graceful) AddInheritedKCP(procListener []*kcp.Listener, envs map[string]string) {
 	if len(procListener) > 0 {
 		for _, f := range procListener {
 			// 判断需要添加的文件句柄是否已经存在,不存在才能追加

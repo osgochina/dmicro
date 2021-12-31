@@ -6,6 +6,12 @@ import (
 	"net"
 )
 
+// kcp 协议的配置
+const (
+	DefaultDataShards   = 10
+	DefaultParityShards = 3
+)
+
 type (
 	// UDPSession defines a KCP session implemented by UDP
 	UDPSession = kcp.UDPSession

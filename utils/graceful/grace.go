@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/normal"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"os"
@@ -21,6 +22,8 @@ func init() {
 	normal.GetInheritedFunc(defaultGraceful.GetInheritedFunc)
 	quic.AddInheritedFunc(defaultGraceful.AddInheritedQUIC)
 	quic.GetInheritedFunc(defaultGraceful.GetInheritedFuncQUIC)
+	kcp.AddInheritedFunc(defaultGraceful.AddInheritedKCP)
+	kcp.GetInheritedFunc(defaultGraceful.GetInheritedFuncKCP)
 	defaultGraceful.SetShutdown(minShutdownTimeout, nil, nil)
 }
 

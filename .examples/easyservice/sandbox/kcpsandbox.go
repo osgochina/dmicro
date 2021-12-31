@@ -6,8 +6,8 @@ import (
 	"github.com/osgochina/dmicro/easyservice"
 )
 
-// QUICSandBox  默认的服务
-type QUICSandBox struct {
+// KCPSandBox  默认的服务
+type KCPSandBox struct {
 	id       int
 	name     string
 	boxConf  *easyservice.BoxConf
@@ -15,8 +15,8 @@ type QUICSandBox struct {
 	endpoint drpc.Endpoint
 }
 
-// NewQUICSandBox 创建一个默认的服务沙盒
-func NewQUICSandBox(cfg *easyservice.BoxConf, globalLeftPlugin ...drpc.Plugin) *KCPSandBox {
+// NewKCPSandBox 创建一个默认的服务沙盒
+func NewKCPSandBox(cfg *easyservice.BoxConf, globalLeftPlugin ...drpc.Plugin) *KCPSandBox {
 	id := easyservice.GetNextSandBoxId()
 	if len(cfg.SandBoxName) <= 0 {
 		cfg.SandBoxName = fmt.Sprintf("default_%d", id)
@@ -35,27 +35,27 @@ func NewQUICSandBox(cfg *easyservice.BoxConf, globalLeftPlugin ...drpc.Plugin) *
 	return sBox
 }
 
-func (that *QUICSandBox) ID() int {
+func (that *KCPSandBox) ID() int {
 	return that.id
 }
 
-func (that *QUICSandBox) Name() string {
+func (that *KCPSandBox) Name() string {
 	return that.name
 }
 
-func (that *QUICSandBox) Setup() error {
+func (that *KCPSandBox) Setup() error {
 
 	return that.endpoint.ListenAndServe()
 }
 
-func (that *QUICSandBox) Shutdown() error {
+func (that *KCPSandBox) Shutdown() error {
 	return that.endpoint.Close()
 }
 
-func (that *QUICSandBox) Endpoint() drpc.Endpoint {
+func (that *KCPSandBox) Endpoint() drpc.Endpoint {
 	return that.endpoint
 }
 
-func (that *QUICSandBox) Service() *easyservice.EasyService {
+func (that *KCPSandBox) Service() *easyservice.EasyService {
 	return that.service
 }

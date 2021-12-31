@@ -3,6 +3,7 @@ package graceful
 import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"net"
@@ -66,6 +67,7 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 	m := map[string]string{
 		"tcp":  "",
 		"quic": "",
+		"kcp":  "",
 	}
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
@@ -85,6 +87,20 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 				m["quic"] += ","
 			}
 			m["quic"] += str
+			return true
+		}
+		kcpLis, ok := v.(*kcp.Listener)
+		if ok {
+			f, e := kcpLis.PacketConn().(filer).File()
+			if e != nil {
+				logger.Error(e)
+				return false
+			}
+			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+			if len(m["kcp"]) > 0 {
+				m["kcp"] += ","
+			}
+			m["kcp"] += str
 			return true
 		}
 		f, e := lis.(filer).File()
@@ -136,6 +152,20 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 				m["quic"] += ","
 			}
 			m["quic"] += str
+			return true
+		}
+		kcpLis, ok := v.(*kcp.Listener)
+		if ok {
+			f, e := kcpLis.PacketConn().(filer).File()
+			if e != nil {
+				logger.Error(e)
+				return false
+			}
+			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+			if len(m["kcp"]) > 0 {
+				m["kcp"] += ","
+			}
+			m["kcp"] += str
 			return true
 		}
 		f, e := lis.(filer).File()
