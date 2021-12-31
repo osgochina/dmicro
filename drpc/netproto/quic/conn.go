@@ -11,6 +11,8 @@ type Conn struct {
 	stream quic.Stream
 }
 
+var _ net.Conn = new(Conn)
+
 func (that *Conn) Read(b []byte) (n int, err error) {
 	return that.stream.Read(b)
 }

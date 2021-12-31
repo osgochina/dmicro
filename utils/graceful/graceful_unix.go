@@ -37,8 +37,8 @@ func SetInheritListener(address []InheritAddr) error {
 		<-ch
 		for _, addr := range address {
 			network := defaultGraceful.translateNetwork(addr.Network)
-			if addr.Network == "https" && addr.TlsConfig == nil {
-				return gerror.Newf("https 协议，必须传入证书")
+			if (addr.Network == "https" || addr.Network == "quic") && addr.TlsConfig == nil {
+				return gerror.Newf("https或quic协议，必须传入证书")
 			}
 			err := defaultGraceful.inheritedListener(utils.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
 			if err != nil {
@@ -64,6 +64,8 @@ func (that *graceful) translateNetwork(network string) string {
 		return "tcp"
 	case "unix", "unixpacket", "invalid_unix_net_for_test":
 		return "unix"
+	case "quic":
+		return "quic"
 	default:
 		return "tcp"
 	}
