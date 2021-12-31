@@ -3,6 +3,7 @@ package drpc
 import (
 	"crypto/tls"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/normal"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/utils"
@@ -15,29 +16,14 @@ var testTLSConfig = utils.GenerateTLSConfigForServer()
 func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listener, err error) {
 	addrStr := addr.String()
 	network := addr.Network()
-	//var host, port string
-	//switch addrF := addr.(type) {
-	//case *inherit.FakeAddr:
-	//	host, port = addrF.Host(), addrF.Port()
-	//default:
-	//	host, port, err = net.SplitHostPort(addrStr)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-	//if port == "0" {
-	//	addrStr = graceful.Graceful().PopParentAddr(network, host, addrStr)
-	//}
-
 	if _network := asQUIC(network); _network != "" {
 		if tlsConfig == nil {
 			tlsConfig = testTLSConfig
 		}
 		lis, err = quic.InheritedListen(_network, addrStr, tlsConfig, nil)
 
-		//} else if _network := asKCP(network); _network != "" {
-		//	lis, err = kcp.InheritedListen(_network, laddr, tlsConfig, dataShards, parityShards)
-		//
+	} else if _network := asKCP(network); _network != "" {
+		lis, err = kcp.InheritedListen(_network, addrStr, tlsConfig, dataShards, parityShards)
 	} else {
 		lis, err = normal.Listen(network, addrStr)
 		if err == nil && tlsConfig != nil {
@@ -47,9 +33,5 @@ func NewInheritedListener(addr net.Addr, tlsConfig *tls.Config) (lis net.Listene
 			lis = tls.NewListener(lis, tlsConfig)
 		}
 	}
-
-	//if err == nil {
-	//	graceful.Graceful().PushParentAddr(network, host, lis.Addr().String())
-	//}
 	return
 }

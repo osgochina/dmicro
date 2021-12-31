@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/os/grpool"
 	"github.com/gogf/gf/util/grand"
 	"github.com/osgochina/dmicro/drpc/codec"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/drpc/socket"
@@ -421,11 +422,11 @@ func (that *endpoint) ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Se
 			return nil, NewStatus(CodeWrongConn, "not support "+network, "network must be one of the following: tcp, tcp4, tcp6, unix, unixpacket, kcp or quic")
 		}
 		network = "quic"
-		//} else if asKCP(network) != "" {
-		//	if _, ok := conn.(*kcp.UDPSession); !ok {
-		//		return nil, NewStatus(CodeWrongConn, "not support "+network, "network must be one of the following: tcp, tcp4, tcp6, unix, unixpacket, kcp or quic")
-		//	}
-		//	network = "kcp"
+	} else if asKCP(network) != "" {
+		if _, ok := conn.(*kcp.UDPSession); !ok {
+			return nil, NewStatus(CodeWrongConn, "not support "+network, "network must be one of the following: tcp, tcp4, tcp6, unix, unixpacket, kcp or quic")
+		}
+		network = "kcp"
 	}
 
 	var sess = newSession(that, conn, protoFunc)

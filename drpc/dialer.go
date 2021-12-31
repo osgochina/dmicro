@@ -4,11 +4,18 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
 	"net"
 	"time"
+)
+
+// kcp 协议的配置
+const (
+	dataShards   = 10
+	parityShards = 3
 )
 
 // Dialer 拨号器
@@ -125,9 +132,9 @@ func (that *Dialer) dialOne(addr string) (net.Conn, error) {
 		return quic.DialAddrContext(ctx, network, that.localAddr.(*utils.FakeAddr).UdpAddr(), addr, tlsConf, nil)
 	}
 
-	//if network := asKCP(d.network); network != "" {
-	//	return kcp.DialAddrContext(network, d.localAddr.(*FakeAddr).udpAddr, addr, d.tlsConfig, dataShards, parityShards)
-	//}
+	if network := asKCP(that.network); network != "" {
+		return kcp.DialAddrContext(network, that.localAddr.(*utils.FakeAddr).UdpAddr(), addr, that.tlsConfig, dataShards, parityShards)
+	}
 
 	dialer := &net.Dialer{
 		LocalAddr: that.localAddr,
