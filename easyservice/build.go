@@ -2,7 +2,9 @@ package easyservice
 
 import (
 	"fmt"
+	"github.com/gogf/gf"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/osgochina/dmicro"
 )
 
 var (
@@ -18,5 +20,7 @@ func (that *EasyService) version() {
 	fmt.Printf("Server Build Time: %s\n", BuildTime)
 	fmt.Printf("Go version: %s\n", BuildGoVersion)
 	fmt.Printf("Git commit: %s\n", BuildGitCommitId)
+	fmt.Printf("DMicro Version: %s\n", dmicro.Version)
+	fmt.Printf("GF Version: %s\n", gf.VERSION)
 	fmt.Printf("Install Path: %s\n", gfile.SelfPath())
 }
