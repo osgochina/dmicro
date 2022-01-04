@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"math/big"
 	"net"
+	"strings"
 )
 
 // NewTLSConfigFromFile 通过证书文件生成证书信息
@@ -137,4 +138,29 @@ func GenerateTLSConfigForServer() *tls.Config {
 		panic(err)
 	}
 	return newTLSConfig(cert)
+}
+
+// IsSameAddr 判断两个地址是否相同
+func IsSameAddr(addOne, addTwo net.Addr) bool {
+	if addOne.Network() != addTwo.Network() {
+		return false
+	}
+	addOneStr := addOne.String()
+	addTwoStr := addTwo.String()
+
+	if addOneStr == addTwoStr {
+		return true
+	}
+	//去掉地址上的ipv6前缀
+	const ipv6prefix = "[::]"
+	addOneStr = strings.TrimPrefix(addOneStr, ipv6prefix)
+	addTwoStr = strings.TrimPrefix(addTwoStr, ipv6prefix)
+
+	//去掉地址上的ipv4前缀
+	const ipv4prefix = "0.0.0.0"
+	addOneStr = strings.TrimPrefix(addOneStr, ipv4prefix)
+	addTwoStr = strings.TrimPrefix(addTwoStr, ipv4prefix)
+
+	//判断去掉前缀后的地址是否相等
+	return addOneStr == addTwoStr
 }

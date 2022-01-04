@@ -8,8 +8,8 @@ import (
 
 // kcp 协议的配置
 const (
-	DefaultDataShards   = 10
-	DefaultParityShards = 3
+	DefaultDataShards   = 10 //FEC前向纠错算法的数据冗余度
+	DefaultParityShards = 3  ////FEC前向纠错算法的奇偶校验配置
 )
 
 type (

@@ -4,9 +4,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/lucas-clemente/quic-go"
+	"github.com/osgochina/dmicro/utils"
 	"net"
 	"os"
-	"strings"
 	"sync"
 )
 
@@ -48,6 +48,7 @@ type inheritQUIC struct {
 
 	//传递需要继承的文件句柄列表方法
 	addInherited func([]*Listener, map[string]string)
+	// 获取从父进程继承过来的句柄列表
 	getInherited func() []int
 }
 
@@ -93,7 +94,7 @@ func (that *inheritQUIC) inheritedListen(network string, udpAddr *net.UDPAddr, t
 			continue
 		}
 		//如果将要监听的地址已经在继承列表中，则直接返回该继承的句柄
-		if isSameAddr(conn.LocalAddr(), udpAddr) {
+		if utils.IsSameAddr(conn.LocalAddr(), udpAddr) {
 			that.inherited[i] = nil //如果地址相同，则把改地址从继承列表拿出来使用
 			udpConn = conn
 		}
@@ -146,29 +147,4 @@ func (that *inheritQUIC) inherit() error {
 		}
 	})
 	return retErr
-}
-
-//判断两个地址是否相同
-func isSameAddr(addOne, addTwo net.Addr) bool {
-	if addOne.Network() != addTwo.Network() {
-		return false
-	}
-	addOneStr := addOne.String()
-	addTwoStr := addTwo.String()
-
-	if addOneStr == addTwoStr {
-		return true
-	}
-	//去掉地址上的ipv6前缀
-	const ipv6prefix = "[::]"
-	addOneStr = strings.TrimPrefix(addOneStr, ipv6prefix)
-	addTwoStr = strings.TrimPrefix(addTwoStr, ipv6prefix)
-
-	//去掉地址上的ipv4前缀
-	const ipv4prefix = "0.0.0.0"
-	addOneStr = strings.TrimPrefix(addOneStr, ipv4prefix)
-	addTwoStr = strings.TrimPrefix(addTwoStr, ipv4prefix)
-
-	//判断去掉前缀后的地址是否相等
-	return addOneStr == addTwoStr
 }
