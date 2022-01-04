@@ -16,12 +16,13 @@ import (
 )
 
 var defaultOptions = map[string]bool{
-	"h,host": true,
-	"p,port": true,
-	"c,conf": true,
-	"env":    true,
-	"pid":    true,
-	"debug":  true,
+	"network": true,
+	"h,host":  true,
+	"p,port":  true,
+	"c,conf":  true,
+	"env":     true,
+	"pid":     true,
+	"debug":   true,
 }
 
 // SetOptions 添加自定义的参数解析
@@ -39,16 +40,18 @@ func SetOption(key string, v bool) {
 var (
 	helpContent = gstr.TrimLeft(`
 USAGE
-	./server start|stop|quit [default|custom] [OPTION]
+	./server [start|stop|quit] [default|custom] [OPTION]
 OPTION
-	-h,--host	服务监听地址，默认监听的地址为127.0.0.1
-	-p,--port	服务监听端口，默认监听端口为0，表示随机监听
-	-d,--daemon	debug模式开关，默认关闭debug=false
+	-h,--host       服务监听地址，默认监听的地址为127.0.0.1
+	-p,--port       服务监听端口，默认监听端口为0，表示随机监听
+	--network       监听的网络协议，支持tcp,tcp4,tcp6,默认tcp
+	-d,--daemon     debug模式开关，默认关闭debug=false
 	--gf.gcfg.file  需要加载的配置文件名 如 config.dev.toml
-	--env		环境变量，表示当前启动所在的环境,有[dev,test,product]这三种，默认是product
-	--debug		default debug=false
-	--pid		设置pid文件的地址，默认是/tmp/[server].pid
-EXAMPLES	
+	--env           环境变量，表示当前启动所在的环境,有[dev,test,product]这三种，默认是product
+	--debug         是否开启debug 默认debug=false
+	--pid           设置pid文件的地址，默认是/tmp/[server].pid
+EXAMPLES
+	/path/to/server 
 	/path/to/server start --env=dev --debug=true --pid=/tmp/server.pid
 	/path/to/server start --host=127.0.0.1 --port=8808
 	/path/to/server start --host=127.0.0.1 --port=8808 --gf.gcfg.file=config.product.toml
@@ -70,15 +73,6 @@ func SetHelpContent(content string) {
 // 解析命令行，根据返回值判断是否继续执行
 // 返回false，则结束进程，返回true继续执行
 func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
-	var pidFile string
-	if len(that.processName) > 0 {
-		pidFile = fmt.Sprintf("%s.pid", that.processName)
-	} else {
-		pidFile = "easyservice.pid"
-	}
-	//设置pid文件
-	that.pidFile = parser.GetOpt("pid", gfile.TempDir(pidFile))
-
 	command := gcmd.GetArg(1)
 	switch strings.ToLower(command) {
 	case "help":
@@ -88,20 +82,30 @@ func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
 		that.version()
 		return false
 	case "start":
+		that.initSandboxNames()
+		that.initPidFile(parser)
 		that.checkStart()
 		return true
 	case "stop":
-		that.stop(parser, "stop")
+		that.initSandboxNames()
+		that.initPidFile(parser)
+		that.stop("stop")
+		return false
 	case "reload":
-		that.stop(parser, "reload")
+		that.initSandboxNames()
+		that.initPidFile(parser)
+		that.stop("reload")
+		return false
 	case "quit":
-		that.stop(parser, "quit")
+		that.initSandboxNames()
+		that.initPidFile(parser)
+		that.stop("quit")
 		return false
 	default:
-		for k := range gcmd.GetOptAll() {
-			switch k {
+		for _, v := range gcmd.GetArgAll() {
+			switch v {
 			case "?", "h":
-				fmt.Println(helpContent)
+				that.help()
 				return false
 			case "i", "v":
 				that.version()
@@ -109,11 +113,14 @@ func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
 			}
 		}
 	}
-	that.help()
-	return false
+	that.initSandboxNames()
+	that.initPidFile(parser)
+	that.checkStart()
+	return true
 }
 
-func (that *EasyService) stop(parser *gcmd.Parser, signal string) {
+// 停止服务
+func (that *EasyService) stop(signal string) {
 	pidFile := that.pidFile
 	var serverPid = 0
 	if gfile.IsFile(pidFile) {
@@ -138,11 +145,47 @@ func (that *EasyService) stop(parser *gcmd.Parser, signal string) {
 	}
 	err := syscallKill(serverPid, sigNo)
 	if err != nil {
-		logger.Errorf("error:%v", err)
+		fmt.Println(fmt.Errorf("error:%v", err))
 	}
 	os.Exit(0)
 }
 
+// 初始化要启动的服务名
+func (that *EasyService) initSandboxNames() {
+	command := gcmd.GetArg(1)
+	switch strings.ToLower(command) {
+	case "start":
+		fallthrough
+	case "stop":
+		fallthrough
+	case "reload":
+		fallthrough
+	case "quit":
+		// 获取要启动的服务名，并存储
+		sandboxNames := gcmd.GetArg(2)
+		if len(sandboxNames) > 0 {
+			sandboxNames = gstr.Trim(sandboxNames)
+			sandboxNameArray := gstr.Split(sandboxNames, ",")
+			if len(sandboxNameArray) > 1 {
+				that.sandboxNames.Append(sandboxNameArray...)
+			} else {
+				that.sandboxNames.Append(sandboxNames)
+			}
+		}
+	}
+	return
+}
+
+// 初始化pid文件地址
+func (that *EasyService) initPidFile(parser *gcmd.Parser) {
+	pidFile := "easyservice.pid"
+	if that.sandboxNames.Len() > 0 {
+		pidFile = fmt.Sprintf("%s.pid", that.sandboxNames.Join("-"))
+	}
+	that.pidFile = parser.GetOpt("pid", gfile.TempDir(pidFile))
+}
+
+// 检查服务是否已经启动
 func (that *EasyService) checkStart() {
 	pidFile := that.pidFile
 	var serverPid = 0

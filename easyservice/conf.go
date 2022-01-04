@@ -15,7 +15,7 @@ import (
 type BoxConf struct {
 	id                 int           //服务沙盒的id"
 	SandBoxName        string        `json:"sandbox_name"   comment:"服务沙盒的名字"`
-	Network            string        `json:"network"        comment:"使用的网络协议; tcp, tcp4, tcp6, unix or unixpacket"`
+	Network            string        `json:"network"        comment:"使用的网络协议; tcp, tcp4, tcp6,kcp,quic,unix or unixpacket"`
 	ListenAddress      string        `json:"listen_address" comment:"监听地址"`
 	PrintDetail        bool          `json:"print_detail"   comment:"是否显示通讯详情"`
 	SessionMaxTimeout  time.Duration `json:"session_max_timeout" comment:"会话生命周期"`
@@ -28,29 +28,43 @@ type BoxConf struct {
 }
 
 // NewBoxConf 创建BoxConf对象
-func NewBoxConf() *BoxConf {
-	return &BoxConf{}
+func NewBoxConf(name string, config *gcfg.Config, parsers ...*gcmd.Parser) *BoxConf {
+	cfg := &BoxConf{}
+
+	cfg.id = config.GetInt(fmt.Sprintf("%s.Id", name), 0)
+	cfg.SandBoxName = config.GetString(fmt.Sprintf("%s.Name", name), "")
+
+	cfg.Network = config.GetString(fmt.Sprintf("%s.Network", name), "tcp")
+	host := config.GetString(fmt.Sprintf("%s.Host", name), "0.0.0.0")
+	port := config.GetInt(fmt.Sprintf("%s.Port", name), 0)
+	cfg.ListenAddress = fmt.Sprintf("%s:%d", host, port)
+
+	cfg.SessionMaxTimeout = config.GetDuration(fmt.Sprintf("%s.SessionMaxTimeout", name), 0)
+	cfg.ResponseMaxTimeout = config.GetDuration(fmt.Sprintf("%s.ResponseMaxTimeout", name), 0)
+	cfg.RequestMaxTimeout = config.GetDuration(fmt.Sprintf("%s.RequestMaxTimeout", name), 0)
+	cfg.SlowTimeout = config.GetDuration(fmt.Sprintf("%s.SlowTimeout", name), 0)
+	cfg.CountTime = config.GetBool(fmt.Sprintf("%s.CountTime", name), false)
+	cfg.RedialTimes = config.GetInt(fmt.Sprintf("%s.RedialTimes", name), 0)
+	cfg.RedialInterval = config.GetDuration(fmt.Sprintf("%s.RedialTimes", name), 0)
+
+	debug := config.GetBool("Debug", false)
+	cfg.PrintDetail = debug
+	// 命令行参数覆盖配置文件
+	if len(parsers) > 0 {
+		parser := parsers[0]
+		cfg.ListenAddress = fmt.Sprintf("%s:%d",
+			parser.GetOptVar("host", host).String(),
+			parser.GetOptVar("port", port).Int(),
+		)
+		cfg.Network = parser.GetOptVar(fmt.Sprintf("%s.Network", name), cfg.Network).String()
+	}
+
+	return cfg
 }
 
 // DefaultBoxConf 创建运行配置
 func DefaultBoxConf(parser *gcmd.Parser, config *gcfg.Config) *BoxConf {
-	cfg := NewBoxConf()
-	cfg.Network = config.GetString("default.sandbox.Network", "tcp")
-	host := parser.GetOptVar("host", config.GetString("default.sandbox.Host", "0.0.0.0"))
-	port := parser.GetOptVar("port", config.GetInt("default.sandbox.Port", 0))
-	debug := parser.GetOptVar("debug", config.GetBool("Debug", false))
-	cfg.ListenAddress = fmt.Sprintf("%s:%d", host.String(), port.Int())
-	cfg.id = config.GetInt("default.sandbox.Id", 0)
-	cfg.SandBoxName = config.GetString("default.sandbox.Name", "")
-	cfg.PrintDetail = debug.Bool()
-	cfg.SessionMaxTimeout = config.GetDuration("default.sandbox.SessionMaxTimeout", 0)
-	cfg.ResponseMaxTimeout = config.GetDuration("default.sandbox.ResponseMaxTimeout", 0)
-	cfg.RequestMaxTimeout = config.GetDuration("default.sandbox.RequestMaxTimeout", 0)
-	cfg.SlowTimeout = config.GetDuration("default.sandbox.SlowTimeout", 0)
-	cfg.SlowTimeout = config.GetDuration("default.sandbox.SlowTimeout", 0)
-	cfg.CountTime = config.GetBool("default.sandbox.CountTime", false)
-	cfg.RedialTimes = config.GetInt("default.sandbox.RedialTimes", 0)
-	cfg.RedialInterval = config.GetDuration("default.sandbox.RedialTimes", 0)
+	cfg := NewBoxConf("default.sandbox", config, parser)
 	return cfg
 }
 

@@ -28,11 +28,11 @@ func main() {
 
 		// 使用master worker 进程模型实现平滑重启
 		err = graceful.SetInheritListener([]graceful.InheritAddr{
-			{Network: "tcp", Host: "127.0.0.1", Port: "8199"},
+			{Network: svr.CmdParser().GetOptVar("network", "tcp").String(), Host: svr.CmdParser().GetOptVar("host", "127.0.0.1").String(), Port: "8199"},
 			{Network: "http", Host: "127.0.0.1", Port: "8080", ServerName: "default"},
 		})
 		if err != nil {
-			logger.Error(err)
+			logger.Fatal(err)
 			return
 		}
 		var cfg = easyservice.DefaultBoxConf(svr.CmdParser(), svr.Config())
@@ -55,6 +55,11 @@ func main() {
 		rpc3.Endpoint().SubRoute("/app").RouteCallFunc(Home)
 		rpc3.Endpoint().SetTLSConfig(tlsConfigKCP)
 		svr.AddSandBox(rpc3)
+
+		var cfg4 = easyservice.NewBoxConf("sandboxBak", svr.Config())
+		rpc4 := sandbox.NewDefaultSandBox(cfg4)
+		rpc4.Endpoint().SubRoute("/app").RouteCallFunc(Home)
+		svr.AddSandBox(rpc4)
 
 		http := sandbox.NewHttpSandBox(svr)
 		svr.AddSandBox(http)

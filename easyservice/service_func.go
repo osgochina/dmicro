@@ -61,5 +61,5 @@ func Shutdown() {
 
 // SetProcessName 设置进程名称
 func SetProcessName(name string) {
-	defaultService.setProcessName(name)
+	//defaultService.setProcessName(name)
 }
