@@ -19,7 +19,6 @@ var defaultOptions = map[string]bool{
 	"network": true,
 	"h,host":  true,
 	"p,port":  true,
-	"c,conf":  true,
 	"env":     true,
 	"pid":     true,
 	"debug":   true,
