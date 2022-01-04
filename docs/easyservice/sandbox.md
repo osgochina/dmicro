@@ -1,0 +1,81 @@
+# 服务沙盒
+
+`服务沙盒`的作用是为了隔离区分业务，让每个业务能够相对独立的运行在自己的环境中，并且多个业务之间不互相干扰。
+
+需要创建`服务沙盒`,需要实现`ISandBox`接口。
+
+```go
+type ISandBox interface {
+	ID() int               // 沙盒id
+	Name() string          // 沙盒名字
+	Setup() error          // 启动沙盒
+	Shutdown() error       //关闭沙盒
+	Service() *EasyService //返回当前所在服务
+}
+```
+
+以下是沙盒的示例：
+
+```go
+package sandbox
+
+import (
+	"fmt"
+	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/easyservice"
+)
+
+// DefaultSandBox  默认的服务
+type DefaultSandBox struct {
+	id       int
+	name     string
+	boxConf  *easyservice.BoxConf
+	service  *easyservice.EasyService
+	endpoint drpc.Endpoint
+}
+
+// NewDefaultSandBox 创建一个默认的服务沙盒
+func NewDefaultSandBox(cfg *easyservice.BoxConf, globalLeftPlugin ...drpc.Plugin) *DefaultSandBox {
+	id := easyservice.GetNextSandBoxId()
+	if len(cfg.SandBoxName) <= 0 {
+		cfg.SandBoxName = fmt.Sprintf("default_%d", id)
+	}
+
+	sBox := &DefaultSandBox{
+		id:      id,
+		name:    cfg.SandBoxName,
+		boxConf: cfg,
+	}
+	var pluginArray []drpc.Plugin
+	if len(globalLeftPlugin) > 0 {
+		pluginArray = append(pluginArray, globalLeftPlugin...)
+	}
+	sBox.endpoint = drpc.NewEndpoint(cfg.EndpointConfig(), pluginArray...)
+	return sBox
+}
+
+func (that *DefaultSandBox) ID() int {
+	return that.id
+}
+
+func (that *DefaultSandBox) Name() string {
+	return that.name
+}
+
+func (that *DefaultSandBox) Setup() error {
+
+	return that.endpoint.ListenAndServe()
+}
+
+func (that *DefaultSandBox) Shutdown() error {
+	return that.endpoint.Close()
+}
+
+func (that *DefaultSandBox) Endpoint() drpc.Endpoint {
+	return that.endpoint
+}
+
+func (that *DefaultSandBox) Service() *easyservice.EasyService {
+	return that.service
+}
+```
