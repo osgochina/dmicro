@@ -3,7 +3,6 @@ package easyservice
 import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/os/gfile"
@@ -16,12 +15,13 @@ import (
 )
 
 var defaultOptions = map[string]bool{
-	"network": true,
-	"h,host":  true,
-	"p,port":  true,
-	"env":     true,
-	"pid":     true,
-	"debug":   true,
+	"network":  true,
+	"h,host":   true,
+	"p,port":   true,
+	"c,config": true,
+	"env":      true,
+	"pid":      true,
+	"debug":    true,
 }
 
 // SetOptions 添加自定义的参数解析
@@ -41,19 +41,21 @@ var (
 USAGE
 	./server [start|stop|quit] [default|custom] [OPTION]
 OPTION
-	-h,--host       服务监听地址，默认监听的地址为127.0.0.1
-	-p,--port       服务监听端口，默认监听端口为0，表示随机监听
-	--network       监听的网络协议，支持tcp,tcp4,tcp6,默认tcp
-	-d,--daemon     debug模式开关，默认关闭debug=false
-	--gf.gcfg.file  需要加载的配置文件名 如 config.dev.toml
+	-c,--config     指定要载入的配置文件，该参数与gf.gcfg.file参数二选一，建议使用该参数
+	-d,--daemon     使用守护进程模式启动
 	--env           环境变量，表示当前启动所在的环境,有[dev,test,product]这三种，默认是product
 	--debug         是否开启debug 默认debug=false
 	--pid           设置pid文件的地址，默认是/tmp/[server].pid
+	-h,--host       服务监听地址，默认监听的地址为127.0.0.1
+	-p,--port       服务监听端口，默认监听端口为0，表示随机监听
+	--network       监听的网络协议，支持tcp,tcp4,tcp6,默认tcp
+	
 EXAMPLES
 	/path/to/server 
 	/path/to/server start --env=dev --debug=true --pid=/tmp/server.pid
 	/path/to/server start --host=127.0.0.1 --port=8808
 	/path/to/server start --host=127.0.0.1 --port=8808 --gf.gcfg.file=config.product.toml
+	/path/to/server start --host=127.0.0.1 --port=8808 -c=config.product.toml
 	/path/to/server start user --host=127.0.0.1 --port=8808 
 	/path/to/server start pay  --host=127.0.0.1 --port=8808
 	/path/to/server stop
@@ -202,7 +204,7 @@ func (that *EasyService) checkStart() {
 
 //解析配置文件
 func (that *EasyService) parserConfig(parser *gcmd.Parser) {
-	that.config = gcfg.Instance()
+	that.config = that.getGFConf(parser)
 	array := garray.NewStrArrayFrom(os.Args)
 	//判断是否需要后台运行
 	index := array.Search("--daemon")

@@ -153,13 +153,23 @@ func (that *EasyService) StartTime() *gtime.Time {
 	return that.started
 }
 
+// SandboxNames 获取当前需要启动的服务沙盒，如果为空，则表示未传入
+func (that *EasyService) SandboxNames() *garray.StrArray {
+	return that.sandboxNames
+}
+
 //设置日志级别
 func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 	level := config.GetString("logger.Level", "PRODUCT")
-
-	env := that.config.GetString("ENV_NAME")
+	if len(level) <= 0 {
+		level = "PRODUCT"
+	}
+	env := config.GetString("ENV_NAME", "product")
 	if len(env) > 0 && env == "dev" || env == "develop" {
 		level = "DEVELOP"
+	}
+	if len(env) <= 0 {
+		env = "product"
 	}
 	err := logger.SetConfigWithMap(g.Map{
 		"path":   config.GetString("logger.Path"),
