@@ -4,6 +4,8 @@
 package graceful
 
 import (
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"net"
 	"os"
 	"os/exec"
@@ -24,10 +26,10 @@ func (that *graceful) GraceSignal() {
 	signal.Stop(that.signal)
 	that.Shutdown()
 }
-func (that *graceful) Reboot(_ ...time.Duration)                             {}
-func (that *graceful) shutdownMaster()                                       {}
-func (that *graceful) rebootMasterWorker()                                   {}
-func (that *graceful) AddInherited(_ []net.Listener, _ map[string]string)    {}
-func (that *graceful) AddInheritedQUIC(_ []interface{}, _ map[string]string) {}
-func (that *graceful) AddInheritedKCP(_ []interface{}, _ map[string]string)  {}
-func (that *graceful) startProcess() (*exec.Cmd, error)                      { return nil, nil }
+func (that *graceful) Reboot(_ ...time.Duration)                                {}
+func (that *graceful) shutdownMaster()                                          {}
+func (that *graceful) rebootMasterWorker()                                      {}
+func (that *graceful) AddInherited(_ []net.Listener, _ map[string]string)       {}
+func (that *graceful) AddInheritedQUIC(_ []*quic.Listener, _ map[string]string) {}
+func (that *graceful) AddInheritedKCP(_ []*kcp.Listener, _ map[string]string)   {}
+func (that *graceful) startProcess() (*exec.Cmd, error)                         { return nil, nil }
