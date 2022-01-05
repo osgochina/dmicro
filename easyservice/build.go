@@ -12,6 +12,7 @@ var (
 	BuildGoVersion   = "No Version Info"
 	BuildGitCommitId = "No Commit Info"
 	BuildTime        = "No Time Info"
+	Authors          = "No Authors Info"
 )
 
 //显示版本信息
@@ -22,5 +23,6 @@ func (that *EasyService) version() {
 	fmt.Printf("Git commit: %s\n", BuildGitCommitId)
 	fmt.Printf("DMicro Version: %s\n", dmicro.Version)
 	fmt.Printf("GF Version: %s\n", gf.VERSION)
+	fmt.Printf("Authors: %s\n", Authors)
 	fmt.Printf("Install Path: %s\n", gfile.SelfPath())
 }
