@@ -14,6 +14,7 @@ func SetInheritListener(_ []InheritAddr) error { return nil }
 
 // 发送结束信号给进程
 func syscallKillSIGTERM(_ int) error { return nil }
+func syscallKillSIGQUIT(_ int) error { return nil }
 
 func (that *graceful) GraceSignal() {
 	// subscribe to SIGINT signals
