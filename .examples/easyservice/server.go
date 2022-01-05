@@ -8,7 +8,6 @@ import (
 	"github.com/osgochina/dmicro/easyservice"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
-	"github.com/osgochina/dmicro/utils/graceful"
 )
 
 func Home(ctx drpc.CallCtx, args *struct{}) (string, *drpc.Status) {
@@ -26,11 +25,11 @@ func main() {
 		tlsConfigQUIC, err := utils.NewTLSConfigFromFile(fmt.Sprintf("%s/../quic/cert.pem", gfile.MainPkgPath()), fmt.Sprintf("%s/../quic/key.pem", gfile.MainPkgPath()))
 		tlsConfigKCP, err := utils.NewTLSConfigFromFile(fmt.Sprintf("%s/../kcp/cert.pem", gfile.MainPkgPath()), fmt.Sprintf("%s/../kcp/key.pem", gfile.MainPkgPath()))
 
-		// 使用master worker 进程模型实现平滑重启
-		err = graceful.SetInheritListener([]graceful.InheritAddr{
-			{Network: svr.CmdParser().GetOptVar("network", "tcp").String(), Host: svr.CmdParser().GetOptVar("host", "127.0.0.1").String(), Port: "8199"},
-			{Network: "http", Host: "127.0.0.1", Port: "8080", ServerName: "default"},
-		})
+		//// 使用master worker 进程模型实现平滑重启
+		//err = graceful.SetInheritListener([]graceful.InheritAddr{
+		//	{Network: svr.CmdParser().GetOptVar("network", "tcp").String(), Host: svr.CmdParser().GetOptVar("host", "127.0.0.1").String(), Port: "8199"},
+		//	{Network: "http", Host: "127.0.0.1", Port: "8080", ServerName: "default"},
+		//})
 		if err != nil {
 			logger.Fatal(err)
 			return

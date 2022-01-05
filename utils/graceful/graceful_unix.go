@@ -186,13 +186,13 @@ func (that *graceful) graceSignalGracefulChangeProcess() {
 		logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
 		switch sig {
 		// 强制关闭服务
-		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
+		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGABRT:
 			signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
 			// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
 			that.Shutdown(time.Second)
 			continue
 		// 平滑的关闭服务
-		case syscall.SIGTERM:
+		case syscall.SIGQUIT:
 			signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
 			// 平滑重启的时候使用默认超时时间，能够等待业务处理完毕，优雅的结束
 			that.Shutdown()
@@ -223,13 +223,13 @@ func (that *graceful) graceSignalGracefulMW() {
 			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
 			// 强制关闭服务
-			case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
+			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGABRT:
 				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
 				// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
 				that.Shutdown(time.Second)
 				continue
 			// 平滑的关闭服务
-			case syscall.SIGTERM:
+			case syscall.SIGQUIT:
 				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
 				// 平滑重启的时候使用默认超时时间，能够等待业务处理完毕，优雅的结束
 				that.Shutdown()
@@ -253,10 +253,15 @@ func (that *graceful) graceSignalGracefulMW() {
 			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
 			// 关闭服务
-			case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM:
+			case syscall.SIGINT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM:
 				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
 				// 强制关闭的时候，设置超时时间为1秒，表示1秒后强制结束
 				that.shutdownMaster()
+				continue
+			//优化的关闭服务
+			case syscall.SIGQUIT:
+				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
+				that.quitMaster()
 				continue
 			// 平滑重启服务
 			case syscall.SIGUSR2:
@@ -309,8 +314,8 @@ func (that *graceful) rebootMasterWorker() {
 		logger.Errorf("MasterWorker模式下重启子进程失败,err:%v", err)
 		return
 	}
-	logger.Printf("主进程:%d 向子进程: %d 发送信号SIGTERM", os.Getpid(), pid)
-	_ = syscallKillSIGTERM(pid)
+	logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
+	_ = syscallKillSIGQUIT(pid)
 	that.processStatus.Set(statusActionNone)
 	that.mwChildCmd <- cmd
 }
@@ -321,6 +326,14 @@ func (that *graceful) shutdownMaster() {
 	pid := that.mwPid
 	logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
 	_ = syscallKillSIGTERM(pid)
+}
+
+//master worker进程模式，优雅退出master进程方法
+func (that *graceful) quitMaster() {
+	defer os.Exit(0)
+	pid := that.mwPid
+	logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGQUIT`, os.Getpid(), pid)
+	_ = syscallKillSIGQUIT(pid)
 }
 
 //启动新的进程
@@ -409,4 +422,9 @@ func (that *graceful) getExtraFiles() ([]*os.File, error) {
 // 发送结束信号给进程
 func syscallKillSIGTERM(pid int) error {
 	return syscall.Kill(pid, syscall.SIGTERM)
+}
+
+// 发送结束信号给进程
+func syscallKillSIGQUIT(pid int) error {
+	return syscall.Kill(pid, syscall.SIGQUIT)
 }
