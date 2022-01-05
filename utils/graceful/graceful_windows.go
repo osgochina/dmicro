@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package graceful
@@ -23,8 +24,10 @@ func (that *graceful) GraceSignal() {
 	signal.Stop(that.signal)
 	that.Shutdown()
 }
-func (that *graceful) Reboot(_ ...time.Duration)                          {}
-func (that *graceful) shutdownMaster()                                    {}
-func (that *graceful) rebootMasterWorker()                                {}
-func (that *graceful) AddInherited(_ []net.Listener, _ map[string]string) {}
-func (that *graceful) startProcess() (*exec.Cmd, error)                   { return nil, nil }
+func (that *graceful) Reboot(_ ...time.Duration)                             {}
+func (that *graceful) shutdownMaster()                                       {}
+func (that *graceful) rebootMasterWorker()                                   {}
+func (that *graceful) AddInherited(_ []net.Listener, _ map[string]string)    {}
+func (that *graceful) AddInheritedQUIC(_ []interface{}, _ map[string]string) {}
+func (that *graceful) AddInheritedKCP(_ []interface{}, _ map[string]string)  {}
+func (that *graceful) startProcess() (*exec.Cmd, error)                      { return nil, nil }
