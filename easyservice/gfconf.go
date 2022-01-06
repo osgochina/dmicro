@@ -25,13 +25,13 @@ func (that *EasyService) getGFConf(parser *gcmd.Parser) *gcfg.Config {
 	confFile := parser.GetOpt("config")
 	if len(confFile) > 0 {
 		//指定了具体的配置文件地址
-		if gstr.Contains(confFile, "/") {
+		if gstr.Contains(confFile, gfile.Separator) {
 			confPath := gfile.Abs(confFile)
 			if gfile.Exists(confPath) {
 				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
 				return gcfg.Instance()
 			}
-			confPath = fmt.Sprintf("%s/%s", gfile.MainPkgPath(), gfile.Basename(confPath))
+			confPath = fmt.Sprintf("%s%s%s", gfile.MainPkgPath(), gfile.Separator, gfile.Basename(confPath))
 			if gfile.Exists(confPath) {
 				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
 				return gcfg.Instance()
