@@ -15,7 +15,7 @@ func ToSignal(signalName string) os.Signal {
 	if signalName == "HUP" {
 		return syscall.SIGHUP
 	} else if signalName == "INT" {
-		return syscall.SIGINT, nil
+		return syscall.SIGINT
 	} else if signalName == "QUIT" {
 		return syscall.SIGQUIT
 	} else if signalName == "KILL" {
@@ -27,7 +27,7 @@ func ToSignal(signalName string) os.Signal {
 		logger.Warning("signal USR2 is not supported in windows")
 		return syscall.SIGTERM
 	} else {
-		return syscall.SIGTERM, nil
+		return syscall.SIGTERM
 
 	}
 
