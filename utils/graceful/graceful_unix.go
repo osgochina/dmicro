@@ -15,6 +15,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
+	"github.com/osgochina/dmicro/utils/signals"
 	"net"
 	"os"
 	"os/exec"
@@ -315,7 +316,7 @@ func (that *graceful) rebootMasterWorker() {
 		return
 	}
 	logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
-	_ = syscallKillSIGQUIT(pid)
+	_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 	that.processStatus.Set(statusActionNone)
 	that.mwChildCmd <- cmd
 }
@@ -325,7 +326,7 @@ func (that *graceful) shutdownMaster() {
 	defer os.Exit(0)
 	pid := that.mwPid
 	logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
-	_ = syscallKillSIGTERM(pid)
+	_ = signals.KillPid(pid, signals.ToSignal("SIGTERM"), false)
 }
 
 //master worker进程模式，优雅退出master进程方法
@@ -333,7 +334,7 @@ func (that *graceful) quitMaster() {
 	defer os.Exit(0)
 	pid := that.mwPid
 	logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGQUIT`, os.Getpid(), pid)
-	_ = syscallKillSIGQUIT(pid)
+	_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 }
 
 //启动新的进程
@@ -417,14 +418,4 @@ func (that *graceful) getExtraFiles() ([]*os.File, error) {
 	}
 
 	return extraFiles, nil
-}
-
-// 发送结束信号给进程
-func syscallKillSIGTERM(pid int) error {
-	return syscall.Kill(pid, syscall.SIGTERM)
-}
-
-// 发送结束信号给进程
-func syscallKillSIGQUIT(pid int) error {
-	return syscall.Kill(pid, syscall.SIGQUIT)
 }

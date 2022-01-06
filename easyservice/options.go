@@ -9,9 +9,9 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/signals"
 	"os"
 	"strings"
-	"syscall"
 )
 
 var defaultOptions = map[string]bool{
@@ -132,19 +132,19 @@ func (that *EasyService) stop(signal string) {
 		os.Exit(0)
 	}
 
-	var sigNo syscall.Signal
+	var sigNo string
 	switch signal {
 	case "stop":
-		sigNo = syscall.SIGTERM
+		sigNo = "SIGTERM"
 	case "reload":
-		sigNo = syscallSIGUSR
+		sigNo = "SIGUSR2"
 	case "quit":
-		sigNo = syscall.SIGQUIT
+		sigNo = "SIGQUIT"
 	default:
 		fmt.Printf("signal cmd `%s' not found", signal)
 		os.Exit(0)
 	}
-	err := syscallKill(serverPid, sigNo)
+	err := signals.KillPid(serverPid, signals.ToSignal(sigNo), false)
 	if err != nil {
 		fmt.Println(fmt.Errorf("error:%v", err))
 	}
@@ -196,7 +196,7 @@ func (that *EasyService) checkStart() {
 	if serverPid == 0 {
 		return
 	}
-	if checkStart(serverPid) {
+	if signals.CheckPidExist(serverPid) {
 		logger.Fatalf("Server [%d] is already running.", serverPid)
 	}
 	return

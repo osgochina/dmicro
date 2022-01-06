@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/utils/signals"
 	"net"
 	"syscall"
 )
@@ -31,7 +32,7 @@ func (that *graceful) onStart() {
 	}
 	pPid := syscall.Getppid()
 	if pPid != 1 {
-		if err := syscallKillSIGTERM(pPid); err != nil {
+		if err := signals.KillPid(pPid, signals.ToSignal("SIGTERM"), false); err != nil {
 			logger.Errorf("子进程重启后向父进程发送信号失败，error: %s", err.Error())
 			return
 		}
