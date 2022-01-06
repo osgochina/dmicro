@@ -33,7 +33,7 @@ import "github.com/osgochina/dmicro"
 
 ## 限制
 ```shell
-golang版本 >= 1.13
+golang版本 >= 1.16
 ```
 
 ## rpc服务
