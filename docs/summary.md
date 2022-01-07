@@ -40,6 +40,7 @@
     * [安全传输](drpc/plugin_securebody.md)
     * [代理proxy](drpc/plugin_proxy.md)
   * [平滑重启 - Graceful](drpc/graceful.md)
+  * [WebSocket支持](drpc/websocket.md)
 
 * 组件库
   * [EventBus(事件总线)](component/eventBus.md)
