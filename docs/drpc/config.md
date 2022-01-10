@@ -57,8 +57,8 @@ svr := drpc.NewEndpoint(config)
 * 如果角色是服务端，则会使用对应的网络类型监听具体的端口或地址。
 * 如果角色是客户端，则会使用对应的网络类型链接到服务端。
 * 注意，框架已经支持`kcp`,`quic`协议，具体的用法可以参考
-* [kcp](https://github.com/osgochina/dmicro/tree/main/.examples/kcp)
-* [quic](https://github.com/osgochina/dmicro/tree/main/.examples/quic)
+* [kcp](https://github.com/osgochina/dmicro/tree/main/examples/kcp)
+* [quic](https://github.com/osgochina/dmicro/tree/main/examples/quic)
 
 #### ListenIP
 

@@ -11,7 +11,7 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/os/gfile"
-	"github.com/osgochina/dmicro/.examples/easyservice/sandbox"
+	"github.com/osgochina/dmicro/examples/easyservice/sandbox"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/easyservice"
 	"github.com/osgochina/dmicro/logger"
