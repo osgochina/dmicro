@@ -41,6 +41,7 @@
     * [代理proxy](drpc/plugin_proxy.md)
   * [平滑重启 - Graceful](drpc/graceful.md)
   * [WebSocket支持](drpc/websocket.md)
+  * [并发请求客户端](drpc/multiclient.md)
 
 * 组件库
   * [EventBus(事件总线)](component/eventBus.md)
