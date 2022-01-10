@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
+export GOPROXY=https://goproxy.io,direct
+export GOPRIVATE=git.chelun.com
 
 help() {
     echo "使用方式:"
     echo "  build.sh [-s build_file] [-o output_dir] [-v version] [-g go_bin]"
     echo "参数详解:"
     echo "  build_file 需要从那个目录编译项目，默认是当前目录的main.go,你也可以指定指定的目录文件"
-    echo "  output_dir 编译后的产物存在到那个目录.默认是存在在当前目录"
+    echo "  output_dir 该参数不传，则编译后的产物在项目当前目录，名称为main+version,
+            如果传入目录，则编译后产物在指定的目录，名称为main+version，
+            如果传入的是文件名，则编译后的产物就是指定的文件+version"
     echo "  version 编译后的文件版本号"
     echo "  go_bin 使用的golang程序"
     exit
@@ -27,9 +31,6 @@ if [ -z $build_file ]; then
     build_file=main.go
 fi
 
-if [ -z $output_dir ]; then
-    output_dir=$(dirname "$0")
-fi
 
 ## 获取当前环境
 ## shellcheck disable=SC2046
@@ -64,14 +65,40 @@ pwd
 
 build_name=${build_file%.*}
 
+#
+#if [ -f "$output_dir" ]; then
+#  output_file="${output_dir}"
+#   echo "11111 ${output_dir}"
+#elif [ -z $output_dir ]; then
+#  output_dir=$(dirname "$0")
+#  # 最终要输出的文件名
+#  output_file="${output_dir}"/${build_name}-"${build_version}"
+#  echo "aaaa ${output_file}"
+#fi
+
+if [ -z $output_dir ]; then
+  output_dir=$(dirname "$0")
+  output_file="${output_dir}"/${build_name}-"${build_version}"
+elif [ -d "$output_dir" ]; then
+  output_file="${output_dir}"/${build_name}-"${build_version}"
+elif [ ! -f "$output_dir" ]; then
+  output_file="${output_dir}"-"${build_version}"
+fi
+
+
+
+
+
+
 ldflags=()
 
 # 链接时设置变量值
+ldflags+=("-X" "\"main.BuildVersion=${build_version}\"")
 ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildVersion=${build_version}\"")
 ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildGoVersion=${go_version}\"")
 ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildGitCommitId=${build_git}\"")
 ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildTime=${build_date}\"")
 
-${goBin} build -v -ldflags "${ldflags[*]}"  -o "${output_dir}"/${build_name}-"${build_version}" $build_file || exit 1
+${goBin} build -v -ldflags "${ldflags[*]}"  -o "${output_file}" $build_file || exit 1
 echo "build linux amd64 done."
 
