@@ -43,6 +43,15 @@ const (
 	// CodeNetworkAuthenticationRequired int32 = 511
 )
 
+// NewStatusByCodeText 通过错误码生成错误信息
+func NewStatusByCodeText(code int32, cause interface{}, tagStack bool) *Status {
+	stat := NewStatus(code, CodeText(code), cause)
+	if tagStack {
+		stat.TagStack(1)
+	}
+	return stat
+}
+
 func CodeText(statCode int32) string {
 	switch statCode {
 	case CodeNoError:

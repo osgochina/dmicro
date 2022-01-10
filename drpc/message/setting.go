@@ -120,6 +120,13 @@ func WithNewBody(newBodyFunc NewBodyFunc) MsgSetting {
 	}
 }
 
+// WithMType 设置消息类型，改方法会改变整个消息的处理逻辑，请明确知道你要做什么的时候使用
+func WithMType(mType byte) MsgSetting {
+	return func(m Message) {
+		m.SetMType(mType)
+	}
+}
+
 // WithXFerPipe 设置消息的管道类型
 func WithXFerPipe(filterID ...byte) MsgSetting {
 	return func(m Message) {
