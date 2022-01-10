@@ -99,6 +99,11 @@ ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildGoVersion=${go_ve
 ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildGitCommitId=${build_git}\"")
 ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildTime=${build_date}\"")
 
+# -s -w 去除符号表
+#${goBin} build -v -ldflags "${ldflags[*]} -s -w"  -o "${output_file}" $build_file || exit 1
+# 加壳
+#upx "${output_file}" -o "${output_file}".upx
+
 ${goBin} build -v -ldflags "${ldflags[*]}"  -o "${output_file}" $build_file || exit 1
 echo "build linux amd64 done."
 
