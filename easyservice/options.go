@@ -15,9 +15,6 @@ import (
 )
 
 var defaultOptions = map[string]bool{
-	"network":  true,
-	"h,host":   true,
-	"p,port":   true,
 	"c,config": true,
 	"env":      true,
 	"pid":      true,
@@ -46,18 +43,16 @@ OPTION
 	--env           环境变量，表示当前启动所在的环境,有[dev,test,product]这三种，默认是product
 	--debug         是否开启debug 默认debug=false
 	--pid           设置pid文件的地址，默认是/tmp/[server].pid
-	-h,--host       服务监听地址，默认监听的地址为127.0.0.1
-	-p,--port       服务监听端口，默认监听端口为0，表示随机监听
-	--network       监听的网络协议，支持tcp,tcp4,tcp6,默认tcp
+	-h,--help       获取帮助信息
+	-v,--version    获取编译版本信息
 	
 EXAMPLES
 	/path/to/server 
 	/path/to/server start --env=dev --debug=true --pid=/tmp/server.pid
-	/path/to/server start --host=127.0.0.1 --port=8808
-	/path/to/server start --host=127.0.0.1 --port=8808 --gf.gcfg.file=config.product.toml
-	/path/to/server start --host=127.0.0.1 --port=8808 -c=config.product.toml
-	/path/to/server start user --host=127.0.0.1 --port=8808 
-	/path/to/server start pay  --host=127.0.0.1 --port=8808
+	/path/to/server start --gf.gcfg.file=config.product.toml
+	/path/to/server start -c=config.product.toml
+	/path/to/server start user,admin --config=config.product.toml
+	/path/to/server start user
 	/path/to/server stop
 	/path/to/server quit
 	/path/to/server reload
@@ -112,6 +107,16 @@ func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
 				that.version()
 				return false
 			}
+		}
+		// 识别参数展示帮助信息和版本信息
+		array := garray.NewStrArrayFrom(os.Args)
+		if array.Search("--help") != -1 || array.Search("-h") != -1 {
+			that.help()
+			return false
+		}
+		if array.Search("--version") != -1 || array.Search("-v") != -1 {
+			that.version()
+			return false
 		}
 	}
 	that.initSandboxNames()

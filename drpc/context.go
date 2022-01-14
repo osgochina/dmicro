@@ -578,7 +578,7 @@ func (that *handlerCtx) handle() {
 	}
 E:
 	that.output.SetStatus(statCodeMTypeNotAllowed)
-	logger.Errorf(logFormatDisconnected,
+	logger.Warningf(logFormatDisconnected,
 		that.input.MType(), that.IP(), that.input.ServiceMethod(), that.input.Seq(),
 		messageLogBytes(that.input, that.sess.endpoint.printDetail))
 
