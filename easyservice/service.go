@@ -190,6 +190,8 @@ func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 	logPath := loggerCfg.GetString("Path")
 	if len(logPath) > 0 {
 		setConfig["path"] = logPath
+	} else {
+		logger.SetDebug(true)
 	}
 
 	// 如果开启debug模式，则无视其他设置
