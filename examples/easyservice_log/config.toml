@@ -1,0 +1,6 @@
+
+#Debug = true
+[logger]
+    Path        = "/tmp/log/test-server"
+    Level       = "Notice"
+    Stdout      = false

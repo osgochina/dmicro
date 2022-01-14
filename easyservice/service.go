@@ -158,33 +158,47 @@ func (that *EasyService) SandboxNames() *garray.StrArray {
 	return that.sandboxNames
 }
 
-//设置日志级别
+//通过参数设置日志级别
+// 日志级别通过环境默认分三个类型，开发环境，测试环境，生产环境
+// 开发环境: 日志级别为 DEVELOP,标准输出打开
+// 测试环境：日志级别为 INFO,除了debug日志，都会被打印，标准输出关闭
+// 生产环境: 日志级别为 PRODUCT，会打印 WARN,ERRO,CRIT三个级别的日志，标准输出为关闭
+// Debug开关会无视以上设置，强制把日志级别设置为ALL，并且打开标准输出。
 func (that *EasyService) initLogSetting(config *gcfg.Config) error {
-	level := config.GetString("logger.Level", "PRODUCT")
+	loggerCfg := config.GetJson("logger")
+	env := config.GetString("ENV_NAME")
+	level := loggerCfg.GetString("Level")
+	logger.SetDebug(false)
+	logger.SetStdoutPrint(false)
+	//如果配置文件中的日志配置不存在，则判断环境变量，通过不同的环境变量，给与不同的日志级别
 	if len(level) <= 0 {
-		level = "PRODUCT"
+		if env == "dev" || env == "develop" {
+			level = "DEVELOP"
+		} else if env == "test" {
+			level = "INFO"
+		} else {
+			level = "PRODUCT"
+		}
 	}
-	env := config.GetString("ENV_NAME", "product")
-	if len(env) > 0 && env == "dev" || env == "develop" {
-		level = "DEVELOP"
+
+	setConfig := g.Map{"level": level}
+
+	if env == "dev" || env == "develop" {
+		setConfig["stdout"] = true
+		logger.SetDebug(true)
 	}
-	if len(env) <= 0 {
-		env = "product"
+	logPath := loggerCfg.GetString("Path")
+	if len(logPath) > 0 {
+		setConfig["path"] = logPath
 	}
-	err := logger.SetConfigWithMap(g.Map{
-		"path":   config.GetString("logger.Path"),
-		"level":  level,
-		"stdout": true,
-	})
-	if err != nil {
-		return err
+
+	// 如果开启debug模式，则无视其他设置
+	if config.GetBool("Debug", false) {
+		setConfig["level"] = "ALL"
+		setConfig["stdout"] = true
+		logger.SetDebug(true)
 	}
-	// 开启debug模式
-	debug := config.GetBool("Debug", false)
-	if debug {
-		_ = logger.SetLevelStr("ALL")
-	}
-	return nil
+	return logger.SetConfigWithMap(setConfig)
 }
 
 //守护进程

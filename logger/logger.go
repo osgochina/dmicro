@@ -144,6 +144,10 @@ func SetDebug(debug bool) {
 	log.gLog.SetDebug(debug)
 }
 
+func SetStdoutPrint(enabled bool) {
+	log.gLog.SetStdoutPrint(enabled)
+}
+
 func IsDebug() bool {
 	return (log.gLog.GetLevel() & glog.LEVEL_DEBU) > 0
 }

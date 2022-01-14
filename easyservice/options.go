@@ -217,9 +217,13 @@ func (that *EasyService) parserConfig(parser *gcmd.Parser) {
 	}
 	//通过命令行传入环境参数
 	env := parser.GetOpt("env", "")
+	//如果命令行传入了env参数，则使用命令行参数
 	if len(env) > 0 {
 		_ = genv.Set("ENV_NAME", gstr.ToLower(env))
 		_ = that.config.Set("ENV_NAME", gstr.ToLower(env))
+	} else if len(that.config.GetString("ENV_NAME")) <= 0 {
+		//如果命令行未传入env参数,且配置文件中页不存在ENV_NAME配置，则先查找环境变量ENV_NAME，并把环境变量中的ENV_NAME赋值给配置文件
+		_ = that.config.Set("ENV_NAME", gstr.ToLower(genv.Get("ENV_NAME", "product")))
 	}
 	//通过启动命令判断是否开启debug
 	index = array.Search("--debug")
