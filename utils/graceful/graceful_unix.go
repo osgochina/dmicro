@@ -105,11 +105,24 @@ func (that *graceful) MWWait() {
 			err = mwCmd.Wait()
 			if err != nil {
 				logger.Warningf("子进程:%d 非正常退出，退出原因:%v", that.mwPid, err)
+				go that.abnormalReload()
 			} else {
 				logger.Printf("子进程:%d 正常退出", that.mwPid)
 			}
 		}
 	}
+}
+
+// 子进程异常推出的情况下，拉取子进程
+func (that *graceful) abnormalReload() {
+	logger.Warning("MasterWorker模式下子进程异常退出，重新拉起子进程")
+	cmd, err := that.startProcess()
+	if err != nil {
+		logger.Errorf("MasterWorker模式下子进程异常退出，重新拉起子进程失败,err:%v", err)
+		return
+	}
+	that.processStatus.Set(statusActionNone)
+	that.mwChildCmd <- cmd
 }
 
 // AddInherited 添加需要给重启后新进程继承的文件句柄和环境变量

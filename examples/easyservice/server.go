@@ -28,7 +28,7 @@ func main() {
 
 		// 使用master worker 进程模型实现平滑重启
 		err = graceful.SetInheritListener([]graceful.InheritAddr{
-			{Network: svr.CmdParser().GetOptVar("network", "tcp").String(), Host: svr.CmdParser().GetOptVar("host", "127.0.0.1").String(), Port: "8199"},
+			{Network: "tcp", Host: "127.0.0.1", Port: "8199"},
 			{Network: "http", Host: "127.0.0.1", Port: "8080", ServerName: "default"},
 		})
 		if err != nil {
@@ -63,5 +63,8 @@ func main() {
 
 		http := sandbox.NewHttpSandBox(svr)
 		svr.AddSandBox(http)
+		//gtimer.Add(5*time.Second, func() {
+		//	panic("aaadfasd")
+		//})
 	})
 }
