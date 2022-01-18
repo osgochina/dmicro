@@ -1,15 +1,13 @@
 package jsonproto
 
 import (
+	"bytes"
 	"encoding/binary"
-	"encoding/json"
-	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/utils/dbuffer"
 	"io"
+	"strconv"
 	"sync"
 )
 
@@ -34,34 +32,40 @@ func (that *jsonProto) Version() (byte, string) {
 	return that.id, that.name
 }
 
-type packMsg struct {
-	Seq           int32        `json:"seq"`
-	MType         byte         `json:"mtype"`
-	ServiceMethod string       `json:"serviceMethod"`
-	Status        *drpc.Status `json:"status"`
-	Meta          *gmap.Map    `json:"meta"`
-	BodyCodec     byte         `json:"bodyCodec"`
-	Body          interface{}  `json:"body"`
-}
+var (
+	msg1 = []byte(`{"seq":`)
+	msg2 = []byte(`,"mtype":`)
+	msg3 = []byte(`,"serviceMethod":`)
+	msg4 = []byte(`,"status":`)
+	msg5 = []byte(`,"meta":`)
+	msg6 = []byte(`,"bodyCodec":`)
+	msg7 = []byte(`,"body":"`)
+	msg8 = []byte(`"}`)
+)
 
 func (that *jsonProto) Pack(m proto.Message) error {
 	bb := dbuffer.GetByteBuffer()
 	defer dbuffer.ReleaseByteBuffer(bb)
-	//组装消息
-	pMsg := &packMsg{}
-	pMsg.Seq = m.Seq()
-	pMsg.MType = m.MType()
-	pMsg.ServiceMethod = m.ServiceMethod()
-	pMsg.Status = m.Status(true)
-	pMsg.Meta = m.Meta()
-	pMsg.BodyCodec = m.BodyCodec()
-	pMsg.Body = m.Body()
 
-	msgByte, err := json.Marshal(pMsg)
+	bodyBytes, err := m.MarshalBody()
 	if err != nil {
 		return err
 	}
-	_, _ = bb.Write(msgByte)
+	_, _ = bb.Write(msg1)
+	_, _ = bb.WriteString(strconv.FormatInt(int64(m.Seq()), 10))
+	_, _ = bb.Write(msg2)
+	_, _ = bb.WriteString(strconv.FormatInt(int64(m.MType()), 10))
+	_, _ = bb.Write(msg3)
+	_, _ = bb.WriteString(strconv.Quote(m.ServiceMethod()))
+	_, _ = bb.Write(msg4)
+	_, _ = bb.WriteString(strconv.Quote(m.Status(true).String()))
+	_, _ = bb.Write(msg5)
+	_, _ = bb.WriteString(strconv.Quote(m.Meta().String()))
+	_, _ = bb.Write(msg6)
+	_, _ = bb.WriteString(strconv.FormatInt(int64(m.BodyCodec()), 10))
+	_, _ = bb.Write(msg7)
+	_, _ = bb.Write(bytes.Replace(bodyBytes, []byte{'"'}, []byte{'\\', '"'}, -1))
+	_, _ = bb.Write(msg8)
 
 	//对消息内容进行处理
 	b, err := m.PipeTFilter().OnPack(bb.B)
@@ -130,6 +134,7 @@ func (that *jsonProto) Unpack(m proto.Message) error {
 
 	// read body
 	m.SetBodyCodec(byte(j.GetInt8("bodyCodec")))
-	err = m.UnmarshalBody(gconv.Bytes(j.GetString("body")))
+	body := j.GetBytes("body")
+	err = m.UnmarshalBody(body)
 	return err
 }

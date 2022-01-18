@@ -24,6 +24,10 @@ func (h *Home) Test(arg *map[string]string) (map[string]interface{}, *drpc.Statu
 	}, nil
 }
 
+func (h *Home) RetString(arg *map[string]string) (string, *drpc.Status) {
+	return "RetString", nil
+}
+
 func TestJSONProto(t *testing.T) {
 	gzip.Reg('g', "gizp-5", 5)
 
@@ -53,6 +57,19 @@ func TestJSONProto(t *testing.T) {
 		t.Error(stat)
 	}
 	t.Logf("result:%v", result)
+	time.Sleep(3e9)
+
+	var resultString string
+	stat = sess.Call("/home/ret_string",
+		map[string]string{
+			"author": "osgochina@gmail.com",
+		},
+		&resultString,
+	).Status()
+	if !stat.OK() {
+		t.Error(stat)
+	}
+	t.Logf("resultString:%v", resultString)
 	time.Sleep(3e9)
 }
 

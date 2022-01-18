@@ -540,6 +540,11 @@ func (that *handlerCtx) handleReply() {
 		that.callCmd.mu.Unlock()
 	}()
 
+	// 如果执行执行消息处理逻辑的时候出错，则直接报错
+	if !that.stat.OK() {
+		that.callCmd.stat = that.stat
+	}
+
 	//判断处理状态是否成功，如果都很成功，则触发事件
 	if that.callCmd.stat.OK() {
 		stat := that.input.Status()
