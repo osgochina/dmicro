@@ -6,8 +6,8 @@ import (
 	"github.com/gogf/gf/crypto/gmd5"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
-	"github.com/osgochina/dmicro/logger"
 )
 
 // NewSecureBodyPlugin 创建插件
@@ -16,11 +16,11 @@ import (
 func NewSecureBodyPlugin(cipherKey string, statCode ...int32) drpc.Plugin {
 	b := gconv.Bytes(cipherKey)
 	if _, err := aes.NewCipher(b); err != nil {
-		logger.Fatalf("secure: %v", err)
+		internal.Fatalf("secure: %v", err)
 	}
 	version, err := gmd5.EncryptBytes(b)
 	if err != nil {
-		logger.Fatalf("md5 error: %v", err)
+		internal.Fatalf("md5 error: %v", err)
 	}
 	var code = drpc.CodeConflict
 	if len(statCode) > 0 {

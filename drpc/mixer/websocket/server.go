@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket/jsonSubProto"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket/pbSubProto"
 	"github.com/osgochina/dmicro/drpc/proto"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
 	"golang.org/x/net/websocket"
 	"net"
@@ -96,7 +96,7 @@ func (that *Server) ListenAndServe(protoFunc ...proto.ProtoFunc) (err error) {
 		return err
 	}
 	that.lisAddr = that.lis.Addr()
-	logger.Printf("listen and serve (network:%s, addr:%s)", network, that.lisAddr)
+	internal.Printf("listen and serve (network:%s, addr:%s)", network, that.lisAddr)
 
 	// 执行listen钩子
 	for _, v := range that.Endpoint.PluginContainer().GetAll() {

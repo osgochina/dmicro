@@ -3,9 +3,9 @@ package websocket_test
 import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket"
 	"github.com/osgochina/dmicro/drpc/plugin/auth"
-	"github.com/osgochina/dmicro/logger"
 	"testing"
 	"time"
 )
@@ -55,7 +55,7 @@ var authBearer = auth.NewBearerPlugin(
 		if !stat.OK() {
 			return
 		}
-		logger.Infof("auth info: %s, result: %s", clientAuthInfo, ret)
+		internal.Infof("auth info: %s, result: %s", clientAuthInfo, ret)
 		return
 	},
 	drpc.WithBodyCodec('s'),
@@ -68,7 +68,7 @@ var authChecker = auth.NewCheckerPlugin(
 		if !stat.OK() {
 			return
 		}
-		logger.Infof("auth info: %v", authInfo)
+		internal.Infof("auth info: %v", authInfo)
 		if clientAuthInfo != authInfo {
 			return nil, drpc.NewStatus(403, "auth fail", "auth fail detail")
 		}

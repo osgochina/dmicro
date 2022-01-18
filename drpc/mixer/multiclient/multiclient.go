@@ -3,9 +3,9 @@ package multiclient
 import (
 	"github.com/gogf/gf/container/gpool"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto"
-	"github.com/osgochina/dmicro/logger"
 	"time"
 )
 
@@ -63,7 +63,7 @@ func (that *MultiClient) AsyncCall(uri string, arg interface{}, result interface
 	if err != nil {
 		callCmd := drpc.NewFakeCallCmd(uri, arg, result, drpc.NewStatusByCodeText(drpc.CodeWrongConn, err, false))
 		if callCmdChan != nil && cap(callCmdChan) == 0 {
-			logger.Panicf("*MultiClient.AsyncCall(): callCmdChan channel is unbuffered")
+			internal.Panicf("*MultiClient.AsyncCall(): callCmdChan channel is unbuffered")
 		}
 		callCmdChan <- callCmd
 		return callCmd

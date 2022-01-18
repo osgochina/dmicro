@@ -3,8 +3,8 @@ package proxy_test
 import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/plugin/proxy"
-	"github.com/osgochina/dmicro/logger"
 	"strconv"
 	"testing"
 	"time"
@@ -65,14 +65,14 @@ func newUnknownProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		internal.Warningf("%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyPlugin(func(label *proxy.Label) proxy.Forwarder {
-		logger.Infof("label RealIP:%s", label.RealIP)
-		logger.Infof("label SessionID:%s", label.SessionID)
-		logger.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		internal.Infof("label RealIP:%s", label.RealIP)
+		internal.Infof("label SessionID:%s", label.SessionID)
+		internal.Infof("label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }
@@ -84,14 +84,14 @@ func newUnknownCallProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		internal.Warningf("%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyCallPlugin(func(label *proxy.Label) proxy.CallForwarder {
-		logger.Infof("label RealIP:%s", label.RealIP)
-		logger.Infof("label SessionID:%s", label.SessionID)
-		logger.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		internal.Infof("label RealIP:%s", label.RealIP)
+		internal.Infof("label SessionID:%s", label.SessionID)
+		internal.Infof("label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }
@@ -103,14 +103,14 @@ func newUnknownPushProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		internal.Warningf("%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyPushPlugin(func(label *proxy.Label) proxy.PushForwarder {
-		logger.Infof("label RealIP:%s", label.RealIP)
-		logger.Infof("label SessionID:%s", label.SessionID)
-		logger.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		internal.Infof("label RealIP:%s", label.RealIP)
+		internal.Infof("label SessionID:%s", label.SessionID)
+		internal.Infof("label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }

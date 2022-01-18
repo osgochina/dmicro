@@ -4,10 +4,10 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto/pb_test"
 	"github.com/osgochina/dmicro/drpc/tfilter/gzip"
-	"github.com/osgochina/dmicro/logger"
 	"testing"
 	"time"
 )
@@ -33,7 +33,7 @@ type Push struct {
 }
 
 func (that *Push) Test(arg *pb_test.Push) *drpc.Status {
-	logger.Infof("receive push(%s):\narg: %#v\n", that.IP(), arg.PeerId)
+	internal.Infof("receive push(%s):\narg: %#v\n", that.IP(), arg.PeerId)
 	return nil
 }
 

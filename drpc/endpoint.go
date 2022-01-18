@@ -8,13 +8,13 @@ import (
 	"github.com/gogf/gf/os/grpool"
 	"github.com/gogf/gf/util/grand"
 	"github.com/osgochina/dmicro/drpc/codec"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/drpc/socket"
 	"github.com/osgochina/dmicro/drpc/status"
 	"github.com/osgochina/dmicro/eventbus"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	errors2 "github.com/osgochina/dmicro/utils/errors"
@@ -136,7 +136,7 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 
 	// 检查配置项是否正确
 	if err := cfg.check(); err != nil {
-		logger.Fatalf("%v", err)
+		internal.Fatalf("%v", err)
 	}
 
 	var e = &endpoint{
@@ -163,7 +163,7 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 	}
 	//默认的消息体编码格式
 	if c, err := codec.GetByName(cfg.DefaultBodyCodec); err != nil {
-		logger.Fatalf("%v", err)
+		internal.Fatalf("%v", err)
 	} else {
 		e.defaultBodyCodec = c.ID()
 	}
@@ -345,7 +345,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 				_ = sess.closeLocked()
 				//防止状态没有修改成功，再次尝试修改状态
 				sess.tryChangeStatus(statusRedialFailed, statusRedialing)
-				logger.Warningf("redial fail,the maximum number of reconnections has been reached. (network:%s, addr:%s, id:%s,maxredial:%d)",
+				internal.Warningf("redial fail,the maximum number of reconnections has been reached. (network:%s, addr:%s, id:%s,maxredial:%d)",
 					that.network, addr, oldID, that.dialer.RedialTimes())
 				return false
 			}
@@ -380,7 +380,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 				_ = sess.closeLocked()
 				//防止状态没有修改成功，再次尝试修改状态
 				sess.tryChangeStatus(statusRedialFailed, statusRedialing)
-				logger.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
+				internal.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
 			}
 			//原始链接如果存在，则关闭
@@ -391,16 +391,16 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			sess.changeStatus(statusOk)
 			err = grpool.Add(sess.startReadAndHandle)
 			if err != nil {
-				logger.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
+				internal.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
 			}
 			//把当前会话加入会话池
 			that.sessHub.set(sess)
-			logger.Infof("redial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+			internal.Infof("redial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 			return true
 		}
 	}
-	logger.Infof("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+	internal.Infof("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 	//修改会话状态，并且启动响应监听
 	sess.changeStatus(statusOk)
 	err = grpool.Add(sess.startReadAndHandle)
@@ -437,7 +437,7 @@ func (that *endpoint) ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Se
 		_ = sess.Close()
 		return nil, stat
 	}
-	logger.Infof("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+	internal.Infof("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 	sess.changeStatus(statusOk)
 	err := grpool.Add(sess.startReadAndHandle)
 	if err != nil {
@@ -466,7 +466,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 	}
 
 	addr := lis.Addr().String()
-	logger.Printf("pid:%d,启动监听并提供服务：(network:%s, addr:%s)", os.Getpid(), network, addr)
+	internal.Printf("pid:%d,启动监听并提供服务：(network:%s, addr:%s)", os.Getpid(), network, addr)
 	that.pluginContainer.afterListen(lis.Addr())
 
 	var tempDelay time.Duration
@@ -493,7 +493,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 					tempDelay = max
 				}
 
-				logger.Infof("accept error: %s; retrying in %v", err.Error(), tempDelay)
+				internal.Infof("accept error: %s; retrying in %v", err.Error(), tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -512,7 +512,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 					_ = c.SetReadDeadline(time.Now().Add(that.defaultContextAge))
 				}
 				if err = c.Handshake(); err != nil {
-					logger.Errorf("TLS handshake error from %s: %s", c.RemoteAddr(), err.Error())
+					internal.Errorf("TLS handshake error from %s: %s", c.RemoteAddr(), err.Error())
 					return
 				}
 			}
@@ -524,7 +524,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 				return
 			}
 
-			logger.Infof("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+			internal.Infof("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 			that.sessHub.set(sess)
 			sess.changeStatus(statusOk)
 			// 启动消息侦听
@@ -538,7 +538,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 func (that *endpoint) ListenAndServe(protoFunc ...proto.ProtoFunc) error {
 	lis, err := NewInheritedListener(that.listerAddr, that.tlsConfig)
 	if err != nil {
-		logger.Fatalf("%v", err)
+		internal.Fatalf("%v", err)
 	}
 	return that.serveListener(lis, protoFunc...)
 }
@@ -570,7 +570,7 @@ func (that *endpoint) Close() (err error) {
 		dgpool.FILOAnywayGo(func() {
 			e := s.Close()
 			if e != nil {
-				logger.Error(e)
+				internal.Error(e)
 			}
 			errCh <- e
 		})

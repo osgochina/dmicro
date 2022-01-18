@@ -2,8 +2,8 @@ package heartbeat
 
 import (
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	"strconv"
 	"sync"
@@ -83,7 +83,7 @@ func (that *heartPing) SetRate(rateSecond int) {
 	that.pingRate = time.Second * time.Duration(rateSecond)
 	that.pingRateSecond = strconv.Itoa(rateSecond)
 	that.mu.Unlock()
-	logger.Infof("set heartbeat rate: %ds", rateSecond)
+	internal.Infof("set heartbeat rate: %ds", rateSecond)
 }
 
 //获取心跳频率

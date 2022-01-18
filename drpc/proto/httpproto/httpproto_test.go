@@ -6,8 +6,8 @@ import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/proto/httpproto"
-	"github.com/osgochina/dmicro/logger"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -19,7 +19,7 @@ type Home struct {
 }
 
 func (h *Home) Test(arg *map[string]string) (map[string]interface{}, *drpc.Status) {
-	logger.Infof("endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
+	internal.Infof("endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
 	return map[string]interface{}{
 		"arg": *arg,
 	}, nil

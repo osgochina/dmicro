@@ -4,9 +4,9 @@ import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/plugin/ignorecase"
-	"github.com/osgochina/dmicro/logger"
 	"testing"
 	"time"
 )
@@ -62,6 +62,6 @@ type Push struct {
 }
 
 func (p *Push) Test(arg *map[string]string) *drpc.Status {
-	logger.Infof("receive push(%s):\narg: %#v\n", p.IP(), arg)
+	internal.Infof("receive push(%s):\narg: %#v\n", p.IP(), arg)
 	return nil
 }
