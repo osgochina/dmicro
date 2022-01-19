@@ -1,5 +1,14 @@
 ## 更新日志
 
+### v0.5.0 (2022-01-19)
+1. 增加`build.sh`编译脚本，支持设置编译变量，方便使用`easyservice`组件使用`version`命令展示编译信息。
+2. 完善`easyservice`的日志级别配置.
+3. 移除`easyservice`的默认`network`,`host`,`port`参数支持。
+4. 增加`master-worker`进程模型下，worker进程异常退出后，master进程自动拉起功能。
+5. 修复了`reply`消息解包失败不能正确报错的问题。
+6. 修复了`jsonproto`协议不能正确处理字符串的问题。
+7. 增加drpc的内部日志组件，支持重设日志组件，方便与默认的日志组件区分。
+
 ### v0.4.0 (2022-01-10)
 1. 优化`easyService`服务的行为,增加`-c,--config`参数的支持.
 2. 支持`easyservice`的quit命令.
