@@ -9,3 +9,8 @@ import (
 func SetLogger(l *glog.Logger) {
 	internal.SetLogger(l)
 }
+
+// GetLogger 获取drpc组件使用的logger对象
+func GetLogger() *glog.Logger {
+	return internal.GetLogger()
+}
