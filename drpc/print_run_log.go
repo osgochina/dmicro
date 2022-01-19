@@ -30,6 +30,11 @@ func enablePrintRunLog() bool {
 
 //打印运行log
 func (that *session) printRunLog(realIP string, costTime time.Duration, input, output message.Message, logType int8) {
+	defer func() {
+		if err := recover(); err != nil {
+			internal.Error(err)
+		}
+	}()
 	var addr = that.RemoteAddr().String()
 	if realIP != "" && realIP == addr {
 		realIP = "same"
