@@ -54,6 +54,14 @@ func RemoveSandBox(sandBoxID int) error {
 	return nil
 }
 
+// Iterator 迭代服务沙盒
+func Iterator(f func(sandboxId int, sandbox ISandBox)) {
+	defaultService.sList.Iterator(func(k int, v interface{}) bool {
+		f(k, v.(ISandBox))
+		return true
+	})
+}
+
 // Shutdown 关闭服务
 func Shutdown() {
 	defaultService.Shutdown()
