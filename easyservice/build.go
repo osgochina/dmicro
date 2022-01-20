@@ -24,7 +24,7 @@ var (
 
 //显示版本信息
 func (that *EasyService) version() {
-	fmt.Println(Logo)
+	fmt.Print(Logo)
 	fmt.Printf("Version:         %s\n", BuildVersion)
 	fmt.Printf("Go Version:      %s\n", BuildGoVersion)
 	fmt.Printf("DMicro Version:  %s\n", dmicro.Version)
