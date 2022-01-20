@@ -27,9 +27,8 @@ type EasyService struct {
 	beforeStopFunc StopFunc         //服务关闭之前执行该方法
 	pidFile        string           //pid文件的路径
 	sandboxNames   *garray.StrArray // 启动服务的名称
-	//processName    string           // 进程名字
-	cmdParser *gcmd.Parser //命令行参数解析信息
-	config    *gcfg.Config ///服务的配置信息
+	cmdParser      *gcmd.Parser     //命令行参数解析信息
+	config         *gcfg.Config     ///服务的配置信息
 }
 
 // StartFunc 启动回调方法
@@ -39,25 +38,17 @@ type StartFunc func(service *EasyService)
 type StopFunc func(service *EasyService) bool
 
 // NewEasyService  创建服务
-func NewEasyService(processName ...string) *EasyService {
+func newEasyService() *EasyService {
 	svr := &EasyService{
 		sList:        gmap.NewIntAnyMap(true),
 		sandboxNames: garray.NewStrArray(false),
 	}
-	//if len(processName) > 0 {
-	//	svr.processName = processName[0]
-	//}
 	return svr
 }
 
 // SetPidFile 设置pid文件
 func (that *EasyService) SetPidFile(pidFile string) {
 	that.pidFile = pidFile
-}
-
-// SetProcessName 设置进程名字
-func (that *EasyService) setProcessName(processName string) {
-	//that.processName = processName
 }
 
 // BeforeStop 设置服务重启方法
@@ -117,10 +108,7 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 
 	//等待服务结束
 	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
-	//设置进程名
-	//if len(that.processName) > 0 {
-	//	setProcessName(that.processName)
-	//}
+
 	//监听重启信号
 	graceful.GraceSignal()
 }

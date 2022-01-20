@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-var defaultService = NewEasyService()
+var defaultService = newEasyService()
 
 // DefaultService 获取默认的service
 func DefaultService() *EasyService {
@@ -65,9 +65,4 @@ func Iterator(f func(sandboxId int, sandbox ISandBox)) {
 // Shutdown 关闭服务
 func Shutdown() {
 	defaultService.Shutdown()
-}
-
-// SetProcessName 设置进程名称
-func SetProcessName(name string) {
-	//defaultService.setProcessName(name)
 }

@@ -380,7 +380,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 				_ = sess.closeLocked()
 				//防止状态没有修改成功，再次尝试修改状态
 				sess.tryChangeStatus(statusRedialFailed, statusRedialing)
-				internal.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
+				internal.Warningf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
 			}
 			//原始链接如果存在，则关闭
@@ -391,16 +391,16 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			sess.changeStatus(statusOk)
 			err = grpool.Add(sess.startReadAndHandle)
 			if err != nil {
-				internal.Errorf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
+				internal.Warningf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
 			}
 			//把当前会话加入会话池
 			that.sessHub.set(sess)
-			internal.Infof("redial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+			internal.Printf("redial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 			return true
 		}
 	}
-	internal.Infof("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+	internal.Printf("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 	//修改会话状态，并且启动响应监听
 	sess.changeStatus(statusOk)
 	err = grpool.Add(sess.startReadAndHandle)
@@ -437,7 +437,7 @@ func (that *endpoint) ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Se
 		_ = sess.Close()
 		return nil, stat
 	}
-	internal.Infof("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+	internal.Printf("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 	sess.changeStatus(statusOk)
 	err := grpool.Add(sess.startReadAndHandle)
 	if err != nil {
@@ -493,7 +493,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 					tempDelay = max
 				}
 
-				internal.Infof("accept error: %s; retrying in %v", err.Error(), tempDelay)
+				internal.Warningf("accept error: %s; retrying in %v", err.Error(), tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -512,7 +512,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 					_ = c.SetReadDeadline(time.Now().Add(that.defaultContextAge))
 				}
 				if err = c.Handshake(); err != nil {
-					internal.Errorf("TLS handshake error from %s: %s", c.RemoteAddr(), err.Error())
+					internal.Warningf("TLS handshake error from %s: %s", c.RemoteAddr(), err.Error())
 					return
 				}
 			}
@@ -524,7 +524,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 				return
 			}
 
-			internal.Infof("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+			internal.Printf("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 			that.sessHub.set(sess)
 			sess.changeStatus(statusOk)
 			// 启动消息侦听
