@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gogf/gf/os/glog"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/ignorecase"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
 	"github.com/osgochina/dmicro/registry/etcd"
 	"time"
@@ -29,29 +27,24 @@ func main() {
 	)
 
 	svr.RouteCall(new(Math))
-
-	// broadcast per 5s
-	go func() {
-		for {
-			time.Sleep(time.Second * 5)
-			s, e := reg.ListServices()
-			if e != nil {
-				logger.Error(e)
-			}
-			logger.Info(s)
-			svr.RangeSession(func(sess drpc.Session) bool {
-				sess.Push(
-					"/push/status",
-					fmt.Sprintf("this is a broadcast, server time: %v", time.Now()),
-				)
-				return true
-			})
-		}
-	}()
 	//go func() {
 	//	time.Sleep(time.Second * 10)
 	//	svr.Close()
 	//}()
+	go func() {
+		rSvr2 := &registry.Service{Name: "testregistry", Version: "0.1"}
+		svr2 := drpc.NewEndpoint(drpc.EndpointConfig{
+			CountTime:   true,
+			LocalIP:     "127.0.0.1",
+			ListenPort:  9092,
+			PrintDetail: true,
+		}, ignorecase.NewIgnoreCase(),
+			registry.NewRegistryPlugin(reg, rSvr2),
+		)
+
+		svr2.RouteCall(new(Math))
+		_ = svr2.ListenAndServe()
+	}()
 	_ = svr.ListenAndServe()
 }
 

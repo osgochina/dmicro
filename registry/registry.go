@@ -10,6 +10,7 @@ const (
 	DefaultRegisterTTL      = time.Second * 90
 )
 
+//var DefaultRegistry = NewRegistry()
 var ErrNotFound = errors.New("service not found")
 
 // Registry 服务注册接口
