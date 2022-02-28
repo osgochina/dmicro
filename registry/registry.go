@@ -37,7 +37,7 @@ type Service struct {
 type Node struct {
 	Id       string            `json:"id"`
 	Address  string            `json:"address"`
-	UrlPaths []string          `json:"url_paths"`
+	Paths    []string          `json:"paths"`
 	Metadata map[string]string `json:"metadata"`
 }
 

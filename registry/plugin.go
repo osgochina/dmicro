@@ -76,7 +76,7 @@ func (that *PluginRegistry) AfterListen(addr net.Addr) (err error) {
 		Id:       that.service.Name + "-" + addr.String(),
 		Address:  addr.String(),
 		Metadata: make(map[string]string),
-		UrlPaths: that.allApis.Slice(),
+		Paths:    that.allApis.Slice(),
 	}
 	node.Metadata["registry"] = that.registry.String()
 	node.Metadata["server"] = that.service.Name

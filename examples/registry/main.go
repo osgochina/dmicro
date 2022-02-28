@@ -13,7 +13,10 @@ import (
 
 func main() {
 
-	reg := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"))
+	reg := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
+		etcd.LeasesInterval(10*time.Second),
+		etcd.RegisterTTL(20*time.Second),
+	)
 
 	rSvr := &registry.Service{Name: "testregistry", Version: "0.1"}
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
@@ -45,7 +48,10 @@ func main() {
 			})
 		}
 	}()
-
+	//go func() {
+	//	time.Sleep(time.Second * 10)
+	//	svr.Close()
+	//}()
 	_ = svr.ListenAndServe()
 }
 

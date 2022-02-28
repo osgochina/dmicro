@@ -92,6 +92,10 @@ func (that *etcdRegistry) configure(opts ...registry.Option) error {
 		if ok && cfg != nil {
 			config.LogConfig = cfg
 		}
+		leasesIVal, ok := that.options.Context.Value(leasesInterval{}).(time.Duration)
+		if ok && leasesIVal > 0 {
+			that.leasesInterval = leasesIVal
+		}
 	}
 	var cAddrList []string
 

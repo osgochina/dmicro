@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/registry"
 	"path"
 	"strings"
+	"time"
 )
 
 type authKey struct{}
@@ -15,6 +16,7 @@ type authCreds struct {
 	Password string
 }
 type logConfigKey struct{}
+type leasesInterval struct{}
 
 // Auth 生成etcd的用户名密码认证方式配置
 func Auth(username, password string) registry.Option {
@@ -23,6 +25,26 @@ func Auth(username, password string) registry.Option {
 			o.Context = context.Background()
 		}
 		o.Context = context.WithValue(o.Context, authKey{}, &authCreds{Username: username, Password: password})
+	}
+}
+
+// LeasesInterval 租约续期时间
+func LeasesInterval(t time.Duration) registry.Option {
+	return func(o *registry.Options) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, leasesInterval{}, t)
+	}
+}
+
+// RegisterTTL 服务key在etcd中的生存时间
+func RegisterTTL(t time.Duration) registry.Option {
+	return func(o *registry.Options) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, "RegisterTTL", t)
 	}
 }
 
