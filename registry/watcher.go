@@ -6,7 +6,7 @@ import "time"
 type Watcher interface {
 	// Next 是一个阻塞调用
 	Next() (*Result, error)
-	//Stop()
+	Stop()
 }
 
 // Result 监视器返回对象

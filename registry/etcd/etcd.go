@@ -6,7 +6,6 @@ import (
 	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"go.etcd.io/etcd/client/v3"
@@ -29,7 +28,6 @@ type etcdRegistry struct {
 	register       map[string]uint64           // 已注册list
 	leases         map[string]clientv3.LeaseID // 租约
 	leasesInterval time.Duration               //租约续期时间
-	stop           chan bool                   // 注册服务是否关闭
 	sync.RWMutex
 }
 
@@ -44,7 +42,6 @@ func NewRegistry(opts ...registry.Option) registry.Registry {
 		options:  registry.Options{},
 		register: make(map[string]uint64),
 		leases:   make(map[string]clientv3.LeaseID),
-		stop:     make(chan bool, 1),
 	}
 	// 如果有etcd的用户名密码环境变量
 	username, password := os.Getenv("ETCD_USERNAME"), os.Getenv("ETCD_PASSWORD")
@@ -92,10 +89,7 @@ func (that *etcdRegistry) configure(opts ...registry.Option) error {
 		if ok && cfg != nil {
 			config.LogConfig = cfg
 		}
-		leasesIVal, ok := that.options.Context.Value(leasesInterval{}).(time.Duration)
-		if ok && leasesIVal > 0 {
-			that.leasesInterval = leasesIVal
-		}
+
 	}
 	var cAddrList []string
 
@@ -146,31 +140,6 @@ func (that *etcdRegistry) Register(s *registry.Service, opts ...registry.Registe
 		if err != nil {
 			gerr = err
 		}
-	}
-	// 判断是否有租约，有租约就需要定时续期
-	if len(that.leases) > 0 {
-		go func() {
-			var t *time.Ticker
-			if that.leasesInterval > time.Duration(0) {
-				t = time.NewTicker(that.leasesInterval)
-			} else {
-				t = time.NewTicker(registry.DefaultRegisterInterval)
-			}
-			for {
-				select {
-				case <-t.C:
-					for _, node := range s.Nodes {
-						err := that.registerNode(s, node, opts...)
-						if err != nil {
-							logger.Error(err)
-						}
-					}
-				case <-that.stop:
-					t.Stop()
-					return
-				}
-			}
-		}()
 	}
 	return gerr
 }
@@ -389,16 +358,6 @@ func (that *etcdRegistry) ListServices(opts ...registry.ListOption) ([]*registry
 // Watch 监听服务变更
 func (that *etcdRegistry) Watch(opts ...registry.WatchOption) (registry.Watcher, error) {
 	return newEtcdWatcher(that, that.options.Timeout, opts...)
-}
-
-// Stop 停止服务
-func (that *etcdRegistry) Stop() {
-	select {
-	case <-that.stop:
-		return
-	default:
-		close(that.stop)
-	}
 }
 
 func (that *etcdRegistry) String() string {

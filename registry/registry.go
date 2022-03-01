@@ -22,7 +22,6 @@ type Registry interface {
 	GetService(string, ...GetOption) ([]*Service, error)
 	ListServices(...ListOption) ([]*Service, error)
 	Watch(...WatchOption) (Watcher, error)
-	Stop()
 	String() string
 }
 

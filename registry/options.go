@@ -68,6 +68,38 @@ func TLSConfig(t *tls.Config) Option {
 	}
 }
 
+// ServiceName 设置服务名称
+func ServiceName(name string) Option {
+	return func(o *Options) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, "ServiceName", name)
+	}
+}
+
+// ServiceVersion 设置服务版本
+func ServiceVersion(version string) Option {
+	return func(o *Options) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, "ServiceVersion", version)
+	}
+}
+
+type leasesInterval struct{}
+
+// LeasesInterval 租约续期时间
+func LeasesInterval(t time.Duration) Option {
+	return func(o *Options) {
+		if o.Context == nil {
+			o.Context = context.Background()
+		}
+		o.Context = context.WithValue(o.Context, leasesInterval{}, t)
+	}
+}
+
 // RegisterTTL 设置服务的生存时间
 func RegisterTTL(t time.Duration) RegisterOption {
 	return func(o *RegisterOptions) {

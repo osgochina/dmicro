@@ -11,19 +11,20 @@ import (
 
 func main() {
 
+	etcd.SetPrefix("/chelun/registry/dev/")
 	reg := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
-		etcd.LeasesInterval(10*time.Second),
+		registry.LeasesInterval(10*time.Second),
+		registry.ServiceName("testregistry"),
+		registry.ServiceVersion("0.1"),
 		etcd.RegisterTTL(20*time.Second),
 	)
-
-	rSvr := &registry.Service{Name: "testregistry", Version: "0.1"}
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: true,
 	}, ignorecase.NewIgnoreCase(),
-		registry.NewRegistryPlugin(reg, rSvr),
+		registry.NewRegistryPlugin(reg),
 	)
 
 	svr.RouteCall(new(Math))
@@ -32,14 +33,19 @@ func main() {
 	//	svr.Close()
 	//}()
 	go func() {
-		rSvr2 := &registry.Service{Name: "testregistry", Version: "0.1"}
+		reg1 := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
+			registry.LeasesInterval(10*time.Second),
+			etcd.RegisterTTL(20*time.Second),
+			registry.ServiceName("testregistry"),
+			registry.ServiceVersion("0.2"),
+		)
 		svr2 := drpc.NewEndpoint(drpc.EndpointConfig{
 			CountTime:   true,
 			LocalIP:     "127.0.0.1",
 			ListenPort:  9092,
 			PrintDetail: true,
 		}, ignorecase.NewIgnoreCase(),
-			registry.NewRegistryPlugin(reg, rSvr2),
+			registry.NewRegistryPlugin(reg1),
 		)
 
 		svr2.RouteCall(new(Math))

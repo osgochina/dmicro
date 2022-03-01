@@ -10,7 +10,7 @@ import (
 
 //
 type etcdWatcher struct {
-	//stop    chan bool
+	stop    chan bool
 	w       clientv3.WatchChan
 	client  *clientv3.Client
 	timeout time.Duration
@@ -22,7 +22,7 @@ func newEtcdWatcher(r *etcdRegistry, timeout time.Duration, opts ...registry.Wat
 		o(&wo)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	stop := r.stop
+	stop := make(chan bool, 1)
 	go func() {
 		<-stop
 		cancel()
@@ -77,11 +77,11 @@ func (that *etcdWatcher) Next() (*registry.Result, error) {
 	return nil, gerror.New("could not get next")
 }
 
-//func (that *etcdWatcher) Stop() {
-//	select {
-//	case <-that.stop:
-//		return
-//	default:
-//		close(that.stop)
-//	}
-//}
+func (that *etcdWatcher) Stop() {
+	select {
+	case <-that.stop:
+		return
+	default:
+		close(that.stop)
+	}
+}
