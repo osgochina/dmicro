@@ -31,11 +31,6 @@ type etcdRegistry struct {
 	sync.RWMutex
 }
 
-// SetPrefix 设置前缀
-func SetPrefix(p string) {
-	prefix = p
-}
-
 // NewRegistry 创建etcd注册表
 func NewRegistry(opts ...registry.Option) registry.Registry {
 	e := &etcdRegistry{

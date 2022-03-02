@@ -33,6 +33,8 @@ func main() {
 	//	svr.Close()
 	//}()
 	go func() {
+		time.Sleep(10 * time.Second)
+		_ = svr.Close()
 		reg1 := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
 			registry.LeasesInterval(10*time.Second),
 			etcd.RegisterTTL(20*time.Second),
@@ -52,6 +54,7 @@ func main() {
 		_ = svr2.ListenAndServe()
 	}()
 	_ = svr.ListenAndServe()
+	select {}
 }
 
 type Math struct {

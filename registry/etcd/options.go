@@ -37,6 +37,11 @@ func RegisterTTL(t time.Duration) registry.Option {
 	}
 }
 
+// SetPrefix 设置前缀
+func SetPrefix(p string) {
+	prefix = p
+}
+
 // 生成服务节点的路径
 func nodePath(s, id string) string {
 	service := strings.Replace(s, "/", "-", -1)

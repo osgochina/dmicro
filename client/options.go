@@ -28,8 +28,7 @@ type Options struct {
 	HeartbeatTime     time.Duration
 	Registry          registry.Registry
 	Selector          selector.Selector
-	PoolSize          int
-	PoolTTL           time.Duration
+	RetryTimes        int
 	GlobalLeftPlugin  []drpc.Plugin
 }
 
@@ -39,8 +38,6 @@ type Option func(*Options)
 func NewOptions(options ...Option) Options {
 	opts := Options{
 		Context:           context.Background(),
-		PoolSize:          DefaultPoolSize,
-		PoolTTL:           DefaultPoolTTL,
 		Network:           "tcp",
 		LocalIP:           "0.0.0.0",
 		BodyCodec:         DefaultBodyCodec,
@@ -48,6 +45,7 @@ func NewOptions(options ...Option) Options {
 		ContextAge:        DefaultContextAge,
 		DialTimeout:       DefaultDialTimeout,
 		SlowCometDuration: DefaultSlowCometDuration,
+		RetryTimes:        DefaultRetryTimes,
 		PrintDetail:       false,
 		CountTime:         false,
 		HeartbeatTime:     time.Duration(0),
@@ -74,20 +72,6 @@ func (that *Options) EndpointConfig() drpc.EndpointConfig {
 		DialTimeout:       that.DialTimeout,
 	}
 	return c
-}
-
-// PoolSize 设置连接池大小
-func PoolSize(d int) Option {
-	return func(o *Options) {
-		o.PoolSize = d
-	}
-}
-
-// PoolTTL 设置连接池链接生命周期
-func PoolTTL(d time.Duration) Option {
-	return func(o *Options) {
-		o.PoolTTL = d
-	}
 }
 
 // Registry 设置服务注册中心
@@ -139,5 +123,12 @@ func TlsConfig(config *tls.Config) Option {
 func ProtoFunc(pf proto.ProtoFunc) Option {
 	return func(o *Options) {
 		o.ProtoFunc = pf
+	}
+}
+
+// RetryTimes 设置重试次数
+func RetryTimes(n int) Option {
+	return func(o *Options) {
+		o.RetryTimes = n
 	}
 }

@@ -101,3 +101,15 @@ var (
 	// 必须要在 post dial和post accept阶段调用，不然就报错
 	statUnpreparedError = statInvalidOpError.Copy("Cannot be called during the Non-PostDial and Non-PostAccept phase")
 )
+
+// IsConnError 判断是否是链接出错
+func IsConnError(stat *Status) bool {
+	if stat == nil {
+		return false
+	}
+	code := stat.Code()
+	if code == CodeDialFailed || code == CodeConnClosed {
+		return true
+	}
+	return false
+}

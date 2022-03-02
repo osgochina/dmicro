@@ -68,7 +68,6 @@ func (that *registrySelector) Reset(service string) {
 // Close 关闭选择器
 func (that *registrySelector) Close() error {
 	that.rc.Stop()
-
 	return nil
 }
 
