@@ -26,10 +26,16 @@ var (
 	// DefaultRetryTimes 默认重试次数
 	DefaultRetryTimes = 2
 
+	// DefaultPoolSize sets the connection pool size
+	DefaultPoolSize = 100
+	// DefaultPoolTTL sets the connection pool ttl
+	DefaultPoolTTL = time.Minute
+
 	// RerClientClosed 客户端已关闭错误信息
 	RerClientClosed = drpc.NewStatus(100, "client is closed", "")
 )
 
+// RpcClient rpc客户端结构体
 type RpcClient struct {
 	serviceName string // 服务名称
 	endpoint    drpc.Endpoint
@@ -37,8 +43,10 @@ type RpcClient struct {
 	sessMap     *gmap.StrAnyMap
 	closeCh     chan bool
 	closeMu     sync.Mutex
+	pool        Pool
 }
 
+// NewRpcClient 创建rpc客户端
 func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 
 	opts := NewOptions(opt...)
@@ -67,9 +75,16 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 		endpoint:    endpoint,
 		sessMap:     gmap.NewStrAnyMap(true),
 	}
+	rc.pool = NewPool(poolOptions{
+		Endpoint:  endpoint,
+		ProtoFunc: opts.ProtoFunc,
+		TTL:       opts.PoolTTL,
+		Size:      opts.PoolSize,
+	})
 	return rc
 }
 
+// Options 获取配置信息
 func (that *RpcClient) Options() Options {
 	return that.opts
 }
@@ -86,13 +101,18 @@ func (that *RpcClient) Call(serviceMethod string, args interface{}, result inter
 		connFail bool
 	)
 	for i := 0; i < that.opts.RetryTimes; i++ {
-		addr, sess, stat := that.selectSession(serviceMethod)
+		sess, stat := that.selectSession(serviceMethod)
 		if stat != nil {
 			return drpc.NewFakeCallCmd(serviceMethod, args, result, stat)
 		}
 		var callCmdChan = make(chan drpc.CallCmd, 1)
 		sess.AsyncCall(serviceMethod, args, result, callCmdChan, setting...)
 		callCmd = <-callCmdChan
+		// session使用完毕，释放
+		err := that.pool.Release(sess, callCmd.Status())
+		if err != nil {
+			logger.Warning(err)
+		}
 		// 判断错误类型是否是链接出错，如果不是链接出错，则直接返回错误信息，如果是链接出错，则删除该链接，重新执行
 		connFail = drpc.IsConnError(callCmd.Status())
 		if !connFail {
@@ -101,9 +121,6 @@ func (that *RpcClient) Call(serviceMethod string, args interface{}, result inter
 		if i > 0 {
 			logger.Debugf("链接第[%d]出错，错误原因: %s", i, callCmd.Status().String())
 		}
-		// 删除出错链接
-		_ = sess.Close()
-		that.sessMap.Remove(addr)
 	}
 	return callCmd
 }
@@ -118,15 +135,19 @@ func (that *RpcClient) Push(serviceMethod string, arg interface{}, setting ...me
 	var (
 		stat     *drpc.Status
 		connFail bool
-		sess     drpc.Session
-		addr     string
+		sess     Conn
 	)
 	for i := 0; i < that.opts.RetryTimes; i++ {
-		addr, sess, stat = that.selectSession(serviceMethod)
+		sess, stat = that.selectSession(serviceMethod)
 		if stat != nil {
 			return stat
 		}
 		stat = sess.Push(serviceMethod, arg, setting...)
+		// session使用完毕，释放
+		err := that.pool.Release(sess, stat)
+		if err != nil {
+			logger.Warning(err)
+		}
 		connFail = !drpc.IsConnError(stat)
 		if connFail {
 			return stat
@@ -134,13 +155,11 @@ func (that *RpcClient) Push(serviceMethod string, arg interface{}, setting ...me
 		if i > 0 {
 			logger.Debugf("链接第[%d]出错，错误原因: %s", i, stat.String())
 		}
-		// 删除出错链接
-		_ = sess.Close()
-		that.sessMap.Remove(addr)
 	}
 	return stat
 }
 
+// AsyncCall 异步请求
 func (that *RpcClient) AsyncCall(serviceMethod string, arg interface{}, result interface{}, callCmdChan chan<- drpc.CallCmd, setting ...message.MsgSetting) drpc.CallCmd {
 	if callCmdChan == nil {
 		callCmdChan = make(chan drpc.CallCmd, 10) // buffered.
@@ -157,59 +176,39 @@ func (that *RpcClient) AsyncCall(serviceMethod string, arg interface{}, result i
 	default:
 	}
 
-	addr, sess, stat := that.selectSession(serviceMethod)
+	sess, stat := that.selectSession(serviceMethod)
 	if stat != nil {
 		callCmd := drpc.NewFakeCallCmd(serviceMethod, arg, result, stat)
 		callCmdChan <- callCmd
 		return callCmd
 	}
 	callCmd := sess.AsyncCall(serviceMethod, arg, result, callCmdChan, setting...)
-	// 如果报链接错误，则删除缓存中的链接
-	if drpc.IsConnError(callCmd.Status()) {
-		_ = sess.Close()
-		that.sessMap.Remove(addr)
+	// session使用完毕，释放
+	err := that.pool.Release(sess, stat)
+	if err != nil {
+		logger.Warning(err)
 	}
 	return callCmd
 }
 
-// 选择session
-func (that *RpcClient) selectSession(serviceMethod string) (string, drpc.Session, *drpc.Status) {
-
-	next, err := that.next(that.serviceName)
-	if err != nil {
-		return "", nil, err
-	}
-	node, e := next()
-	if e != nil {
-		if e == selector.ErrNotFound {
-			return "", nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client service %s: %s", that.serviceName, e.Error()))
-		}
-		return "", nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", that.serviceName, e.Error()))
-	}
-	_s, found := that.sessMap.Search(node.Address)
-	if !found {
-		s, st := that.endpoint.Dial(node.Address, that.opts.ProtoFunc)
-		if !st.OK() {
-			return "", nil, st
-		}
-		that.sessMap.Set(node.Address, s)
-		return node.Address, s, nil
-	}
-
-	return node.Address, _s.(drpc.Session), nil
+// SubRoute 设置服务的路由组
+func (that *RpcClient) SubRoute(pathPrefix string, plugin ...drpc.Plugin) *drpc.SubRouter {
+	return that.endpoint.SubRoute(pathPrefix, plugin...)
 }
 
-// 获取服务可用的节点列表
-func (that *RpcClient) next(serviceName string) (selector.Next, *drpc.Status) {
-	next, err := that.opts.Selector.Select(serviceName)
-	if err != nil {
-		if err == selector.ErrNotFound {
-			return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client service %s: %s", serviceName, err.Error()))
-		}
-		return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", serviceName, err.Error()))
-	}
+// RoutePush 使用结构体注册PUSH处理程序，并且返回地址
+func (that *RpcClient) RoutePush(ctrlStruct interface{}, plugin ...drpc.Plugin) []string {
+	return that.endpoint.RoutePush(ctrlStruct, plugin...)
+}
 
-	return next, nil
+// RoutePushFunc 使用函数注册PUSH处理程序，并且返回地址
+func (that *RpcClient) RoutePushFunc(pushHandleFunc interface{}, plugin ...drpc.Plugin) string {
+	return that.endpoint.RoutePushFunc(pushHandleFunc, plugin...)
+}
+
+// Endpoint 返回Endpoint对象
+func (that *RpcClient) Endpoint() drpc.Endpoint {
+	return that.endpoint
 }
 
 // Close 关闭客户端对象
@@ -225,4 +224,51 @@ func (that *RpcClient) Close() {
 		_ = that.opts.Selector.Close()
 		that.sessMap.Clear()
 	}
+}
+
+// 选择session
+func (that *RpcClient) selectSession(serviceMethod string) (Conn, *drpc.Status) {
+
+	next, err := that.next(that.serviceName)
+	if err != nil {
+		return nil, err
+	}
+	node, e := next()
+	if e != nil {
+		if e == selector.ErrNotFound {
+			return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client service %s: %s", that.serviceName, e.Error()))
+		}
+		return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", that.serviceName, e.Error()))
+	}
+	addr := node.Address
+	s, st := that.pool.Get(addr)
+	if st != nil {
+		return nil, drpc.NewStatus(drpc.CodeDialFailed, "", st)
+	}
+	return s, nil
+}
+
+// 获取服务可用的节点列表
+func (that *RpcClient) next(serviceName string) (selector.Next, *drpc.Status) {
+	next, err := that.opts.Selector.Select(serviceName)
+	if err != nil {
+		if err == selector.ErrNotFound {
+			return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client service %s: %s", serviceName, err.Error()))
+		}
+		return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", serviceName, err.Error()))
+	}
+
+	return next, nil
+}
+
+func (that *RpcClient) release(sess drpc.Session, status *drpc.Status) {
+	if status == nil || status.OK() {
+		return
+	}
+	if drpc.IsConnError(status) {
+		addr := sess.ID()
+		_ = sess.Close()
+		that.sessMap.Remove(addr)
+	}
+	return
 }
