@@ -3,6 +3,7 @@ package config
 import (
 	"bufio"
 	"bytes"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"io"
@@ -61,7 +62,7 @@ func ParseIni(data []byte) (res map[string]interface{}, err error) {
 	}
 
 	if !haveSection {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "failed to parse INI file, section not found")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "failed to parse INI file, section not found")
 	}
 	return res, nil
 

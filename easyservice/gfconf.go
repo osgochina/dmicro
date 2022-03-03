@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gcmd"
@@ -128,7 +129,7 @@ func getFilePath(file string) (path string, err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path configured", name))
 		}
-		err = gerror.NewCode(gerror.CodeOperationFailed, buffer.String())
+		err = gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
 	}
 	return
 }
