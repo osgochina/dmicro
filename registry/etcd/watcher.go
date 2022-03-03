@@ -32,7 +32,7 @@ func newEtcdWatcher(r *etcdRegistry, timeout time.Duration, opts ...registry.Wat
 		watchPath = servicePath(wo.Service) + "/"
 	}
 	return &etcdWatcher{
-		//stop:    stop,
+		stop:    stop,
 		w:       r.client.Watch(ctx, watchPath, clientv3.WithPrefix(), clientv3.WithPrevKV()),
 		client:  r.client,
 		timeout: timeout,
