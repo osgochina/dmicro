@@ -132,3 +132,52 @@ func RetryTimes(n int) Option {
 		o.RetryTimes = n
 	}
 }
+func SessionAge(n time.Duration) Option {
+	return func(o *Options) {
+		o.SessionAge = n
+	}
+}
+
+func ContextAge(n time.Duration) Option {
+	return func(o *Options) {
+		o.ContextAge = n
+	}
+}
+
+func DialTimeout(n time.Duration) Option {
+	return func(o *Options) {
+		o.DialTimeout = n
+	}
+}
+
+func SlowCometDuration(n time.Duration) Option {
+	return func(o *Options) {
+		o.SlowCometDuration = n
+	}
+}
+
+func BodyCodec(c string) Option {
+	return func(o *Options) {
+		o.BodyCodec = c
+	}
+}
+func PrintDetail(c bool) Option {
+	return func(o *Options) {
+		o.PrintDetail = c
+	}
+}
+func CountTime(c bool) Option {
+	return func(o *Options) {
+		o.CountTime = c
+	}
+}
+func Network(net string) Option {
+	return func(o *Options) {
+		o.Network = net
+	}
+}
+func LocalIP(addr string) Option {
+	return func(o *Options) {
+		o.LocalIP = addr
+	}
+}
