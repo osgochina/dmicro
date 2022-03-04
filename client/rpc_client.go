@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
@@ -26,11 +25,6 @@ var (
 	// DefaultRetryTimes 默认重试次数
 	DefaultRetryTimes = 2
 
-	// DefaultPoolSize sets the connection pool size
-	DefaultPoolSize = 100
-	// DefaultPoolTTL sets the connection pool ttl
-	DefaultPoolTTL = time.Minute
-
 	// RerClientClosed 客户端已关闭错误信息
 	RerClientClosed = drpc.NewStatus(100, "client is closed", "")
 )
@@ -40,10 +34,8 @@ type RpcClient struct {
 	serviceName string // 服务名称
 	endpoint    drpc.Endpoint
 	opts        Options
-	sessMap     *gmap.StrAnyMap
 	closeCh     chan bool
 	closeMu     sync.Mutex
-	pool        Pool
 }
 
 // NewRpcClient 创建rpc客户端
@@ -73,14 +65,7 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 		serviceName: serviceName,
 		opts:        opts,
 		endpoint:    endpoint,
-		sessMap:     gmap.NewStrAnyMap(true),
 	}
-	rc.pool = NewPool(poolOptions{
-		Endpoint:  endpoint,
-		ProtoFunc: opts.ProtoFunc,
-		TTL:       opts.PoolTTL,
-		Size:      opts.PoolSize,
-	})
 	return rc
 }
 
@@ -108,11 +93,6 @@ func (that *RpcClient) Call(serviceMethod string, args interface{}, result inter
 		var callCmdChan = make(chan drpc.CallCmd, 1)
 		sess.AsyncCall(serviceMethod, args, result, callCmdChan, setting...)
 		callCmd = <-callCmdChan
-		// session使用完毕，释放
-		err := that.pool.Release(sess, callCmd.Status())
-		if err != nil {
-			logger.Warning(err)
-		}
 		// 判断错误类型是否是链接出错，如果不是链接出错，则直接返回错误信息，如果是链接出错，则删除该链接，重新执行
 		connFail = drpc.IsConnError(callCmd.Status())
 		if !connFail {
@@ -135,7 +115,7 @@ func (that *RpcClient) Push(serviceMethod string, arg interface{}, setting ...me
 	var (
 		stat     *drpc.Status
 		connFail bool
-		sess     Conn
+		sess     drpc.Session
 	)
 	for i := 0; i < that.opts.RetryTimes; i++ {
 		sess, stat = that.selectSession(serviceMethod)
@@ -143,11 +123,6 @@ func (that *RpcClient) Push(serviceMethod string, arg interface{}, setting ...me
 			return stat
 		}
 		stat = sess.Push(serviceMethod, arg, setting...)
-		// session使用完毕，释放
-		err := that.pool.Release(sess, stat)
-		if err != nil {
-			logger.Warning(err)
-		}
 		connFail = !drpc.IsConnError(stat)
 		if connFail {
 			return stat
@@ -175,7 +150,6 @@ func (that *RpcClient) AsyncCall(serviceMethod string, arg interface{}, result i
 		return callCmd
 	default:
 	}
-
 	sess, stat := that.selectSession(serviceMethod)
 	if stat != nil {
 		callCmd := drpc.NewFakeCallCmd(serviceMethod, arg, result, stat)
@@ -183,11 +157,6 @@ func (that *RpcClient) AsyncCall(serviceMethod string, arg interface{}, result i
 		return callCmd
 	}
 	callCmd := sess.AsyncCall(serviceMethod, arg, result, callCmdChan, setting...)
-	// session使用完毕，释放
-	err := that.pool.Release(sess, stat)
-	if err != nil {
-		logger.Warning(err)
-	}
 	return callCmd
 }
 
@@ -222,12 +191,11 @@ func (that *RpcClient) Close() {
 		close(that.closeCh)
 		_ = that.endpoint.Close()
 		_ = that.opts.Selector.Close()
-		that.sessMap.Clear()
 	}
 }
 
 // 选择session
-func (that *RpcClient) selectSession(serviceMethod string) (Conn, *drpc.Status) {
+func (that *RpcClient) selectSession(serviceMethod string) (drpc.Session, *drpc.Status) {
 
 	next, err := that.next(that.serviceName)
 	if err != nil {
@@ -241,10 +209,18 @@ func (that *RpcClient) selectSession(serviceMethod string) (Conn, *drpc.Status) 
 		return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", that.serviceName, e.Error()))
 	}
 	addr := node.Address
-	s, st := that.pool.Get(addr)
-	if st != nil {
-		return nil, drpc.NewStatus(drpc.CodeDialFailed, "", st)
+	s, found := that.endpoint.GetSession(addr)
+	if found && s.Health() {
+		if s.Health() {
+			return s, nil
+		}
+		_ = s.Close()
 	}
+	s, stat := that.endpoint.Dial(addr, that.opts.ProtoFunc)
+	if !stat.OK() {
+		return s, drpc.NewStatus(drpc.CodeDialFailed, "", stat)
+	}
+	s.SetID(addr)
 	return s, nil
 }
 
@@ -259,16 +235,4 @@ func (that *RpcClient) next(serviceName string) (selector.Next, *drpc.Status) {
 	}
 
 	return next, nil
-}
-
-func (that *RpcClient) release(sess drpc.Session, status *drpc.Status) {
-	if status == nil || status.OK() {
-		return
-	}
-	if drpc.IsConnError(status) {
-		addr := sess.ID()
-		_ = sess.Close()
-		that.sessMap.Remove(addr)
-	}
-	return
 }

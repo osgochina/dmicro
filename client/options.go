@@ -25,20 +25,11 @@ type Options struct {
 	BodyCodec         string
 	PrintDetail       bool
 	CountTime         bool
-	PoolSize          int
-	PoolTTL           time.Duration
 	HeartbeatTime     time.Duration
 	Registry          registry.Registry
 	Selector          selector.Selector
 	RetryTimes        int
 	GlobalLeftPlugin  []drpc.Plugin
-}
-
-type poolOptions struct {
-	Endpoint  drpc.Endpoint
-	ProtoFunc proto.ProtoFunc
-	TTL       time.Duration
-	Size      int
 }
 
 type Option func(*Options)
@@ -57,8 +48,6 @@ func NewOptions(options ...Option) Options {
 		RetryTimes:        DefaultRetryTimes,
 		PrintDetail:       false,
 		CountTime:         false,
-		PoolSize:          DefaultPoolSize,
-		PoolTTL:           DefaultPoolTTL,
 		HeartbeatTime:     time.Duration(0),
 		ProtoFunc:         drpc.DefaultProtoFunc(),
 	}
@@ -98,20 +87,6 @@ func Registry(r registry.Registry) Option {
 func Selector(s selector.Selector) Option {
 	return func(o *Options) {
 		o.Selector = s
-	}
-}
-
-// PoolSize 设置连接池的大小
-func PoolSize(d int) Option {
-	return func(o *Options) {
-		o.PoolSize = d
-	}
-}
-
-// PoolTTL 设置连接池中链接的生存时间
-func PoolTTL(d time.Duration) Option {
-	return func(o *Options) {
-		o.PoolTTL = d
 	}
 }
 
