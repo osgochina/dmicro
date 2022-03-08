@@ -6,8 +6,10 @@ import (
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/signals"
 	"os"
@@ -210,6 +212,8 @@ func (that *EasyService) checkStart() {
 //解析配置文件
 func (that *EasyService) parserConfig(parser *gcmd.Parser) {
 	that.config = that.getGFConf(parser)
+	// 设置配置文件中log的配置
+	that.initLogCfg()
 	array := garray.NewStrArrayFrom(os.Args)
 	//判断是否需要后台运行
 	index := array.Search("--daemon")
@@ -237,6 +241,29 @@ func (that *EasyService) parserConfig(parser *gcmd.Parser) {
 	} else {
 		debug := parser.GetOptVar("debug", that.config.GetBool("Debug", false))
 		_ = that.config.Set("Debug", debug.Bool())
+	}
+}
+
+const configNodeNameLogger = "logger"
+
+// 把配置文件中的配置信息写入到logger配置中
+func (that *EasyService) initLogCfg() {
+	if !that.config.Available() {
+		return
+	}
+	var m map[string]interface{}
+	nodeKey, _ := gutil.MapPossibleItemByKey(that.config.GetMap("."), configNodeNameLogger)
+	if nodeKey == "" {
+		nodeKey = configNodeNameLogger
+	}
+	m = that.config.GetMap(fmt.Sprintf(`%s.%s`, nodeKey, glog.DefaultName))
+	if len(m) == 0 {
+		m = that.config.GetMap(nodeKey)
+	}
+	if len(m) > 0 {
+		if err := logger.SetConfigWithMap(m); err != nil {
+			panic(err)
+		}
 	}
 }
 
