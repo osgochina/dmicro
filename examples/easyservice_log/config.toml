@@ -3,4 +3,5 @@
 [logger]
     Path        = "/tmp/log/test-server"
     Level       = "Notice"
+    File        = "{Ymd}.log"
     Stdout      = false
