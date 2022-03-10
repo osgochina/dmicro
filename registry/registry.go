@@ -12,6 +12,7 @@ const (
 
 //var DefaultRegistry = NewRegistry()
 var ErrNotFound = errors.New("service not found")
+var ErrWatcherStopped = errors.New("watcher stopped")
 
 // Registry 服务注册接口
 type Registry interface {
