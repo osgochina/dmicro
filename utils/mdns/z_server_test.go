@@ -20,6 +20,7 @@ func TestServer_Lookup(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 	defer serv.Shutdown()
+
 	entries := make(chan *ServiceEntry, 1)
 	found := false
 	doneCh := make(chan struct{})
@@ -42,6 +43,7 @@ func TestServer_Lookup(t *testing.T) {
 		}
 		close(doneCh)
 	}()
+
 	params := &QueryParam{
 		Service: "_foobar._tcp",
 		Domain:  "local",

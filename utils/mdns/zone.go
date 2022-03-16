@@ -19,13 +19,14 @@ type Zone interface {
 	Records(q dns.Question) []dns.RR
 }
 
+// ServiceMDNS mdns服务
 type ServiceMDNS struct {
-	Instance     string
-	Service      string
-	Domain       string
-	HostName     string
-	Port         int
-	IPs          []net.IP
+	Instance     string   // 实例的名称 (e.g. "hostService name")
+	Service      string   // 服务的名字 (e.g. "_http._tcp.")
+	Domain       string   // 域 默认为“local”
+	HostName     string   // 主机的dns名称 (e.g. "mymachine.net.")
+	Port         int      // 端口
+	IPs          []net.IP // 当前服务使用的ip地址
 	TXT          []string
 	TTL          uint32
 	serviceAddr  string
@@ -33,6 +34,8 @@ type ServiceMDNS struct {
 	enumAddr     string
 }
 
+// NewServiceMDNS 创建MDNS服务
+// instance
 func NewServiceMDNS(instance, service, domain, hostName string, port int, ips []net.IP, txt []string) (*ServiceMDNS, error) {
 	if instance == "" {
 		return nil, fmt.Errorf("missing service instance name")
