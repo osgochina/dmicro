@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// ServiceEntry 查询后的条目
 type ServiceEntry struct {
 	Name       string // 服务名
 	Host       string //
@@ -34,15 +35,16 @@ func (that *ServiceEntry) complete() bool {
 	return (len(that.AddrV4) > 0 || len(that.AddrV6) > 0 || len(that.Addr) > 0) && that.Port != 0 && that.hasTXT
 }
 
+// QueryParam 自定义查询参数
 type QueryParam struct {
-	Service             string
-	Domain              string
-	Type                uint16
-	Context             context.Context
-	Timeout             time.Duration
-	Interface           *net.Interface
-	Entries             chan<- *ServiceEntry
-	WantUniCastResponse bool
+	Service             string               // 要查找的服务
+	Domain              string               // 要查找的域。默认是 local
+	Type                uint16               // dns查询类型，默认是 dns.TypePTR
+	Context             context.Context      // 上下文
+	Timeout             time.Duration        // 查询超时时间，默认1s，如果通过context提供了超时，则忽略该参数
+	Interface           *net.Interface       // 使用组播的网卡
+	Entries             chan<- *ServiceEntry // 收到的响应包，以channel形式提供
+	WantUniCastResponse bool                 // 是否需要单播响应，参考 per 5.4 in RFC
 }
 
 // DefaultParams 获取查询默认参数
@@ -86,6 +88,7 @@ func Query(params *QueryParam) error {
 	return cli.query(params)
 }
 
+// Listen 无限期的监听多播的更新
 func Listen(entries chan<- *ServiceEntry, exit chan struct{}) error {
 	cli, err := newClient()
 	if err != nil {
@@ -128,10 +131,10 @@ func Listen(entries chan<- *ServiceEntry, exit chan struct{}) error {
 				ip = make(map[string]*ServiceEntry)
 			} else {
 				// Fire off a node specific query
-				m := new(dns.Msg)
-				m.SetQuestion(e.Name, dns.TypePTR)
-				m.RecursionDesired = false
-				if err := cli.sendQuery(m); err != nil {
+				msg := new(dns.Msg)
+				msg.SetQuestion(e.Name, dns.TypePTR)
+				msg.RecursionDesired = false
+				if err = cli.sendQuery(msg); err != nil {
 					logger.Printf("[ERR] mdns: Failed to query instance %s: %v", e.Name, err)
 				}
 			}
@@ -139,12 +142,14 @@ func Listen(entries chan<- *ServiceEntry, exit chan struct{}) error {
 	}
 }
 
+// Lookup 使用默认参数查询
 func Lookup(service string, entries chan<- *ServiceEntry) error {
 	params := DefaultParams(service)
 	params.Entries = entries
 	return Query(params)
 }
 
+// 提供了一个查询接口，可以用于 使用mDNS搜索服务提供商
 type client struct {
 	ipv4UniCastConn *net.UDPConn // 单播ipv4地址
 	ipv6UniCastConn *net.UDPConn // 单播ipv6地址
@@ -209,10 +214,10 @@ func newClient() (*client, error) {
 	var errCount1, errCount2 int
 
 	for _, iFace := range iFaces {
-		if err := p1.JoinGroup(&iFace, &net.UDPAddr{IP: mdnsGroupIPv4}); err != nil {
+		if err = p1.JoinGroup(&iFace, &net.UDPAddr{IP: mdnsGroupIPv4}); err != nil {
 			errCount1++
 		}
-		if err := p2.JoinGroup(&iFace, &net.UDPAddr{IP: mdnsGroupIPv6}); err != nil {
+		if err = p2.JoinGroup(&iFace, &net.UDPAddr{IP: mdnsGroupIPv6}); err != nil {
 			errCount2++
 		}
 	}
@@ -230,6 +235,7 @@ func newClient() (*client, error) {
 	return c, nil
 }
 
+// Close 关闭客户端
 func (that *client) Close() error {
 	that.closeLock.Lock()
 	defer that.closeLock.Unlock()
@@ -284,7 +290,10 @@ func (that *client) setInterface(iFace *net.Interface, loopBack bool) error {
 	return nil
 }
 
+// Query用于执行查询和流结果
 func (that *client) query(params *QueryParam) error {
+
+	// 生成服务名
 	serviceAddr := fmt.Sprintf("%s.%s.", trimDot(params.Service), trimDot(params.Domain))
 
 	msgCh := make(chan *dns.Msg, 32)
@@ -293,6 +302,7 @@ func (that *client) query(params *QueryParam) error {
 	go that.recv(that.ipv4MulticastConn, msgCh)
 	go that.recv(that.ipv6MulticastConn, msgCh)
 
+	// 发送查询消息
 	m := new(dns.Msg)
 	if params.Type == dns.TypeNone {
 		m.SetQuestion(serviceAddr, dns.TypePTR)
@@ -340,10 +350,10 @@ func (that *client) query(params *QueryParam) error {
 				}
 			} else {
 				// Fire off a node specific query
-				m := new(dns.Msg)
-				m.SetQuestion(inp.Name, inp.Type)
-				m.RecursionDesired = false
-				if err := that.sendQuery(m); err != nil {
+				msg := new(dns.Msg)
+				msg.SetQuestion(inp.Name, inp.Type)
+				msg.RecursionDesired = false
+				if err := that.sendQuery(msg); err != nil {
 					logger.Printf("[ERR] mdns: Failed to query instance %s: %v", inp.Name, err)
 				}
 			}
@@ -351,6 +361,21 @@ func (that *client) query(params *QueryParam) error {
 			return nil
 		}
 	}
+}
+
+// sendQuery 使用单播的方式发送dns查询包
+func (that *client) sendQuery(q *dns.Msg) error {
+	buf, err := q.Pack()
+	if err != nil {
+		return err
+	}
+	if that.ipv4UniCastConn != nil {
+		_, _ = that.ipv4UniCastConn.WriteToUDP(buf, ipv4Addr)
+	}
+	if that.ipv6UniCastConn != nil {
+		_, _ = that.ipv6UniCastConn.WriteToUDP(buf, ipv6Addr)
+	}
+	return nil
 }
 
 // 接收组播包
@@ -371,7 +396,7 @@ func (that *client) recv(l *net.UDPConn, msgCh chan *dns.Msg) {
 			continue
 		}
 		msg := new(dns.Msg)
-		if err := msg.Unpack(buf[:n]); err != nil {
+		if err = msg.Unpack(buf[:n]); err != nil {
 			continue
 		}
 		select {
@@ -382,21 +407,7 @@ func (that *client) recv(l *net.UDPConn, msgCh chan *dns.Msg) {
 	}
 }
 
-// sendQuery 使用单播的方式发送dns查询包
-func (that *client) sendQuery(q *dns.Msg) error {
-	buf, err := q.Pack()
-	if err != nil {
-		return err
-	}
-	if that.ipv4UniCastConn != nil {
-		_, _ = that.ipv4UniCastConn.WriteToUDP(buf, ipv4Addr)
-	}
-	if that.ipv6UniCastConn != nil {
-		_, _ = that.ipv6UniCastConn.WriteToUDP(buf, ipv6Addr)
-	}
-	return nil
-}
-
+// ensureName 转换
 func ensureName(inProgress map[string]*ServiceEntry, name string, typ uint16) *ServiceEntry {
 	if inp, ok := inProgress[name]; ok {
 		return inp
@@ -409,11 +420,13 @@ func ensureName(inProgress map[string]*ServiceEntry, name string, typ uint16) *S
 	return inp
 }
 
+// 别名
 func alias(inProgress map[string]*ServiceEntry, src, dst string, typ uint16) {
 	srcEntry := ensureName(inProgress, src, typ)
 	inProgress[dst] = srcEntry
 }
 
+// dns消息转换为条目
 func messageToEntry(m *dns.Msg, inProgress map[string]*ServiceEntry) *ServiceEntry {
 	var inp *ServiceEntry
 
@@ -469,5 +482,5 @@ func messageToEntry(m *dns.Msg, inProgress map[string]*ServiceEntry) *ServiceEnt
 		}
 	}
 
-	return nil
+	return inp
 }
