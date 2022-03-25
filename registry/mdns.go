@@ -333,6 +333,7 @@ func (that *mdnsRegistry) ListServices(opts ...ListOption) ([]*Service, error) {
 	return services, nil
 }
 
+// Watch 监听
 func (that *mdnsRegistry) Watch(opts ...WatchOption) (Watcher, error) {
 	var wo WatchOptions
 	for _, o := range opts {
@@ -354,7 +355,7 @@ func (that *mdnsRegistry) Watch(opts ...WatchOption) (Watcher, error) {
 	}
 
 	go func() {
-		for true {
+		for {
 			that.mtx.Lock()
 			// 如果监听列表为空，则不执行操作
 			if len(that.watchers) == 0 {
@@ -416,6 +417,7 @@ func (that *mdnsRegistry) String() string {
 	return "mdns"
 }
 
+// Next 获取监听的节点变化
 func (that *mdnsWatcher) Next() (*Result, error) {
 	for {
 		select {

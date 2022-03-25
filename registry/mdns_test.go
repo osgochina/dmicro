@@ -137,3 +137,181 @@ func TestMDNS(t *testing.T) {
 	})
 
 }
+
+func TestEncoding(t *testing.T) {
+	testData := []*mdnsTxt{
+		{
+			Version: "1.0.0",
+			Metadata: map[string]string{
+				"foo":  "bar",
+				"foo1": "bar1",
+			},
+		},
+	}
+	for _, d := range testData {
+		encoded, err := encode(d)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, txt := range encoded {
+			if len(txt) > 255 {
+				t.Fatalf("One of parts for txt is %d characters", len(txt))
+			}
+		}
+		decoded, err := decode(encoded)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if decoded.Version != d.Version {
+			t.Fatalf("Expected version %s got %s", d.Version, decoded.Version)
+		}
+		for k, v := range d.Metadata {
+			if val := decoded.Metadata[k]; val != v {
+				t.Fatalf("Expected %s=%s got %s=%s", k, v, k, val)
+			}
+		}
+	}
+}
+
+func TestWatcher(t *testing.T) {
+
+	testData := []*Service{
+		{
+			Name:    "test1",
+			Version: "1.0.1",
+			Nodes: []*Node{
+				{
+					Id:      "test1-1",
+					Address: "10.0.0.1:10001",
+					Metadata: map[string]string{
+						"foo": "bar",
+					},
+				},
+			},
+		},
+		{
+			Name:    "test2",
+			Version: "1.0.2",
+			Nodes: []*Node{
+				{
+					Id:      "test2-1",
+					Address: "10.0.0.2:10002",
+					Metadata: map[string]string{
+						"foo2": "bar2",
+					},
+				},
+			},
+		},
+		{
+			Name:    "test3",
+			Version: "1.0.3",
+			Nodes: []*Node{
+				{
+					Id:      "test3-1",
+					Address: "10.0.0.3:10003",
+					Metadata: map[string]string{
+						"foo3": "bar3",
+					},
+				},
+			},
+		},
+		{
+			Name:    "test4",
+			Version: "1.0.4",
+			Nodes: []*Node{
+				{
+					Id:      "test4-1",
+					Address: "[::]:10004",
+					Metadata: map[string]string{
+						"foo4": "bar4",
+					},
+				},
+			},
+		},
+	}
+
+	testFn := func(service, s *Service) {
+		if s == nil {
+			t.Fatalf("Expected one result for %s got nil", service.Name)
+
+		}
+
+		if s.Name != service.Name {
+			t.Fatalf("Expected name %s got %s", service.Name, s.Name)
+		}
+
+		if s.Version != service.Version {
+			t.Fatalf("Expected version %s got %s", service.Version, s.Version)
+		}
+
+		if len(s.Nodes) != 1 {
+			t.Fatalf("Expected 1 node, got %d", len(s.Nodes))
+		}
+
+		node := s.Nodes[0]
+
+		if node.Id != service.Nodes[0].Id {
+			t.Fatalf("Expected node id %s got %s", service.Nodes[0].Id, node.Id)
+		}
+
+		if node.Address != service.Nodes[0].Address {
+			t.Fatalf("Expected node address %s got %s", service.Nodes[0].Address, node.Address)
+		}
+	}
+	var opts []Option
+
+	// new registry
+	r := NewRegistry(opts...)
+
+	w, err := r.Watch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Stop()
+
+	for _, service := range testData {
+
+		// 注册是否成功
+		if err = r.Register(service); err != nil {
+			t.Fatal(err)
+		}
+
+		for {
+			res, err := w.Next()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if res.Service.Name != service.Name {
+				continue
+			}
+			if res.Action != "create" {
+				t.Fatalf("Expected create event got %s for %s", res.Action, res.Service.Name)
+			}
+			testFn(service, res.Service)
+			break
+		}
+
+		// 注销服务
+		if err = r.Deregister(service); err != nil {
+			t.Fatal(err)
+		}
+
+		for true {
+			res, err := w.Next()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if res.Service.Name != service.Name {
+				continue
+			}
+			if res.Action != "delete" {
+				continue
+			}
+
+			testFn(service, res.Service)
+			break
+		}
+	}
+}

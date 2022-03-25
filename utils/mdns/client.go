@@ -98,9 +98,8 @@ func Listen(entries chan<- *ServiceEntry, exit chan struct{}) error {
 		_ = cli.Close()
 	}()
 
-	if err = cli.setInterface(nil, true); err != nil {
-		return err
-	}
+	_ = cli.setInterface(nil, true)
+
 	msgCh := make(chan *dns.Msg, 32)
 
 	go cli.recv(cli.ipv4UniCastConn, msgCh)
