@@ -1,5 +1,13 @@
 ## 更新日志
 
+### v0.6.2 (2022-06-14)
+1. 完成服务注册功能`registry`
+2. 完成服务发下功能`selector`
+3. 增加`mdns`服务发现组件
+4. 升级gf依赖版本至`v1.16.9`
+5. 改造`rpc client`支持服务发现功能。
+6. `easy service`暴露出`Help`，`Version`方法，方便业务调用。
+
 ### v0.5.0 (2022-01-19)
 1. 增加`build.sh`编译脚本，支持设置编译变量，方便使用`easyservice`组件使用`version`命令展示编译信息。
 2. 完善`easyservice`的日志级别配置.
