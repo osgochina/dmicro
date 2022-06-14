@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-export GOPROXY=https://goproxy.io,direct
-export GOPRIVATE=git.chelun.com
+# 使用镜像
+export  GOPROXY=https://proxy.golang.com.cn,direct
 
 help() {
     echo "使用方式:"
@@ -104,6 +104,6 @@ ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildTime=${build_date
 # 加壳
 #upx "${output_file}" -o "${output_file}".upx
 
-${goBin} build -v -ldflags "${ldflags[*]}"  -o "${output_file}" $build_file || exit 1
+${goBin} build -v -ldflags "${ldflags[*]}"  -o "${output_file}" oa || exit 1
 echo "build linux amd64 done."
 

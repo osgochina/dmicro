@@ -74,10 +74,10 @@ func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
 	command := gcmd.GetArg(1)
 	switch strings.ToLower(command) {
 	case "help":
-		that.help()
+		that.Help()
 		return false
 	case "version":
-		that.version()
+		that.Version()
 		return false
 	case "start":
 		that.initSandboxNames()
@@ -103,21 +103,21 @@ func (that *EasyService) parserArgs(parser *gcmd.Parser) bool {
 		for _, v := range gcmd.GetArgAll() {
 			switch v {
 			case "?", "h":
-				that.help()
+				that.Help()
 				return false
 			case "i", "v":
-				that.version()
+				that.Version()
 				return false
 			}
 		}
 		// 识别参数展示帮助信息和版本信息
 		array := garray.NewStrArrayFrom(os.Args)
 		if array.Search("--help") != -1 || array.Search("-h") != -1 {
-			that.help()
+			that.Help()
 			return false
 		}
 		if array.Search("--version") != -1 || array.Search("-v") != -1 {
-			that.version()
+			that.Version()
 			return false
 		}
 	}
@@ -267,7 +267,7 @@ func (that *EasyService) initLogCfg() {
 	}
 }
 
-//显示帮助信息
-func (that *EasyService) help() {
+//Help 显示帮助信息
+func (that *EasyService) Help() {
 	fmt.Print(helpContent)
 }
