@@ -237,9 +237,15 @@ func (that *EasyService) parserConfig(parser *gcmd.Parser) {
 	//通过启动命令判断是否开启debug
 	index = array.Search("--debug")
 	if index != -1 {
+		// 如果启动命令行强制设置了debug参数，则优先级最高
+		_ = genv.Set("DEBUG", "true")
 		_ = that.config.Set("Debug", true)
 	} else {
-		debug := parser.GetOptVar("debug", that.config.GetBool("Debug", false))
+		// 1. 从命令行中获取debug参数,如果获取到则使用，未获取到这进行下一步
+		// 2. 从配置文件中获取debug参数,如果获取到则使用，未获取到这进行下一步
+		// 3. 先从环境变量获取debug参数
+		// 4. 最终传导获取到debug值，把它设置到配置文件中
+		debug := parser.GetOptVar("debug", that.config.GetBool("Debug", genv.GetVar("DEBUG", false).Bool()))
 		_ = that.config.Set("Debug", debug.Bool())
 	}
 }
