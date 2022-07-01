@@ -23,10 +23,16 @@ func NewManager() *Manager {
 // path: 可执行文件路径
 // args: 参数
 // environment: 环境变量
-func (that *Manager) NewProcess(path string, args []string, environment []string) (*Process, error) {
-	p := NewProcess(path, args, environment)
+func (that *Manager) NewProcess(path string, args []string, environment map[string]string, opts ...ProcOption) (*Process, error) {
+
+	opts = append(opts,
+		ProcCommand(path),
+		ProcArgs(args...),
+		ProcEnvironment(environment),
+	)
+	p := NewProcess(opts...)
 	if _, found := that.processes.Search(p.GetName()); found {
-		return nil, gerror.Newf(errorProcessExist, p.GetName())
+		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
 	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
@@ -36,10 +42,10 @@ func (that *Manager) NewProcess(path string, args []string, environment []string
 
 // NewProcessByEntry 创建进程
 // entry: 配置对象
-func (that *Manager) NewProcessByEntry(entry *ProcEntry) (*Process, error) {
-	p := NewProcessByEntry(entry)
+func (that *Manager) NewProcessByEntry(opts ProcOptions) (*Process, error) {
+	p := NewProcessByOptions(opts)
 	if _, found := that.processes.Search(p.GetName()); found {
-		return nil, gerror.Newf(errorProcessExist, p.GetName())
+		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
 	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)
@@ -50,10 +56,10 @@ func (that *Manager) NewProcessByEntry(entry *ProcEntry) (*Process, error) {
 // NewProcessCmd 创建进程
 // path: shell命令
 // environment: 环境变量
-func (that *Manager) NewProcessCmd(cmd string, environment ...[]string) (*Process, error) {
-	p := NewProcessCmd(cmd, environment...)
+func (that *Manager) NewProcessCmd(cmd string, environment map[string]string) (*Process, error) {
+	p := NewProcessCmd(cmd, environment)
 	if _, found := that.processes.Search(p.GetName()); found {
-		return nil, gerror.Newf(errorProcessExist, p.GetName())
+		return nil, gerror.Newf("进程[%s]已存在", p.GetName())
 	}
 	p.Manager = that
 	that.processes.Set(p.GetName(), p)

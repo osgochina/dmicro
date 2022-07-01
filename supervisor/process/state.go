@@ -45,6 +45,8 @@ func (p State) String() string {
 		return "Exited"
 	case Fatal:
 		return "Fatal"
+	case Unknown:
+		return "Unknown"
 	default:
 		return "Unknown"
 	}

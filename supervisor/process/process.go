@@ -2,9 +2,10 @@ package process
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/genv"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/proclog"
-	"github.com/osgochina/dmicro/supervisor/signals"
+	"github.com/osgochina/dmicro/utils/signals"
 	"io"
 	"os"
 	"os/exec"
@@ -22,7 +23,7 @@ type Process struct {
 	// 进程管理对象
 	Manager *Manager
 	//进程配置
-	entry *ProcEntry
+	option ProcOptions
 	// 进程对象
 	cmd *exec.Cmd
 	// 启动时间
@@ -37,7 +38,8 @@ type Process struct {
 	stopByUser bool
 	//启动的次数
 	retryTimes *int32
-	lock       sync.RWMutex
+
+	lock sync.RWMutex
 
 	stdin     io.WriteCloser
 	StdoutLog proclog.Logger
@@ -45,26 +47,23 @@ type Process struct {
 }
 
 // NewProcess 创建进程对象
-func NewProcess(path string, args []string, environment ...[]string) *Process {
-	entry := NewProcEntry(path, args)
-	env := os.Environ()
-	if len(environment) > 0 {
-		for k, v := range environment[0] {
-			env[k] = v
-		}
-	}
-	entry.SetEnvironment(env)
+func NewProcess(opts ...ProcOption) *Process {
+	options := NewProcOptions()
+	options.Environment.Sets(genv.Map())
 	dir, _ := os.Getwd()
-	entry.SetDirectory(dir)
-	return NewProcessByEntry(entry)
+	options.Directory = dir
+	for _, opt := range opts {
+		opt(&options)
+	}
+	return NewProcessByOptions(options)
 }
 
-// NewProcessByEntry 通过详细配置，创建进程对象
-func NewProcessByEntry(entry *ProcEntry) *Process {
+// NewProcessByOptions 通过详细配置，创建进程对象
+func NewProcessByOptions(options ProcOptions) *Process {
 	proc := &Process{
 		Manager:    nil,
 		cmd:        nil,
-		entry:      entry,
+		option:     options,
 		startTime:  time.Unix(0, 0),
 		stopTime:   time.Unix(0, 0),
 		state:      Stopped,
@@ -76,17 +75,21 @@ func NewProcessByEntry(entry *ProcEntry) *Process {
 }
 
 // NewProcessCmd 按命令启动
-func NewProcessCmd(cmd string, environment ...[]string) *Process {
-	return NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...), environment...)
+func NewProcessCmd(cmd string, environment map[string]string) *Process {
+	return NewProcess(
+		ProcCommand(getShell()),
+		ProcArgs(append([]string{getShellOption()}, parseCommand(cmd)...)...),
+		ProcEnvironment(environment),
+	)
 }
 
 // Start 启动进程，wait表示阻塞等待进程启动成功
 func (that *Process) Start(wait bool) {
-	logger.Infof("尝试启动程序[%s]", that.GetName())
+	logger.Infof("尝试启动程序[%s]", that.option.Name)
 
 	that.lock.Lock()
 	if that.inStart {
-		logger.Infof("不成重复启动该进程[%s],因为该进程已经启动！", that.GetName())
+		logger.Infof("不成重复启动该进程[%s],因为该进程已经启动！", that.option.Name)
 		that.lock.Unlock()
 		return
 	}
@@ -113,15 +116,15 @@ func (that *Process) Start(wait bool) {
 
 			// 如果上一次进程启动失败，并且启动时间少于2秒，则需要暂停一会，避免死循环，耗干资源
 			if time.Now().Unix()-that.startTime.Unix() < 2 {
-				time.Sleep(5 * time.Second)
+				time.Sleep(3 * time.Second)
 			}
 			if that.stopByUser {
-				logger.Infof("用户主动结束了该程序[%s]，不要再次启动", that.GetName())
+				logger.Infof("用户主动结束了该程序[%s]，不要再次启动", that.option.Name)
 				break
 			}
 			// 判断进程是否需要自动重启
 			if !that.isAutoRestart() {
-				logger.Infof("不要自动重启进程[%s],因为该进程设置了不需要自动重启", that.GetName())
+				logger.Infof("不要自动重启进程[%s],因为该进程设置了不需要自动重启", that.option.Name)
 				break
 			}
 		}
@@ -149,15 +152,15 @@ func (that *Process) Stop(wait bool) {
 	logger.Infof("正在停止程序[%s]", that.GetName())
 
 	// 获取程序的正常退出信号
-	sigs := strings.Fields(that.entry.StopSignal())
+	sigs := that.option.StopSignal
 	// 发送信号后的等待秒数
-	waitSecond := time.Duration(that.entry.StopWaitSecs(10)) * time.Second
+	waitSecond := time.Duration(that.option.StopWaitSecs) * time.Second
 	// 发送强制结束信号后的等待秒数
-	killWaitSecond := time.Duration(that.entry.KillWaitSecs(2)) * time.Second
+	killWaitSecond := time.Duration(that.option.KillWaitSecs) * time.Second
 	// 是否同时停止进程组
-	stopAsGroup := that.entry.StopAsGroup()
+	stopAsGroup := that.option.StopAsGroup
 	// 是否强制杀死进程组
-	killAsGroup := that.entry.KillAsGroup()
+	killAsGroup := that.option.KillAsGroup
 	if stopAsGroup && !killAsGroup {
 		logger.Error("不能够同时设置 stopAsGroup=true 和 killAsGroup=false")
 	}
@@ -166,10 +169,7 @@ func (that *Process) Stop(wait bool) {
 	go func() {
 		for i := 0; i < len(sigs) && atomic.LoadInt32(&stopped) == 0; i++ {
 			// 获取需要发送的信号
-			sig, err := signals.ToSignal(sigs[i])
-			if err != nil {
-				continue
-			}
+			sig := signals.ToSignal(sigs[i])
 			logger.Infof("发送结束进程信号[%s]给进程[%s]", that.GetName(), sigs[i])
 			//发送结束进程信号给程序
 			_ = that.Signal(sig, stopAsGroup)
@@ -216,7 +216,7 @@ func (that *Process) run(finishCb func()) {
 
 	// 判断进程是否正在运行
 	if that.isRunning() {
-		logger.Infof("不能启动进程[%s],因为它正在运行中...", that.GetName())
+		logger.Infof("不能启动进程[%s],因为它正在运行中...", that.option.Name)
 		finishCb()
 		return
 	}
@@ -224,9 +224,9 @@ func (that *Process) run(finishCb func()) {
 	that.startTime = time.Now()
 	atomic.StoreInt32(that.retryTimes, 0)
 	//指定启动多少秒后没有异常退出，则表示启动成功
-	startSecs := that.entry.StartSecs()
+	startSecs := that.option.StartSecs
 	// 进程重启间隔秒数，默认是0，表示不间隔
-	restartPause := that.entry.RestartPause()
+	restartPause := that.option.RestartPause
 
 	var once sync.Once
 	finishCbWrapper := func() {
@@ -239,7 +239,7 @@ func (that *Process) run(finishCb func()) {
 		//如果进程启动失败，需要重试，则需要判断配置，重试启动是否需要间隔制定时间
 		if restartPause > 0 && atomic.LoadInt32(that.retryTimes) != 0 {
 			that.lock.Lock()
-			logger.Infof("不能立刻重启程序[%s],需要等待%d秒", that.GetName(), restartPause)
+			logger.Infof("不能立刻重启程序[%s],需要等待%d秒", that.option.Name, restartPause)
 			time.Sleep(time.Duration(restartPause) * time.Second)
 			that.lock.Unlock()
 		}
@@ -259,12 +259,12 @@ func (that *Process) run(finishCb func()) {
 		err = that.cmd.Start()
 		if err != nil {
 			// 重试次数已经大于设置中的最大重试次数
-			if atomic.LoadInt32(that.retryTimes) >= int32(that.entry.StartRetries()) {
+			if atomic.LoadInt32(that.retryTimes) >= int32(that.option.StartRetries) {
 				that.failToStartProgram(fmt.Sprintf("error:%v", err), finishCbWrapper)
 				break
 			} else {
 				// 启动失败，再次重试
-				logger.Infof("程序[%s]启动失败,再次重试,error:%v", that.GetName(), err)
+				logger.Infof("程序[%s]启动失败,再次重试,error:%v", that.option.Name, err)
 				that.changeStateTo(Backoff)
 				continue
 			}
@@ -281,7 +281,7 @@ func (that *Process) run(finishCb func()) {
 		programExited := int32(0)
 		// 如果未设置启动监视时长，则表示cmd.start成功就算该程序启动成功
 		if startSecs <= 0 {
-			logger.Infof("程序[%s]启动成功", that.GetName())
+			logger.Infof("程序[%s]启动成功", that.option.Name)
 			that.changeStateTo(Running)
 			go finishCbWrapper()
 		} else {
@@ -291,7 +291,7 @@ func (that *Process) run(finishCb func()) {
 				finishCbWrapper()
 			}()
 		}
-		logger.Debugf("进程正在运行[%s]等待退出", that.GetName())
+		logger.Debugf("进程正在运行[%s]等待退出", that.option.Name)
 		that.lock.Unlock()
 		that.waitForExit(int64(startSecs))
 		//修改程序退出码
@@ -302,18 +302,17 @@ func (that *Process) run(finishCb func()) {
 		}
 		that.lock.Lock()
 
-		// if the program still in running after startSecs
 		// 如果程序的运行状态为 Running，则更改它的状态
 		if that.state == Running {
 			that.changeStateTo(Exited)
-			logger.Infof("程序[%s]已经结束", that.GetName())
+			logger.Infof("程序[%s]已经结束", that.option.Name)
 			break
 		} else {
 			that.changeStateTo(Backoff)
 		}
 		//如果重试次数已经超过了设置的最大重试次数
-		if atomic.LoadInt32(that.retryTimes) >= int32(that.entry.StartRetries()) {
-			that.failToStartProgram(fmt.Sprintf("不能启动程序[%s],因为已经超出了它的最大重试值:%d", that.GetName(), that.entry.StartRetries()), finishCbWrapper)
+		if atomic.LoadInt32(that.retryTimes) >= int32(that.option.StartRetries) {
+			that.failToStartProgram(fmt.Sprintf("不能启动程序[%s],因为已经超出了它的最大重试值:%d", that.option.Name, that.option.StartRetries), finishCbWrapper)
 			break
 		}
 	}
@@ -322,14 +321,13 @@ func (that *Process) run(finishCb func()) {
 // 创建程序的cmd对象
 func (that *Process) createProgramCommand() (err error) {
 	// 创建命令对象
-	that.cmd, err = that.entry.CreateCommand()
+	that.cmd, err = that.option.CreateCommand()
 	if err != nil {
 		return err
 	}
 	// 设置程序运行时用户
 	if that.setUser() != nil {
-		//logger.Errorf("设置程序运行时用户[%s]失败", that.entry.User())
-		return fmt.Errorf("设置程序运行时用户[%s]失败", that.entry.User())
+		return fmt.Errorf("设置程序运行时用户[%s]失败", that.option.User)
 	}
 	// TODO that.setProgramRestartChangeMonitor(that.cmd.args[0])
 
@@ -362,12 +360,12 @@ func (that *Process) isRunning() bool {
 
 // 在supervisord启动的时候也自动启动
 func (that *Process) isAutoStart() bool {
-	return that.entry.AutoStart()
+	return that.option.AutoStart
 }
 
 // 设置进程的运行用户
 func (that *Process) setUser() error {
-	userName := that.entry.User()
+	userName := that.option.User
 	if len(userName) == 0 {
 		return nil
 	}
@@ -407,17 +405,15 @@ func (that *Process) setUser() error {
 
 // 设置进程运行的环境变量
 func (that *Process) setEnv() {
-
-	if len(that.entry.Environment()) != 0 {
-		that.cmd.Env = that.entry.Environment()
-	} else {
-		that.cmd.Env = os.Environ()
+	if that.option.Environment.Size() > 0 {
+		_ = genv.SetMap(that.option.Environment.Map())
 	}
+	that.cmd.Env = genv.All()
 }
 
 // 设置进程的运行目录
 func (that *Process) setDir() {
-	dir := that.entry.Directory()
+	dir := that.option.Directory
 	if dir != "" {
 		that.cmd.Dir = dir
 	}
@@ -427,7 +423,7 @@ func (that *Process) setDir() {
 func (that *Process) setLog() {
 	that.StdoutLog = that.createStdoutLogger()
 	that.cmd.Stdout = that.StdoutLog
-	if that.entry.RedirectStderr() {
+	if that.option.RedirectStderr {
 		that.StderrLog = that.StdoutLog
 	} else {
 		that.StderrLog = that.createStderrLogger()
@@ -437,7 +433,7 @@ func (that *Process) setLog() {
 
 // 设置程序启动失败状态
 func (that *Process) failToStartProgram(reason string, finishCb func()) {
-	logger.Errorf("程序[%s]启动失败，失败原因：%s ", that.GetName(), reason)
+	logger.Errorf("程序[%s]启动失败，失败原因：%s ", that.option.Name, reason)
 	that.changeStateTo(Fatal)
 	finishCb()
 }
@@ -454,18 +450,18 @@ func (that *Process) monitorProgramIsRunning(endTime time.Time, monitorExited *i
 	defer that.lock.Unlock()
 	// 进程在此期间未退出
 	if atomic.LoadInt32(programExited) == 0 && that.state == Starting {
-		logger.Infof("进程[%s]启动成功", that.GetName())
+		logger.Infof("进程[%s]启动成功", that.option.Name)
 		that.changeStateTo(Running)
 	}
 }
 
 // 判断进程是否需要自动重启
 func (that *Process) isAutoRestart() bool {
-	autoRestart := that.entry.AutoReStart("unexpected")
+	autoRestart := that.option.AutoReStart
 
-	if autoRestart == "false" {
+	if autoRestart == AutoReStartFalse {
 		return false
-	} else if autoRestart == "true" {
+	} else if autoRestart == AutoReStartTrue {
 		return true
 	} else {
 		that.lock.RLock()
@@ -484,9 +480,9 @@ func (that *Process) isAutoRestart() bool {
 func (that *Process) waitForExit(startSecs int64) {
 	_ = that.cmd.Wait()
 	if that.cmd.ProcessState != nil {
-		logger.Infof("程序[%s]已经运行结束，退出码为:%v", that.GetName(), that.cmd.ProcessState)
+		logger.Infof("程序[%s]已经运行结束，退出码为:%v", that.option.Name, that.cmd.ProcessState)
 	} else {
-		logger.Infof("程序[%s]已经运行结束", that.GetName())
+		logger.Infof("程序[%s]已经运行结束", that.option.Name)
 	}
 	that.lock.Lock()
 	defer that.lock.Unlock()

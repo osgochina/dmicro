@@ -3,7 +3,7 @@ package process
 import (
 	"fmt"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/osgochina/dmicro/supervisor/signals"
+	"github.com/osgochina/dmicro/utils/signals"
 	"os"
 )
 
@@ -25,11 +25,10 @@ func (that *Process) sendSignals(sigs []string, sigChildren bool) {
 	defer that.lock.RUnlock()
 
 	for _, strSig := range sigs {
-		sig, err := signals.ToSignal(strSig)
-		if err == nil {
-			_ = that.sendSignal(sig, sigChildren)
-		} else {
-			logger.Info("向进程[%s]发送信号,但是信号[%s]未找到", that.GetName(), strSig)
+		sig := signals.ToSignal(strSig)
+		err := that.sendSignal(sig, sigChildren)
+		if err != nil {
+			logger.Infof("向进程[%s]发送信号[%s]失败,err:%v", that.GetName(), strSig, err)
 		}
 	}
 }

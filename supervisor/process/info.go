@@ -3,8 +3,6 @@ package process
 import (
 	"fmt"
 	"github.com/gogf/gf/os/gfile"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -47,7 +45,7 @@ func (that *Process) GetProcessInfo() *Info {
 
 // GetName 获取进程名
 func (that *Process) GetName() string {
-	return that.entry.Name()
+	return that.option.Name
 }
 
 // GetDescription 获取进程描述
@@ -123,14 +121,14 @@ func (that *Process) Pid() int {
 
 // GetStdoutLogfile 获取标准输出将要写入的日志文件
 func (that *Process) GetStdoutLogfile() string {
-	fileName := that.entry.StdoutLogfile("/dev/null")
+	fileName := "/dev/null"
 	expandFile := gfile.RealPath(fileName)
 	return expandFile
 }
 
 // GetStderrLogfile 获取标准错误将要写入的日志文件
 func (that *Process) GetStderrLogfile() string {
-	fileName := that.entry.StderrLogfile("/dev/null")
+	fileName := "/dev/null"
 	expandFile := gfile.RealPath(fileName)
 	return expandFile
 }
@@ -168,13 +166,9 @@ func (that *Process) inExitCodes(exitCode int) bool {
 
 // 获取配置的退出code值列表
 func (that *Process) getExitCodes() []int {
-	strExitCodes := strings.Split(that.entry.ExitCodes("0,2"), ",")
-	result := make([]int, 0)
-	for _, val := range strExitCodes {
-		i, err := strconv.Atoi(val)
-		if err == nil {
-			result = append(result, i)
-		}
+	strExitCodes := that.option.ExitCodes
+	if len(that.option.ExitCodes) > 0 {
+		return strExitCodes
 	}
-	return result
+	return []int{0, 2}
 }
