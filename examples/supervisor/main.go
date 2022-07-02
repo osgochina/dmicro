@@ -17,13 +17,15 @@ func main() {
 
 func runServer() {
 	m := process.NewManager()
-	entry := process.NewProcEntry(fmt.Sprintf("%s/../simple/server", gfile.MainPkgPath()))
-	entry.SetName("simpleserver")
-	entry.SetUser("lzm")
-	entry.SetDirectory(fmt.Sprintf("%s/../", gfile.MainPkgPath()))
-	entry.SetRedirectStderr(true)
-	entry.SetStdoutLogfile("/tmp/tttserver.log")
-	proc, err := m.NewProcessByEntry(entry)
+	opts := process.NewProcOptions(
+		process.ProcCommand(fmt.Sprintf("%s/../simple/server", gfile.MainPkgPath())),
+		process.ProcName("simpleserver"),
+		process.ProcUser("lzm"),
+		process.ProcDirectory(fmt.Sprintf("%s/../", gfile.MainPkgPath())),
+		process.ProcRedirectStderr(true),
+		process.ProcStdoutLog("/tmp/tttserver.log", "50M", 10),
+	)
+	proc, err := m.NewProcessByOptions(opts)
 	if err != nil {
 		logger.Error(err)
 		return

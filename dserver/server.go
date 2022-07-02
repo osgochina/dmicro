@@ -26,7 +26,7 @@ const MultiProcessEnv = "DServerMultiProcess"
 // DServer 服务对象
 type DServer struct {
 	manager        *process.Manager
-	sList          *gmap.IntAnyMap  //启动的服务列表
+	serviceList    *gmap.StrAnyMap  //启动的服务列表
 	started        *gtime.Time      //服务启动时间
 	shutting       bool             // 服务正在关闭
 	beforeStopFunc StopFunc         //服务关闭之前执行该方法
@@ -38,15 +38,15 @@ type DServer struct {
 }
 
 // StartFunc 启动回调方法
-type StartFunc func(service *DServer)
+type StartFunc func(svr *DServer)
 
 // StopFunc 服务关闭回调方法
-type StopFunc func(service *DServer) bool
+type StopFunc func(svr *DServer) bool
 
 // newDServer  创建服务
 func newDServer() *DServer {
 	svr := &DServer{
-		sList:        gmap.NewIntAnyMap(true),
+		serviceList:  gmap.NewStrAnyMap(true),
 		sandboxNames: garray.NewStrArray(false),
 		manager:      process.NewManager(),
 	}
@@ -110,14 +110,17 @@ func (that *DServer) Setup(startFunction StartFunc) {
 	if that.multiProcess == true {
 		//TODO
 	} else {
-		that.sList.Iterator(func(_ int, v interface{}) bool {
-			sandbox := v.(ISandbox)
-			go func() {
-				e := sandbox.Setup()
-				if e != nil {
-					logger.Warning(e)
-				}
-			}()
+		that.serviceList.Iterator(func(_ string, v interface{}) bool {
+			dService := v.(*DService)
+			dService.iterator(func(name string, sandbox ISandbox) bool {
+				go func() {
+					e := sandbox.Setup()
+					if e != nil {
+						logger.Warning(e)
+					}
+				}()
+				return true
+			})
 			return true
 		})
 	}
@@ -129,17 +132,23 @@ func (that *DServer) Setup(startFunction StartFunc) {
 	graceful.GraceSignal()
 }
 
-func (that *DServer) AddSandBox(s ISandbox) {
-	that.sList.Set(s.ID(), s)
-}
-
-// GetSandBox 获取指定的服务沙盒
-func (that *DServer) GetSandBox(id int) ISandbox {
-	s, found := that.sList.Search(id)
-	if !found {
-		return nil
+// AddSandBox 添加sandbox到服务中
+// services 是可选，如果不传入则表示使用默认服务
+func (that *DServer) AddSandBox(s ISandbox, services ...*DService) error {
+	service := defaultService
+	if len(services) > 0 {
+		service = services[0]
 	}
-	return s.(ISandbox)
+	err := service.addSandBox(s)
+	if err != nil {
+		return err
+	}
+	// 查看service服务是否存在于列表中，如果不存在则添加
+	_, found := that.serviceList.Search(service.Name())
+	if !found {
+		that.serviceList.Set(service.Name(), service)
+	}
+	return nil
 }
 
 // Config 获取配置信息
@@ -303,13 +312,16 @@ func (that *DServer) firstSweep() error {
 //进行结束收尾工作
 func (that *DServer) beforeExiting() error {
 	//结束各组件
-	that.sList.Iterator(func(_ int, v interface{}) bool {
-		service := v.(ISandbox)
-		if e := service.Shutdown(); e != nil {
-			logger.Errorf("服务 %s .结束出错，error: %v", service.Name(), e)
-		} else {
-			logger.Printf("%s 服务 已结束.", service.Name())
-		}
+	that.serviceList.Iterator(func(_ string, v interface{}) bool {
+		dService := v.(*DService)
+		dService.iterator(func(name string, sandbox ISandbox) bool {
+			if e := sandbox.Shutdown(); e != nil {
+				logger.Errorf("服务 %s .结束出错，error: %v", sandbox.Name(), e)
+			} else {
+				logger.Printf("%s 服务 已结束.", sandbox.Name())
+			}
+			return true
+		})
 		return true
 	})
 	return nil
@@ -318,9 +330,4 @@ func (that *DServer) beforeExiting() error {
 // IsMaster 判断当前进程是否是主进程
 func (that *DServer) isMaster() bool {
 	return genv.GetVar(MultiProcessEnv, true).Bool()
-}
-
-func (that *DServer) newService(svr *DService) error {
-
-	return nil
 }

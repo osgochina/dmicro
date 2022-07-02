@@ -2,6 +2,7 @@ package process
 
 import (
 	"github.com/gogf/gf/container/gmap"
+	"github.com/osgochina/dmicro/utils"
 	"os/exec"
 )
 
@@ -225,8 +226,39 @@ func ProcSetExtend(key, val interface{}) ProcOption {
 	}
 }
 
+// ProcStdoutLog 设置stdoutlog的存放配置
+func ProcStdoutLog(file string, maxBytes string, backups ...int) ProcOption {
+	return func(options *ProcOptions) {
+		options.StdoutLogfile = file
+		options.StdoutLogFileMaxBytes = utils.GetBytes(maxBytes, 50*1024*1024)
+		options.StdoutLogFileBackups = 10
+		if len(backups) > 0 {
+			options.StdoutLogFileBackups = backups[0]
+		}
+	}
+}
+
+// ProcStderrLog 设置stderrlog的存放配置
+func ProcStderrLog(file string, maxBytes string, backups ...int) ProcOption {
+	return func(options *ProcOptions) {
+		options.StderrLogfile = file
+		options.StderrLogFileMaxBytes = utils.GetBytes(maxBytes, 50*1024*1024)
+		options.StderrLogFileBackups = 10
+		if len(backups) > 0 {
+			options.StderrLogFileBackups = backups[0]
+		}
+	}
+}
+
+// ProcRedirectStderr 错误输出是否与标准输入一起
+func ProcRedirectStderr(opt bool) ProcOption {
+	return func(options *ProcOptions) {
+		options.RedirectStderr = opt
+	}
+}
+
 // NewProcOptions 创建进程启动配置
-func NewProcOptions() ProcOptions {
+func NewProcOptions(opts ...ProcOption) ProcOptions {
 	proc := ProcOptions{
 		AutoStart:                true,
 		StartSecs:                1,
@@ -251,7 +283,9 @@ func NewProcOptions() ProcOptions {
 		StderrLogFileMaxBytes: 50 * 1024 * 1024,
 		StderrLogFileBackups:  10,
 	}
-
+	for _, opt := range opts {
+		opt(&proc)
+	}
 	return proc
 }
 
