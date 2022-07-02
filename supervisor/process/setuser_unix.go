@@ -46,6 +46,6 @@ func (that *Process) setUser() error {
 			return err
 		}
 	}
-	that.cmd.SysProcAttr = &syscall.SysProcAttr{Credential: &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid), NoSetGroups: true}}
+	that.cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid), NoSetGroups: true}
 	return nil
 }

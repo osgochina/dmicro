@@ -4,6 +4,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/osgochina/dmicro/utils"
 	"os/exec"
+	"syscall"
 )
 
 type ProcOption func(*ProcOptions)
@@ -260,14 +261,14 @@ func ProcRedirectStderr(opt bool) ProcOption {
 // NewProcOptions 创建进程启动配置
 func NewProcOptions(opts ...ProcOption) ProcOptions {
 	proc := ProcOptions{
-		AutoStart:                true,
-		StartSecs:                1,
-		AutoReStart:              AutoReStartTrue,
-		StartRetries:             3,
-		RestartPause:             0,
-		StopWaitSecs:             10,
-		KillWaitSecs:             2,
-		User:                     "root",
+		AutoStart:    true,
+		StartSecs:    1,
+		AutoReStart:  AutoReStartTrue,
+		StartRetries: 3,
+		RestartPause: 0,
+		StopWaitSecs: 10,
+		KillWaitSecs: 2,
+		//User:                     "root",
 		Priority:                 999,
 		StopAsGroup:              false,
 		KillAsGroup:              false,
@@ -298,5 +299,6 @@ func (that ProcOptions) CreateCommand() (*exec.Cmd, error) {
 	if len(that.Args) > 0 {
 		cmd.Args = append([]string{that.Command}, that.Args...)
 	}
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	return cmd, nil
 }

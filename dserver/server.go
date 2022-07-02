@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
 	"github.com/osgochina/dmicro/utils/graceful"
@@ -21,7 +22,7 @@ import (
 	"time"
 )
 
-const MultiProcessEnv = "DServerMultiProcess"
+const MultiProcessMasterEnv = "DServerMultiMasterProcess"
 
 // DServer 服务对象
 type DServer struct {
@@ -47,7 +48,7 @@ type StopFunc func(svr *DServer) bool
 func newDServer() *DServer {
 	svr := &DServer{
 		serviceList:  gmap.NewStrAnyMap(true),
-		sandboxNames: garray.NewStrArray(false),
+		sandboxNames: garray.NewStrArray(true),
 		manager:      process.NewManager(),
 	}
 	return svr
@@ -85,17 +86,16 @@ func (that *DServer) Setup(startFunction StartFunc) {
 	//启动时间
 	that.started = gtime.Now()
 
+	// 命令行解析
 	that.cmdParser = parser
 
-	if that.config != nil {
-		//判断是否是守护进程运行
-		if e := that.demonize(that.config); e != nil {
-			logger.Fatalf("error:%v", e)
-		}
-		//初始化日志配置
-		if e := that.initLogSetting(that.config); e != nil {
-			logger.Fatalf("error:%v", e)
-		}
+	//判断是否是守护进程运行
+	if e := that.demonize(that.config); e != nil {
+		logger.Fatalf("error:%v", e)
+	}
+	//初始化日志配置
+	if e := that.initLogSetting(that.config); e != nil {
+		logger.Fatalf("error:%v", e)
 	}
 
 	//启动自定义方法
@@ -104,15 +104,53 @@ func (that *DServer) Setup(startFunction StartFunc) {
 	//设置优雅退出时候需要做的工作
 	graceful.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 
-	//写入pid文件
-	that.putPidFile()
+	// 如果开启了多进程模式，并且当前进程在主进程中
+	if that.multiProcess == true && that.isMaster() {
+		that.serviceList.Iterator(func(_ string, v interface{}) bool {
+			dService := v.(*DService)
+			if dService.sList.Size() == 0 {
+				return true
+			}
+			sandBoxNames := dService.sList.Keys()
+			if that.sandboxNames.Len() > 0 {
+				sandBoxNames = that.sandboxNames.Slice()
+			}
+			var args = []string{"start", gstr.Implode(",", sandBoxNames)}
 
-	if that.multiProcess == true {
-		//TODO
+			if len(that.config.GetString("ENV_NAME")) > 0 {
+				args = append(args, fmt.Sprintf("--env=%s", that.config.GetString("ENV_NAME")))
+			}
+			confFile := that.cmdParser.GetOpt("config")
+			fmt.Println(confFile)
+			if len(confFile) > 0 {
+				args = append(args, fmt.Sprintf("--config=%s", confFile))
+			}
+			if that.config.GetBool("Debug") {
+				args = append(args, "--debug")
+			}
+			p, e := that.manager.NewProcessByOptions(process.NewProcOptions(
+				process.ProcCommand(that.cmdParser.GetArg(0)),
+				process.ProcName(dService.Name()),
+				process.ProcArgs(args...),
+				process.ProcSetEnvironment(MultiProcessMasterEnv, "false"),
+				process.ProcStdoutLog("/dev/stdout", ""),
+				process.ProcRedirectStderr(true),
+			))
+			if e != nil {
+				logger.Warning(e)
+			}
+			p.Start(false)
+			return true
+		})
 	} else {
+		// 业务进程启动sandbox
 		that.serviceList.Iterator(func(_ string, v interface{}) bool {
 			dService := v.(*DService)
 			dService.iterator(func(name string, sandbox ISandbox) bool {
+				// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
+				if that.sandboxNames.Len() > 0 && !that.sandboxNames.ContainsI(sandbox.Name()) {
+					return true
+				}
 				go func() {
 					e := sandbox.Setup()
 					if e != nil {
@@ -123,6 +161,16 @@ func (that *DServer) Setup(startFunction StartFunc) {
 			})
 			return true
 		})
+	}
+	// 多进程模式下，只有主进程需要写入pid文件
+	if that.multiProcess && that.isMaster() {
+		//写入pid文件
+		that.putPidFile()
+	}
+	// 单进程模式下写入pid文件
+	if !that.multiProcess {
+		//写入pid文件
+		that.putPidFile()
 	}
 
 	//等待服务结束
@@ -329,5 +377,5 @@ func (that *DServer) beforeExiting() error {
 
 // IsMaster 判断当前进程是否是主进程
 func (that *DServer) isMaster() bool {
-	return genv.GetVar(MultiProcessEnv, true).Bool()
+	return genv.GetVar(MultiProcessMasterEnv, true).Bool()
 }

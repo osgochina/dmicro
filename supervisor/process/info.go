@@ -122,6 +122,9 @@ func (that *Process) Pid() int {
 // GetStdoutLogfile 获取标准输出将要写入的日志文件
 func (that *Process) GetStdoutLogfile() string {
 	fileName := "/dev/null"
+	if len(that.option.StdoutLogfile) > 0 {
+		fileName = that.option.StdoutLogfile
+	}
 	expandFile := gfile.RealPath(fileName)
 	return expandFile
 }
@@ -129,6 +132,9 @@ func (that *Process) GetStdoutLogfile() string {
 // GetStderrLogfile 获取标准错误将要写入的日志文件
 func (that *Process) GetStderrLogfile() string {
 	fileName := "/dev/null"
+	if len(that.option.StderrLogfile) > 0 {
+		fileName = that.option.StdoutLogfile
+	}
 	expandFile := gfile.RealPath(fileName)
 	return expandFile
 }

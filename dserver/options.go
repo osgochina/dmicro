@@ -38,7 +38,7 @@ func SetOption(key string, v bool) {
 var (
 	helpContent = gstr.TrimLeft(`
 USAGE
-	./server [start|stop|quit] [default|custom] [OPTION]
+	%path% [start|stop|reload|quit] [default|custom] [OPTION]
 OPTION
 	-c,--config     指定要载入的配置文件，该参数与gf.gcfg.file参数二选一，建议使用该参数
 	-d,--daemon     使用守护进程模式启动
@@ -49,17 +49,17 @@ OPTION
 	-v,--version    获取编译版本信息
 	
 EXAMPLES
-	/path/to/server 
-	/path/to/server start --env=dev --debug=true --pid=/tmp/server.pid
-	/path/to/server start --gf.gcfg.file=config.product.toml
-	/path/to/server start -c=config.product.toml
-	/path/to/server start user,admin --config=config.product.toml
-	/path/to/server start user
-	/path/to/server stop
-	/path/to/server quit
-	/path/to/server reload
-	/path/to/server version
-	/path/to/server help
+	%path% 
+	%path% start --env=dev --debug=true --pid=/tmp/server.pid
+	%path% start --gf.gcfg.file=config.product.toml
+	%path% start -c=config.product.toml
+	%path% start user,admin --config=config.product.toml
+	%path% start user
+	%path% stop
+	%path% quit
+	%path% reload
+	%path% version
+	%path% help
 `)
 )
 
@@ -275,5 +275,5 @@ func (that *DServer) initLogCfg() {
 
 //Help 显示帮助信息
 func (that *DServer) Help() {
-	fmt.Print(helpContent)
+	fmt.Print(gstr.Replace(helpContent, "%path%", gfile.MainPkgPath()))
 }

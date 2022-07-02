@@ -31,7 +31,7 @@ type DefaultSandBox1 struct {
 }
 
 func (that *DefaultSandBox1) Name() string {
-	return "DefaultSandBox"
+	return "DefaultSandBox1"
 }
 
 func (that *DefaultSandBox1) Setup() error {
