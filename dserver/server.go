@@ -111,9 +111,20 @@ func (that *DServer) Setup(startFunction StartFunc) {
 			if dService.sList.Size() == 0 {
 				return true
 			}
-			sandBoxNames := dService.sList.Keys()
+			// 如果命令行传入了需要启动的服务名称，则需要把改服务名提取出来，作为启动参数
+			var sandBoxNames []string
 			if that.sandboxNames.Len() > 0 {
-				sandBoxNames = that.sandboxNames.Slice()
+				for _, name := range dService.sList.Keys() {
+					if that.sandboxNames.ContainsI(name) {
+						sandBoxNames = append(sandBoxNames, name)
+					}
+				}
+			} else {
+				sandBoxNames = dService.sList.Keys()
+			}
+			// 如果未匹配服务名称，则说明该service不需要启动
+			if len(sandBoxNames) == 0 {
+				return true
 			}
 			var args = []string{"start", gstr.Implode(",", sandBoxNames)}
 
@@ -183,9 +194,16 @@ func (that *DServer) Setup(startFunction StartFunc) {
 // AddSandBox 添加sandbox到服务中
 // services 是可选，如果不传入则表示使用默认服务
 func (that *DServer) AddSandBox(s ISandbox, services ...*DService) error {
-	service := defaultService
+	var service *DService
 	if len(services) > 0 {
 		service = services[0]
+	} else {
+		s2, found := that.serviceList.Search("default")
+		if !found {
+			service = that.NewService("default")
+		} else {
+			service = s2.(*DService)
+		}
 	}
 	err := service.addSandBox(s)
 	if err != nil {
@@ -212,11 +230,6 @@ func (that *DServer) CmdParser() *gcmd.Parser {
 // StartTime 返回启动时间
 func (that *DServer) StartTime() *gtime.Time {
 	return that.started
-}
-
-// SandboxNames 获取当前需要启动的服务沙盒，如果为空，则表示未传入
-func (that *DServer) SandboxNames() *garray.StrArray {
-	return that.sandboxNames
 }
 
 //通过参数设置日志级别
@@ -378,4 +391,10 @@ func (that *DServer) beforeExiting() error {
 // IsMaster 判断当前进程是否是主进程
 func (that *DServer) isMaster() bool {
 	return genv.GetVar(MultiProcessMasterEnv, true).Bool()
+}
+
+// NewService 创建新的服务
+// 注意: 如果是多进程模式，则每个service表示一个进程
+func (that *DServer) NewService(name string) *DService {
+	return newDService(name, that)
 }

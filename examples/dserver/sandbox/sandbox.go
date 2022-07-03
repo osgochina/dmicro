@@ -18,6 +18,11 @@ func (that *DefaultSandBox) Name() string {
 func (that *DefaultSandBox) Setup() error {
 	fmt.Println("Setup")
 	fmt.Println(that.Service().Name())
+	s, found := that.Service().SearchSandbox("DefaultSandBox1")
+	if found {
+		fmt.Println(s.Name())
+	}
+	fmt.Println(s.(*DefaultSandBox1).Abc())
 	return gerror.New("Setup error")
 }
 
@@ -33,7 +38,9 @@ type DefaultSandBox1 struct {
 func (that *DefaultSandBox1) Name() string {
 	return "DefaultSandBox1"
 }
-
+func (that *DefaultSandBox1) Abc() string {
+	return "DefaultSandBox1"
+}
 func (that *DefaultSandBox1) Setup() error {
 	fmt.Println("Setup")
 	fmt.Println(that.Service().Name())

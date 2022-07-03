@@ -48,6 +48,15 @@ func (that *DService) Name() string {
 	return that.name
 }
 
+// SearchSandbox 获取指定的sandbox
+func (that *DService) SearchSandbox(name string) (ISandbox, bool) {
+	val, found := that.sList.Search(name)
+	if found {
+		return val.(ISandbox), true
+	}
+	return nil, false
+}
+
 // 通过反射生成私有sandbox对象
 func (that *DService) makeSandBox(s ISandbox) (*privateSandbox, error) {
 	var (
