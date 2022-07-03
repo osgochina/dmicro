@@ -15,7 +15,6 @@ type ISandbox interface {
 // SandboxCtx 所有业务使用的Sandbox都需要继承SandboxCtx
 type SandboxCtx interface {
 	Service() *DService
-	Server() *DServer
 }
 
 // 反射

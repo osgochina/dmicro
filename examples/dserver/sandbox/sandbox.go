@@ -18,11 +18,7 @@ func (that *DefaultSandBox) Name() string {
 func (that *DefaultSandBox) Setup() error {
 	fmt.Println("Setup")
 	fmt.Println(that.Service().Name())
-	s, found := that.Service().SearchSandbox("DefaultSandBox1")
-	if found {
-		fmt.Println(s.Name())
-	}
-	fmt.Println(s.(*DefaultSandBox1).Abc())
+
 	return gerror.New("Setup error")
 }
 
@@ -33,9 +29,11 @@ func (that *DefaultSandBox) Shutdown() error {
 
 type DefaultSandBox1 struct {
 	dserver.SandboxCtx
+	age int
 }
 
 func (that *DefaultSandBox1) Name() string {
+	fmt.Println(that.age)
 	return "DefaultSandBox1"
 }
 func (that *DefaultSandBox1) Abc() string {
@@ -44,10 +42,12 @@ func (that *DefaultSandBox1) Abc() string {
 func (that *DefaultSandBox1) Setup() error {
 	fmt.Println("Setup")
 	fmt.Println(that.Service().Name())
+	that.age = 100
 	return gerror.New("Setup error")
 }
 
 func (that *DefaultSandBox1) Shutdown() error {
 	fmt.Println("Shutdown")
+	fmt.Println(that.age)
 	return nil
 }
