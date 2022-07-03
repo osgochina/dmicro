@@ -4,7 +4,6 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
-	"unsafe"
 )
 
 type DService struct {
@@ -21,19 +20,31 @@ func newDService(name string, server *DServer) *DService {
 	}
 }
 
+// Name 获取服务名
+func (that *DService) Name() string {
+	return that.name
+}
+
+// SearchSandBox 搜索同一个服务下的其他sandbox
+func (that *DService) SearchSandBox(name string) (ISandbox, bool) {
+	s, found := that.sList.Search(name)
+	if found {
+		return s.(ISandbox), true
+	}
+	return nil, false
+}
+
 func (that *DService) addSandBox(s ISandbox) error {
 	name := s.Name()
 	_, found := that.sList.Search(name)
 	if found {
 		return gerror.Newf("Sandbox [%s] 已存在", name)
 	}
-	p, err := that.makeSandBox(s)
+	s1, err := that.makeSandBox(s)
 	if err != nil {
 		return err
 	}
-	//赋值
-	p.handlerCtx.service = that
-	that.sList.Set(p.Name(), p)
+	that.sList.Set(s1.Name(), s1)
 	return nil
 }
 
@@ -44,14 +55,11 @@ func (that *DService) iterator(f func(name string, sandbox ISandbox) bool) {
 	})
 }
 
-func (that *DService) Name() string {
-	return that.name
-}
-
 // 通过反射生成私有sandbox对象
-func (that *DService) makeSandBox(s ISandbox) (*privateSandbox, error) {
+func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
 	var (
-		cType = reflect.TypeOf(s)
+		cType  = reflect.TypeOf(s)
+		cValue = reflect.ValueOf(s)
 	)
 	//判断是否是指针类型
 	if cType.Kind() != reflect.Ptr {
@@ -62,25 +70,14 @@ func (that *DService) makeSandBox(s ISandbox) (*privateSandbox, error) {
 	if cTypeElem.Kind() != reflect.Struct {
 		return nil, gerror.Newf("make sandbox: the type is not struct point: %s", cType.String())
 	}
-	//如果结构体没有实现 ISandbox 的方法，或者不是匿名结构体
-	iType, ok := cTypeElem.FieldByName("SandboxCtx")
+	//如果结构体没有实现 SandboxCtx 的方法，或者不是匿名结构体
+	iType, ok := cTypeElem.FieldByName("BaseSandbox")
 	if !ok || !iType.Anonymous {
-		return nil, gerror.Newf("make sandbox: the struct do not have anonymous field dserver.SandboxCtx: %s", cType.String())
+		return nil, gerror.Newf("make sandbox: the struct do not have anonymous field dserver.BaseSandbox: %s", cType.String())
 	}
-	var callCtxOffset = iType.Offset
-
-	ctrl := reflect.New(cTypeElem)
-	privateBox := &privateSandbox{
-		original: s,
-		sandboxVal: &sandboxReflectValue{
-			ctrl: ctrl,
-			//这种写法参考https://blog.csdn.net/u010853261/article/details/103826830中的模式三
-			//将非类型安全指针转换为一个uintptr值，然后此uintptr值参与各种算术运算，再将算术运算的结果uintptr值转回非类型安全指针
-			ctxPtr: (*SandboxCtx)(unsafe.Pointer(uintptr(unsafe.Pointer(ctrl.Pointer())) + callCtxOffset)),
-		},
-		cType:      cType,
-		handlerCtx: new(handlerCtx),
+	iValue := cValue.Elem().FieldByName("Service")
+	if iValue.CanSet() {
+		iValue.Set(reflect.ValueOf(that))
 	}
-
-	return privateBox, nil
+	return s, nil
 }

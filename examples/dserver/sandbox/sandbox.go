@@ -8,7 +8,7 @@ import (
 
 // DefaultSandBox  默认的服务
 type DefaultSandBox struct {
-	dserver.SandboxCtx
+	dserver.BaseSandbox
 }
 
 func (that *DefaultSandBox) Name() string {
@@ -17,7 +17,7 @@ func (that *DefaultSandBox) Name() string {
 
 func (that *DefaultSandBox) Setup() error {
 	fmt.Println("Setup")
-	fmt.Println(that.Service().Name())
+	fmt.Println(that.Service.Name())
 
 	return gerror.New("Setup error")
 }
@@ -28,7 +28,7 @@ func (that *DefaultSandBox) Shutdown() error {
 }
 
 type DefaultSandBox1 struct {
-	dserver.SandboxCtx
+	dserver.BaseSandbox
 	age int
 }
 
@@ -41,7 +41,7 @@ func (that *DefaultSandBox1) Abc() string {
 }
 func (that *DefaultSandBox1) Setup() error {
 	fmt.Println("Setup")
-	fmt.Println(that.Service().Name())
+	//fmt.Println(that.Service().Name())
 	that.age = 100
 	return gerror.New("Setup error")
 }

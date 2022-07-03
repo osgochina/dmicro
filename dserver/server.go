@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-const MultiProcessMasterEnv = "DServerMultiMasterProcess"
+const multiProcessMasterEnv = "DServerMultiMasterProcess"
 
 // DServer 服务对象
 type DServer struct {
@@ -70,7 +70,7 @@ func (that *DServer) MultiProcess(multiProcess bool) {
 }
 
 // Setup 启动服务，并执行传入的启动方法
-func (that *DServer) Setup(startFunction StartFunc) {
+func (that *DServer) setup(startFunction StartFunc) {
 	//解析命令行
 	parser, err := gcmd.Parse(defaultOptions)
 	if err != nil {
@@ -143,7 +143,7 @@ func (that *DServer) Setup(startFunction StartFunc) {
 				process.ProcCommand(that.cmdParser.GetArg(0)),
 				process.ProcName(dService.Name()),
 				process.ProcArgs(args...),
-				process.ProcSetEnvironment(MultiProcessMasterEnv, "false"),
+				process.ProcSetEnvironment(multiProcessMasterEnv, "false"),
 				process.ProcStdoutLog("/dev/stdout", ""),
 				process.ProcRedirectStderr(true),
 			))
@@ -390,7 +390,7 @@ func (that *DServer) beforeExiting() error {
 
 // IsMaster 判断当前进程是否是主进程
 func (that *DServer) isMaster() bool {
-	return genv.GetVar(MultiProcessMasterEnv, true).Bool()
+	return genv.GetVar(multiProcessMasterEnv, true).Bool()
 }
 
 // NewService 创建新的服务
