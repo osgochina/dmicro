@@ -63,18 +63,34 @@ func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
 	)
 	//判断是否是指针类型
 	if cType.Kind() != reflect.Ptr {
-		return nil, gerror.Newf("make sandbox: the type is not struct point: %s", cType.String())
+		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象不是指针类型: %s", cType.String())
 	}
 	var cTypeElem = cType.Elem()
 	//判断是否是struct类型
 	if cTypeElem.Kind() != reflect.Struct {
-		return nil, gerror.Newf("make sandbox: the type is not struct point: %s", cType.String())
+		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象不是struct类型: %s", cType.String())
 	}
 	//如果结构体没有实现 SandboxCtx 的方法，或者不是匿名结构体
 	iType, ok := cTypeElem.FieldByName("BaseSandbox")
 	if !ok || !iType.Anonymous {
-		return nil, gerror.Newf("make sandbox: the struct do not have anonymous field dserver.BaseSandbox: %s", cType.String())
+		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未继承 dserver.BaseSandbox : %s", cType.String())
 	}
+
+	_, found := cType.MethodByName("Setup")
+	if !found {
+		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Setup方法")
+	}
+
+	_, found = cType.MethodByName("Shutdown")
+	if !found {
+		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Shutdown方法")
+	}
+
+	_, found = cType.MethodByName("Name")
+	if !found {
+		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Name方法")
+	}
+
 	iValue := cValue.Elem().FieldByName("Service")
 	if iValue.CanSet() {
 		iValue.Set(reflect.ValueOf(that))

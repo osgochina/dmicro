@@ -2,52 +2,37 @@ package sandbox
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/dserver"
 )
 
 // DefaultSandBox  默认的服务
 type DefaultSandBox struct {
 	dserver.BaseSandbox
+	endpoint drpc.Endpoint
 }
 
+func Home(ctx drpc.CallCtx, args *struct{}) (string, *drpc.Status) {
+	return "home", nil
+}
 func (that *DefaultSandBox) Name() string {
 	return "DefaultSandBox"
 }
 
 func (that *DefaultSandBox) Setup() error {
 	fmt.Println("Setup")
-	fmt.Println(that.Service.Name())
-
-	return gerror.New("Setup error")
+	var c = drpc.EndpointConfig{
+		PrintDetail: true,
+		Network:     "tcp",
+		LocalIP:     "127.0.0.1",
+		ListenPort:  8199,
+	}
+	that.endpoint = drpc.NewEndpoint(c)
+	that.endpoint.SubRoute("/app").RouteCallFunc(Home)
+	return that.endpoint.ListenAndServe()
 }
 
 func (that *DefaultSandBox) Shutdown() error {
 	fmt.Println("Shutdown")
-	return nil
-}
-
-type DefaultSandBox1 struct {
-	dserver.BaseSandbox
-	age int
-}
-
-func (that *DefaultSandBox1) Name() string {
-	fmt.Println(that.age)
-	return "DefaultSandBox1"
-}
-func (that *DefaultSandBox1) Abc() string {
-	return "DefaultSandBox1"
-}
-func (that *DefaultSandBox1) Setup() error {
-	fmt.Println("Setup")
-	//fmt.Println(that.Service().Name())
-	that.age = 100
-	return gerror.New("Setup error")
-}
-
-func (that *DefaultSandBox1) Shutdown() error {
-	fmt.Println("Shutdown")
-	fmt.Println(that.age)
-	return nil
+	return that.endpoint.Close()
 }

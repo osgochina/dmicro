@@ -10,4 +10,5 @@ type ISandbox interface {
 // BaseSandbox sandbox的基类，必须继承它
 type BaseSandbox struct {
 	Service *DService
+	Config  *Config
 }

@@ -12,9 +12,10 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/dserver/graceful"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
-	"github.com/osgochina/dmicro/utils/graceful"
 	"os"
 	"os/exec"
 	"runtime"
@@ -23,6 +24,15 @@ import (
 )
 
 const multiProcessMasterEnv = "DServerMultiMasterProcess"
+
+// ProcessModel 进程模型
+type ProcessModel int
+
+// ProcessModelSingle 单进程模式
+const ProcessModelSingle ProcessModel = 0
+
+// ProcessModelMulti 多进程模型
+const ProcessModelMulti ProcessModel = 1
 
 // DServer 服务对象
 type DServer struct {
@@ -35,7 +45,7 @@ type DServer struct {
 	sandboxNames   *garray.StrArray // 启动服务的名称
 	cmdParser      *gcmd.Parser     //命令行参数解析信息
 	config         *gcfg.Config     ///服务的配置信息
-	multiProcess   bool             // 其否开启多进程模式，默认是false
+	procModel      ProcessModel     // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
 }
 
 // StartFunc 启动回调方法
@@ -64,9 +74,10 @@ func (that *DServer) BeforeStop(f StopFunc) {
 	that.beforeStopFunc = f
 }
 
-// MultiProcess 设置多进程模式
-func (that *DServer) MultiProcess(multiProcess bool) {
-	that.multiProcess = multiProcess
+// ProcessModel 设置多进程模式
+func (that *DServer) ProcessModel(model ProcessModel) {
+	v := gcmd.GetOptVar("model", gconv.String(model))
+	that.procModel = ProcessModel(v.Int())
 }
 
 // Setup 启动服务，并执行传入的启动方法
@@ -105,7 +116,7 @@ func (that *DServer) setup(startFunction StartFunc) {
 	graceful.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 
 	// 如果开启了多进程模式，并且当前进程在主进程中
-	if that.multiProcess == true && that.isMaster() {
+	if that.procModel == ProcessModelMulti && that.isMaster() {
 		that.serviceList.Iterator(func(_ string, v interface{}) bool {
 			dService := v.(*DService)
 			if dService.sList.Size() == 0 {
@@ -165,7 +176,7 @@ func (that *DServer) setup(startFunction StartFunc) {
 				go func() {
 					e := sandbox.Setup()
 					if e != nil {
-						logger.Warning(e)
+						logger.Warningf("Sandbox Setup Return: %v", e)
 					}
 				}()
 				return true
@@ -174,12 +185,12 @@ func (that *DServer) setup(startFunction StartFunc) {
 		})
 	}
 	// 多进程模式下，只有主进程需要写入pid文件
-	if that.multiProcess && that.isMaster() {
+	if that.procModel == ProcessModelMulti && that.isMaster() {
 		//写入pid文件
 		that.putPidFile()
 	}
 	// 单进程模式下写入pid文件
-	if !that.multiProcess {
+	if that.procModel == ProcessModelSingle {
 		//写入pid文件
 		that.putPidFile()
 	}
@@ -188,7 +199,7 @@ func (that *DServer) setup(startFunction StartFunc) {
 	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 
 	//监听重启信号
-	graceful.GraceSignal()
+	graceful.GraceSignal(int(that.procModel))
 }
 
 // AddSandBox 添加sandbox到服务中
@@ -321,10 +332,10 @@ func (that *DServer) demonize(config *gcfg.Config) error {
 func (that *DServer) putPidFile() {
 	pid := os.Getpid()
 
-	//在GraceMasterWorker模型下，只有子进程才会执行到该逻辑，所以需要把pid设置为父进程的id
-	if graceful.GetModel() == graceful.GraceMasterWorker && graceful.IsChild() {
-		pid = os.Getppid()
-	}
+	////在GraceMasterWorker模型下，只有子进程才会执行到该逻辑，所以需要把pid设置为父进程的id
+	//if graceful.GetModel() == graceful.GraceMasterWorker && graceful.IsChild() {
+	//	pid = os.Getppid()
+	//}
 
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
@@ -343,7 +354,7 @@ func (that *DServer) putPidFile() {
 
 // Shutdown 主动结束进程
 func (that *DServer) Shutdown(timeout ...time.Duration) {
-	graceful.Graceful().Shutdown(timeout...)
+	graceful.Shutdown(timeout...)
 }
 
 func (that *DServer) firstSweep() error {

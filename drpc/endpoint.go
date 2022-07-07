@@ -18,7 +18,6 @@ import (
 	"github.com/osgochina/dmicro/utils"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	errors2 "github.com/osgochina/dmicro/utils/errors"
-	"github.com/osgochina/dmicro/utils/graceful"
 	"net"
 	"os"
 	"sync"
@@ -178,9 +177,6 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 		}
 	}
 
-	//addEndpoint(e)
-	// 平滑重启添加endpoint
-	graceful.Graceful().AddEndpoint(e)
 	//触发事件
 	e.pluginContainer.afterNewEndpoint(e)
 	return e
@@ -558,9 +554,6 @@ func (that *endpoint) Close() (err error) {
 	for lis := range that.listeners {
 		_ = lis.Close()
 	}
-	//deleteEndpoint(that)
-	// 平滑重启移除endpoint
-	graceful.Graceful().DeleteEndpoint(that)
 	var (
 		count int
 		errCh = make(chan error, 1024)

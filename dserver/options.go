@@ -21,6 +21,7 @@ var defaultOptions = map[string]bool{
 	"env":      true,
 	"pid":      true,
 	"debug":    true,
+	"m,model":  true,
 }
 
 // SetOptions 添加自定义的参数解析
@@ -47,6 +48,7 @@ OPTION
 	--pid           设置pid文件的地址，默认是/tmp/[server].pid
 	-h,--help       获取帮助信息
 	-v,--version    获取编译版本信息
+	-m,--model      进程模型，0表示单进程模型，1表示多进程模型
 	
 EXAMPLES
 	%path% 

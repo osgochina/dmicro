@@ -63,8 +63,9 @@ func (that *inheritKCP) setInherited() error {
 	if err != nil {
 		return err
 	}
-	that.addInherited(listeners, nil)
-
+	if that.addInherited != nil {
+		that.addInherited(listeners, nil)
+	}
 	return nil
 }
 
