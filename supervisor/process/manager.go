@@ -15,7 +15,7 @@ type Manager struct {
 // NewManager 创建进程管理器
 func NewManager() *Manager {
 	return &Manager{
-		processes: gmap.NewStrAnyMap(true),
+		processes: gmap.NewStrAnyMap(false),
 	}
 }
 

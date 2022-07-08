@@ -124,6 +124,7 @@ func (that *Process) Start(wait bool) {
 				logger.Infof("不要自动重启进程[%s],因为该进程设置了不需要自动重启", that.option.Name)
 				break
 			}
+			logger.Infof("因为该进程设置了自动重启,自动重启进程[%s],", that.option.Name)
 		}
 		that.lock.Lock()
 		that.inStart = false
@@ -331,7 +332,10 @@ func (that *Process) createProgramCommand() (err error) {
 	// 父进程退出，则它生成的子进程也全部退出
 	that.cmd.SysProcAttr.Setpgid = true
 	that.cmd.SysProcAttr.Pdeathsig = syscall.SIGKILL
-
+	// 是否需要当前进程打开的句柄传给子进程
+	if len(that.option.ExtraFiles) > 0 {
+		that.cmd.ExtraFiles = that.option.ExtraFiles
+	}
 	// 设置进程运行的环境变量
 	that.setEnv()
 	// 设置程序的dir

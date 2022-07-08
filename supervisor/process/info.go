@@ -110,8 +110,6 @@ func (that *Process) GetExitStatus() int {
 
 // Pid 获取进程pid，返回0表示进程未启动
 func (that *Process) Pid() int {
-	that.lock.RLock()
-	defer that.lock.RUnlock()
 
 	if that.state == Stopped || that.state == Fatal || that.state == Unknown || that.state == Exited || that.state == Backoff {
 		return 0

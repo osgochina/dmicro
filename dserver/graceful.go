@@ -23,6 +23,8 @@ import (
 type graceful struct {
 	// server对象
 	dServer *DServer
+	// 是否是子进程
+	childBool bool
 	// 当前进程的状态
 	processStatus *gtype.Int
 
@@ -81,6 +83,7 @@ func newGraceful(server *DServer) *graceful {
 		inheritedProcListener: garray.NewArray(true),
 		firstSweep:            func() error { return nil },
 		beforeExiting:         func() error { return nil },
+		childBool:             genv.GetVar(isChildKey, false).Bool(),
 	}
 }
 
@@ -169,6 +172,7 @@ func (that *graceful) graceMultiSignal() {
 			}
 		}
 	} else {
+
 		signal.Notify(
 			that.signal,
 			syscall.SIGINT,
@@ -192,7 +196,7 @@ func (that *graceful) graceMultiSignal() {
 			//优化的关闭服务
 			case syscall.SIGQUIT:
 				signal.Reset(syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM)
-				that.quitMultiMaster()
+				that.shutdownMultiMaster()
 				continue
 			// 平滑重启服务
 			case syscall.SIGUSR2:
@@ -253,14 +257,7 @@ func (that *graceful) setShutdown(timeout time.Duration, firstSweepFunc, beforeE
 
 // IsChild 判断当前进程是在子进程还是父进程
 func (that *graceful) isChild() bool {
-	isWorker := genv.GetVar(isChildKey, nil)
-	if isWorker.IsNil() {
-		return false
-	}
-	if isWorker.Bool() {
-		return true
-	}
-	return false
+	return that.childBool
 }
 
 // inheritListenerList 在多进程模式下，调用该方法，预先初始化监听

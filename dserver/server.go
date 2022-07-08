@@ -177,11 +177,13 @@ func (that *DServer) setup(startFunction StartFunc) {
 				process.ProcRedirectStderr(true),
 				process.ProcAutoReStart(process.AutoReStartTrue), // 自动重启
 				process.ProcExtraFiles(that.graceful.GetExtraFiles()),
+				process.ProcStopSignal("SIGQUIT", "SIGTERM"), // 退出信号
+				process.ProcStopWaitSecs(int(minShutdownTimeout/time.Second)),
 			))
 			if e != nil {
 				logger.Warning(e)
 			}
-			p.Start(false)
+			p.Start(true)
 			return true
 		})
 	} else {
@@ -353,7 +355,6 @@ func (that *DServer) putPidFile() {
 	//if graceful.GetModel() == graceful.GraceMasterWorker && graceful.IsChild() {
 	//	pid = os.Getppid()
 	//}
-
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)

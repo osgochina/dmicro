@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
-	"github.com/osgochina/dmicro/utils/signals"
 	"os"
 	"time"
 )
@@ -114,17 +113,4 @@ func (that *graceful) shutdownMultiMaster() {
 	//pid := that.mwPid
 	//logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
 	//_ = signals.KillPid(pid, signals.ToSignal("SIGTERM"), false)
-}
-
-//master worker进程模式，优雅退出master进程方法
-func (that *graceful) quitMultiMaster() {
-	defer os.Exit(0)
-	that.dServer.manager.ForEachProcess(func(p *process.Process) {
-		pid := p.Pid()
-		logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
-		_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
-	})
-	//pid := that.mwPid
-	//logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGQUIT`, os.Getpid(), pid)
-	//_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 }
