@@ -55,6 +55,11 @@ func (that *DService) iterator(f func(name string, sandbox ISandbox) bool) {
 	})
 }
 
+// 移除sandbox
+func (that *DService) removeSandbox(name string) {
+	that.sList.Remove(name)
+}
+
 // 通过反射生成私有sandbox对象
 func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
 	var (

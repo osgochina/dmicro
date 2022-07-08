@@ -3,6 +3,7 @@ package process
 import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/osgochina/dmicro/utils"
+	"os"
 	"os/exec"
 	"syscall"
 )
@@ -74,6 +75,9 @@ type ProcOptions struct {
 	Environment *gmap.StrStrMap
 	//当进程的二进制文件有修改，是否需要重启,默认false
 	RestartWhenBinaryChanged bool
+
+	// 继承主进程已经打开的文件列表
+	ExtraFiles []*os.File
 
 	// 扩展参数
 	Extend *gmap.AnyAnyMap
@@ -217,6 +221,13 @@ func ProcEnvironment(opt map[string]string) ProcOption {
 func ProcRestartWhenBinaryChanged(opt bool) ProcOption {
 	return func(options *ProcOptions) {
 		options.RestartWhenBinaryChanged = opt
+	}
+}
+
+// ProcExtraFiles 设置打开的文件句柄列表
+func ProcExtraFiles(opt []*os.File) ProcOption {
+	return func(options *ProcOptions) {
+		options.ExtraFiles = opt
 	}
 }
 

@@ -1,13 +1,15 @@
-package graceful
+package dserver
 
 import (
 	"context"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/supervisor/process"
+	"github.com/osgochina/dmicro/utils/signals"
 	"os"
 	"time"
 )
 
-func (that *graceful) shutdown(timeout ...time.Duration) {
+func (that *graceful) shutdownSingle(timeout ...time.Duration) {
 	pid := os.Getpid()
 	defer os.Exit(0)
 	var isReboot = false
@@ -45,7 +47,7 @@ func (that *graceful) shutdown(timeout ...time.Duration) {
 // 执行shutdown和reboot命令，并且计时，在规定的时候内为执行完收尾动作，则强制结束进程
 func (that *graceful) contextExec(timeout []time.Duration, action string, deferCallback func(ctxTimeout context.Context) <-chan struct{}) {
 	if len(timeout) > 0 {
-		that.SetShutdown(timeout[0], that.firstSweep, that.beforeExiting)
+		that.setShutdown(timeout[0], that.firstSweep, that.beforeExiting)
 	}
 	pid := os.Getpid()
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), that.shutdownTimeout)
@@ -74,4 +76,55 @@ func (that *graceful) callBeforeExiting(ctxTimeout context.Context, action strin
 		}
 	}
 	return true
+}
+
+// 多进程模式子进程退出
+func (that *graceful) shutdownMultiChild(timeout ...time.Duration) {
+	pid := os.Getpid()
+	defer os.Exit(0)
+	logger.Printf("进程:%d,正在退出...", pid)
+	that.processStatus.Set(statusActionShuttingDown)
+
+	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
+		endCh := make(chan struct{})
+		go func() {
+			defer close(endCh)
+			var g = true
+			if err := that.firstSweep(); err != nil {
+				logger.Errorf("进程:%d 结束中 - 执行前置方法失败，error: %s", pid, err.Error())
+				g = false
+			}
+			g = that.callBeforeExiting(ctxTimeout, "shutdown") && g
+			if g {
+				logger.Printf("进程:%d 结束了.", pid)
+			} else {
+				logger.Printf("进程:%d 结束了,但是非平滑模式.", pid)
+			}
+		}()
+		return endCh
+	})
+}
+
+//master worker进程模式，退出master进程方法
+func (that *graceful) shutdownMultiMaster() {
+	defer os.Exit(0)
+	that.dServer.manager.ForEachProcess(func(p *process.Process) {
+		p.Stop(true)
+	})
+	//pid := that.mwPid
+	//logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
+	//_ = signals.KillPid(pid, signals.ToSignal("SIGTERM"), false)
+}
+
+//master worker进程模式，优雅退出master进程方法
+func (that *graceful) quitMultiMaster() {
+	defer os.Exit(0)
+	that.dServer.manager.ForEachProcess(func(p *process.Process) {
+		pid := p.Pid()
+		logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
+		_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
+	})
+	//pid := that.mwPid
+	//logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGQUIT`, os.Getpid(), pid)
+	//_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 }

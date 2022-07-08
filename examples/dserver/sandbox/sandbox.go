@@ -10,6 +10,7 @@ import (
 type DefaultSandBox struct {
 	dserver.BaseSandbox
 	endpoint drpc.Endpoint
+	TestName string
 }
 
 func Home(ctx drpc.CallCtx, args *struct{}) (string, *drpc.Status) {
@@ -20,7 +21,8 @@ func (that *DefaultSandBox) Name() string {
 }
 
 func (that *DefaultSandBox) Setup() error {
-	fmt.Println("Setup")
+	fmt.Println("DefaultSandBox Setup")
+
 	var c = drpc.EndpointConfig{
 		PrintDetail: true,
 		Network:     "tcp",
@@ -33,6 +35,6 @@ func (that *DefaultSandBox) Setup() error {
 }
 
 func (that *DefaultSandBox) Shutdown() error {
-	fmt.Println("Shutdown")
+	fmt.Println("DefaultSandBox Shutdown")
 	return that.endpoint.Close()
 }

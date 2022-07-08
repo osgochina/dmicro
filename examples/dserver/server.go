@@ -8,7 +8,7 @@ import (
 
 func main() {
 	dserver.Setup(func(svr *dserver.DServer) {
-		svr.ProcessModel(dserver.ProcessModelSingle)
+		svr.ProcessModel(dserver.ProcessModelMulti)
 		err := svr.AddSandBox(new(sandbox.DefaultSandBox))
 		if err != nil {
 			logger.Fatal(err)

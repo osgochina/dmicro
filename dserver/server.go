@@ -1,6 +1,7 @@
 package dserver
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
@@ -13,7 +14,9 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/osgochina/dmicro/dserver/graceful"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
+	"github.com/osgochina/dmicro/drpc/netproto/normal"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
 	"os"
@@ -45,7 +48,10 @@ type DServer struct {
 	sandboxNames   *garray.StrArray // 启动服务的名称
 	cmdParser      *gcmd.Parser     //命令行参数解析信息
 	config         *gcfg.Config     ///服务的配置信息
+	inheritAddr    []InheritAddr    // 多进程模式，开启平滑重启逻辑模式下需要监听的列表
 	procModel      ProcessModel     // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
+	graceful       *graceful
+	masterBool     bool //是否是主进程
 }
 
 // StartFunc 启动回调方法
@@ -60,7 +66,9 @@ func newDServer() *DServer {
 		serviceList:  gmap.NewStrAnyMap(true),
 		sandboxNames: garray.NewStrArray(true),
 		manager:      process.NewManager(),
+		masterBool:   genv.GetVar(multiProcessMasterEnv, true).Bool(),
 	}
+	svr.graceful = newGraceful(svr)
 	return svr
 }
 
@@ -108,15 +116,23 @@ func (that *DServer) setup(startFunction StartFunc) {
 	if e := that.initLogSetting(that.config); e != nil {
 		logger.Fatalf("error:%v", e)
 	}
-
+	// 初始化平滑重启的钩子函数
+	that.initGraceful()
 	//启动自定义方法
 	startFunction(that)
 
 	//设置优雅退出时候需要做的工作
-	graceful.SetShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
+	that.graceful.setShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
 
 	// 如果开启了多进程模式，并且当前进程在主进程中
 	if that.procModel == ProcessModelMulti && that.isMaster() {
+
+		// 多进程模式下，master进程预先监听地址
+		err = that.inheritListenerList()
+		if err != nil {
+			logger.Fatalf("error:%v", err)
+		}
+		// 启动进程
 		that.serviceList.Iterator(func(_ string, v interface{}) bool {
 			dService := v.(*DService)
 			if dService.sList.Size() == 0 {
@@ -143,20 +159,24 @@ func (that *DServer) setup(startFunction StartFunc) {
 				args = append(args, fmt.Sprintf("--env=%s", that.config.GetString("ENV_NAME")))
 			}
 			confFile := that.cmdParser.GetOpt("config")
-			fmt.Println(confFile)
 			if len(confFile) > 0 {
 				args = append(args, fmt.Sprintf("--config=%s", confFile))
 			}
 			if that.config.GetBool("Debug") {
 				args = append(args, "--debug")
 			}
+
 			p, e := that.manager.NewProcessByOptions(process.NewProcOptions(
 				process.ProcCommand(that.cmdParser.GetArg(0)),
 				process.ProcName(dService.Name()),
 				process.ProcArgs(args...),
+				process.ProcEnvironment(that.graceful.inheritedEnv.Map()),
+				process.ProcSetEnvironment(isChildKey, "true"),
 				process.ProcSetEnvironment(multiProcessMasterEnv, "false"),
 				process.ProcStdoutLog("/dev/stdout", ""),
 				process.ProcRedirectStderr(true),
+				process.ProcAutoReStart(process.AutoReStartTrue), // 自动重启
+				process.ProcExtraFiles(that.graceful.GetExtraFiles()),
 			))
 			if e != nil {
 				logger.Warning(e)
@@ -171,14 +191,15 @@ func (that *DServer) setup(startFunction StartFunc) {
 			dService.iterator(func(name string, sandbox ISandbox) bool {
 				// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
 				if that.sandboxNames.Len() > 0 && !that.sandboxNames.ContainsI(sandbox.Name()) {
+					dService.removeSandbox(name)
 					return true
 				}
-				go func() {
-					e := sandbox.Setup()
+				go func(s ISandbox) {
+					e := s.Setup()
 					if e != nil {
 						logger.Warningf("Sandbox Setup Return: %v", e)
 					}
-				}()
+				}(sandbox)
 				return true
 			})
 			return true
@@ -199,7 +220,7 @@ func (that *DServer) setup(startFunction StartFunc) {
 	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 
 	//监听重启信号
-	graceful.GraceSignal(int(that.procModel))
+	that.graceful.graceSignal()
 }
 
 // AddSandBox 添加sandbox到服务中
@@ -220,11 +241,7 @@ func (that *DServer) AddSandBox(s ISandbox, services ...*DService) error {
 	if err != nil {
 		return err
 	}
-	// 查看service服务是否存在于列表中，如果不存在则添加
-	_, found := that.serviceList.Search(service.Name())
-	if !found {
-		that.serviceList.Set(service.Name(), service)
-	}
+	that.serviceList.Set(service.Name(), service)
 	return nil
 }
 
@@ -354,7 +371,7 @@ func (that *DServer) putPidFile() {
 
 // Shutdown 主动结束进程
 func (that *DServer) Shutdown(timeout ...time.Duration) {
-	graceful.Shutdown(timeout...)
+	that.graceful.shutdownSingle(timeout...)
 }
 
 func (that *DServer) firstSweep() error {
@@ -383,6 +400,9 @@ func (that *DServer) firstSweep() error {
 
 //进行结束收尾工作
 func (that *DServer) beforeExiting() error {
+	if that.procModel == ProcessModelMulti && that.isMaster() {
+		return nil
+	}
 	//结束各组件
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
@@ -401,11 +421,44 @@ func (that *DServer) beforeExiting() error {
 
 // IsMaster 判断当前进程是否是主进程
 func (that *DServer) isMaster() bool {
-	return genv.GetVar(multiProcessMasterEnv, true).Bool()
+	return that.masterBool
 }
 
 // NewService 创建新的服务
 // 注意: 如果是多进程模式，则每个service表示一个进程
 func (that *DServer) NewService(name string) *DService {
 	return newDService(name, that)
+}
+
+// InheritAddr master进程需要监听的配置
+type InheritAddr struct {
+	Network   string
+	Host      string
+	Port      string
+	TlsConfig *tls.Config
+	// ghttp服务专用
+	ServerName string
+}
+
+func (that *DServer) SetInheritListener(address []InheritAddr) {
+	if that.isMaster() {
+		that.inheritAddr = address
+	}
+}
+
+// 初始化钩子函数
+func (that *DServer) initGraceful() {
+	normal.AddInheritedFunc(that.graceful.AddInherited)
+	normal.GetInheritedFunc(that.graceful.GetInheritedFunc)
+	quic.AddInheritedFunc(that.graceful.AddInheritedQUIC)
+	quic.GetInheritedFunc(that.graceful.GetInheritedFuncQUIC)
+	kcp.AddInheritedFunc(that.graceful.AddInheritedKCP)
+	kcp.GetInheritedFunc(that.graceful.GetInheritedFuncKCP)
+	that.graceful.setInherited = func() error {
+		_ = normal.SetInherited() //把监听的文件句柄数量写入环境变量，方便子进程使用
+		_ = quic.SetInherited()   // 把quic协议监听的文件句柄写入环境变量，方便子进程使用
+		_ = kcp.SetInherited()    // 把kcp协议监听的文件句柄写入环境变量，方便子进程使用
+		return nil
+	}
+	that.graceful.setShutdown(minShutdownTimeout, nil, nil)
 }
