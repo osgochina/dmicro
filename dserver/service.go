@@ -48,13 +48,6 @@ func (that *DService) addSandBox(s ISandbox) error {
 	return nil
 }
 
-// Iterator 迭代sandbox
-func (that *DService) iterator(f func(name string, sandbox ISandbox) bool) {
-	that.sList.Iterator(func(k string, v interface{}) bool {
-		return f(k, v.(ISandbox))
-	})
-}
-
 // 移除sandbox
 func (that *DService) removeSandbox(name string) {
 	that.sList.Remove(name)

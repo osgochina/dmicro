@@ -189,9 +189,10 @@ func (that *DServer) setup(startFunction StartFunc) {
 		// 业务进程启动sandbox
 		that.serviceList.Iterator(func(_ string, v interface{}) bool {
 			dService := v.(*DService)
-			dService.iterator(func(name string, sandbox ISandbox) bool {
+			for name, sandbox := range dService.sList.Map() {
+				s := sandbox.(ISandbox)
 				// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
-				if that.sandboxNames.Len() > 0 && !that.sandboxNames.ContainsI(sandbox.Name()) {
+				if that.sandboxNames.Len() > 0 && !that.sandboxNames.ContainsI(s.Name()) {
 					dService.removeSandbox(name)
 					return true
 				}
@@ -200,9 +201,8 @@ func (that *DServer) setup(startFunction StartFunc) {
 					if e != nil {
 						logger.Warningf("Sandbox Setup Return: %v", e)
 					}
-				}(sandbox)
-				return true
-			})
+				}(s)
+			}
 			return true
 		})
 	}
@@ -406,14 +406,14 @@ func (that *DServer) beforeExiting() error {
 	//结束各组件
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
-		dService.iterator(func(name string, sandbox ISandbox) bool {
-			if e := sandbox.Shutdown(); e != nil {
-				logger.Errorf("服务 %s .结束出错，error: %v", sandbox.Name(), e)
+		for _, sandbox := range dService.sList.Map() {
+			s := sandbox.(ISandbox)
+			if e := s.Shutdown(); e != nil {
+				logger.Errorf("服务 %s .结束出错，error: %v", s.Name(), e)
 			} else {
-				logger.Printf("%s 服务 已结束.", sandbox.Name())
+				logger.Printf("%s 服务 已结束.", s.Name())
 			}
-			return true
-		})
+		}
 		return true
 	})
 	return nil
