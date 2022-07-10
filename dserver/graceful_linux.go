@@ -1,6 +1,15 @@
+//go:build linux
 // +build linux
 
 package dserver
+
+import (
+	"github.com/osgochina/dmicro/logger"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
 
 // GraceSignal 监听信号
 func (that *graceful) graceSignal() {

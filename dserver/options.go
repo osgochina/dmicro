@@ -188,7 +188,7 @@ func (that *DServer) initSandboxNames() {
 
 // 初始化pid文件地址
 func (that *DServer) initPidFile(parser *gcmd.Parser) {
-	pidFile := "dServer.pid"
+	pidFile := fmt.Sprintf("%s.pid", gfile.Basename(parser.GetArg(0)))
 	if that.sandboxNames.Len() > 0 {
 		pidFile = fmt.Sprintf("%s.pid", that.sandboxNames.Join("-"))
 	}

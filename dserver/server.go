@@ -370,8 +370,9 @@ func (that *DServer) putPidFile() {
 		logger.Fatalf("os.Truncate: %v.", e)
 	}
 	if _, e := fmt.Fprintf(f, "%d", pid); e != nil {
-		logger.Fatalf("Unable to write pid %d to file: %s.", os.Getpid(), e)
+		logger.Fatalf("Unable to write pid %d to file: %s.", pid, e)
 	}
+	logger.Printf("写入Pid:[%d]到文件[%s]", pid, that.pidFile)
 }
 
 // Shutdown 主动结束进程
