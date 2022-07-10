@@ -1,4 +1,4 @@
 package dmicro
 
-const Version = "v0.6.2"
+const Version = "v1.0.0"
 const Authors = "ClownFish(osgochina@gmail.com)"
