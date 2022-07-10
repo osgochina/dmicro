@@ -165,18 +165,17 @@ func (that *DServer) setup(startFunction StartFunc) {
 			if that.config.GetBool("Debug") {
 				args = append(args, "--debug")
 			}
-
 			p, e := that.manager.NewProcessByOptions(process.NewProcOptions(
 				process.ProcCommand(that.cmdParser.GetArg(0)),
 				process.ProcName(dService.Name()),
 				process.ProcArgs(args...),
-				process.ProcEnvironment(that.graceful.inheritedEnv.Map()),
 				process.ProcSetEnvironment(isChildKey, "true"),
 				process.ProcSetEnvironment(multiProcessMasterEnv, "false"),
 				process.ProcStdoutLog("/dev/stdout", ""),
 				process.ProcRedirectStderr(true),
-				process.ProcAutoReStart(process.AutoReStartTrue), // 自动重启
-				process.ProcExtraFiles(that.graceful.GetExtraFiles()),
+				process.ProcAutoReStart(process.AutoReStartTrue),      // 自动重启
+				process.ProcExtraFiles(that.graceful.getExtraFiles()), // 与获取inheritedEnv的顺序不能错乱
+				process.ProcEnvironment(that.graceful.inheritedEnv.Map()),
 				process.ProcStopSignal("SIGQUIT", "SIGTERM"), // 退出信号
 				process.ProcStopWaitSecs(int(minShutdownTimeout/time.Second)),
 			))
@@ -435,7 +434,7 @@ func (that *DServer) NewService(name string) *DService {
 type InheritAddr struct {
 	Network   string
 	Host      string
-	Port      string
+	Port      int
 	TlsConfig *tls.Config
 	// ghttp服务专用
 	ServerName string

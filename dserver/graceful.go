@@ -2,12 +2,14 @@ package dserver
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
 	"github.com/osgochina/dmicro/utils/errors"
@@ -47,6 +49,9 @@ type graceful struct {
 	// 监听的句柄需要被子进程继承，需要设置提取这些句柄，并把它们设置为环境变量
 	// 该方法留给业务设置，在结束进程的时候调用
 	setInherited func() error
+
+	//  多进程模式下模式 监听的地址列表
+	listenAddrMap *gmap.StrAnyMap
 }
 
 //当前进程的状态
@@ -64,8 +69,6 @@ const (
 	isChildKey = "GRACEFUL_IS_CHILD"
 	// 父进程的监听列表
 	parentAddrKey = "GRACEFUL_INHERIT_LISTEN_PARENT_ADDR"
-	// 继承过来的fd有多少个
-	//envCountKey = "INHERIT_LISTEN_FDS"
 	// gf框架的ghttp服务平滑重启key
 	adminActionReloadEnvKey = "GF_SERVER_RELOAD"
 )
@@ -270,12 +273,12 @@ func (that *DServer) inheritListenerList() error {
 		if addr.Network == "https" && addr.TlsConfig == nil {
 			return gerror.Newf("使用https协议，必须传入证书")
 		}
-		err := that.inheritedListener(utils.NewFakeAddr(network, addr.Host, addr.Port), addr.TlsConfig)
+		err := that.inheritedListener(utils.NewFakeAddr(network, addr.Host, gconv.String(addr.Port)), addr.TlsConfig)
 		if err != nil {
 			return err
 		}
-		//defaultGraceful.setMWListenAddr(addr)
-		logger.Printf("Master Worker模式，主进程监听(network: %s,host: %s,port: %s)", addr.Network, addr.Host, addr.Port)
+		that.graceful.setListenAddrMap(addr)
+		logger.Printf("多进程模式，主进程监听(network: %s,host: %s,port: %d)", addr.Network, addr.Host, addr.Port)
 	}
 	return nil
 }
@@ -354,4 +357,20 @@ func (that *DServer) translateNetwork(network string) string {
 	default:
 		return "tcp"
 	}
+}
+
+// 保存监听的地址
+func (that *graceful) setListenAddrMap(addr InheritAddr) {
+	if that.listenAddrMap == nil {
+		that.listenAddrMap = gmap.NewStrAnyMap(true)
+	}
+	// 做一次地址转换
+	host := addr.Host
+	if len(host) == 0 {
+		host = "0.0.0.0"
+	}
+	if host == "0.0.0.0" {
+		host = "[::]"
+	}
+	that.listenAddrMap.Set(fmt.Sprintf("%s:%d", host, addr.Port), addr)
 }

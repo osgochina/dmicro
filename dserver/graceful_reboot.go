@@ -55,7 +55,7 @@ func (that *graceful) rebootSingle(timeout ...time.Duration) {
 
 //启动新的进程
 func (that *graceful) startProcess() (*exec.Cmd, error) {
-	extraFiles := that.GetExtraFiles()
+	extraFiles := that.getExtraFiles()
 
 	that.inheritedEnv.Set(isChildKey, "true")
 	//获取进程启动的原始
@@ -83,9 +83,9 @@ func (that *graceful) startProcess() (*exec.Cmd, error) {
 }
 
 // GetExtraFiles 获取要继承的fd列表
-func (that *graceful) GetExtraFiles() []*os.File {
+func (that *graceful) getExtraFiles() []*os.File {
 	var extraFiles []*os.File
-	endpointFM := that.getEndpointListenerFdMapSingle()
+	endpointFM := that.getEndpointListenerFdMap()
 	if len(endpointFM) > 0 {
 		for fdk, fdv := range endpointFM {
 			if len(fdv) > 0 {
@@ -106,11 +106,36 @@ func (that *graceful) GetExtraFiles() []*os.File {
 		buffer, _ := gjson.Encode(endpointFM)
 		that.inheritedEnv.Set(parentAddrKey, string(buffer))
 	}
+
+	gHttpSFM := that.getGHttpListenerFdMap()
+	if len(gHttpSFM) > 0 {
+		for name, m := range gHttpSFM {
+			for fdk, fdv := range m {
+				if len(fdv) > 0 {
+					s := ""
+					for _, item := range gstr.SplitAndTrim(fdv, ",") {
+						array := strings.Split(item, "#")
+						fd := uintptr(gconv.Uint(array[1]))
+						if fd > 0 {
+							s += fmt.Sprintf("%s#%d,", array[0], 3+len(extraFiles))
+							extraFiles = append(extraFiles, os.NewFile(fd, ""))
+						} else {
+							s += fmt.Sprintf("%s#%d,", array[0], 0)
+						}
+					}
+					gHttpSFM[name][fdk] = strings.TrimRight(s, ",")
+				}
+			}
+		}
+		buffer, _ := gjson.Encode(gHttpSFM)
+		that.inheritedEnv.Set(adminActionReloadEnvKey, string(buffer))
+	}
+
 	return extraFiles
 }
 
 // 获取单进程进程模式下的监听fd列表
-func (that *graceful) getEndpointListenerFdMapSingle() map[string]string {
+func (that *graceful) getEndpointListenerFdMap() map[string]string {
 	if that.inheritedProcListener.Len() <= 0 {
 		return nil
 	}
@@ -124,6 +149,13 @@ func (that *graceful) getEndpointListenerFdMapSingle() map[string]string {
 		if !ok {
 			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
 			return true
+		}
+		if that.listenAddrMap != nil {
+			// 判断监听的是否是http协议。如果是http协议则不返回
+			data := that.listenAddrMap.Get(lis.Addr().String())
+			if d, ok := data.(InheritAddr); ok && (d.Network == "http" || d.Network == "https") {
+				return true
+			}
 		}
 		quicLis, ok := v.(*quic.Listener)
 		if ok {
@@ -176,15 +208,59 @@ func (that *graceful) rebootMulti() {
 		_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 	})
 	that.processStatus.Set(statusActionNone)
-	//pid := that.mwPid
-	//
-	//cmd, err := that.startProcess()
-	//if err != nil {
-	//	logger.Errorf("MasterWorker模式下重启子进程失败,err:%v", err)
-	//	return
-	//}
-	//logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
-	//_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
-	//that.processStatus.Set(statusActionNone)
-	//that.mwChildCmd <- cmd
+}
+
+type httpListenerFdMap = map[string]string
+
+// 获取监听列表
+func (that *graceful) getGHttpListenerFdMap() map[string]httpListenerFdMap {
+
+	if that.dServer.procModel == ProcessModelSingle {
+		return nil
+	}
+	if that.inheritedProcListener.Len() <= 0 {
+		return nil
+	}
+	sfm := make(map[string]httpListenerFdMap)
+	m := map[string]string{
+		"https": "",
+		"http":  "",
+	}
+	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
+		lis, ok := v.(net.Listener)
+		if !ok {
+			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			return true
+		}
+		if that.listenAddrMap == nil {
+			return true
+		}
+		// 判断监听的是否是http协议。如果是http协议则不返回
+		data := that.listenAddrMap.Get(lis.Addr().String())
+
+		d, ok := data.(InheritAddr)
+		if ok && d.Network != "http" && d.Network != "https" {
+			return true
+		}
+		f, e := lis.(filer).File()
+		if e != nil {
+			logger.Error(e)
+			return true
+		}
+		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
+		if d.Network == "https" {
+			if len(m["https"]) > 0 {
+				m["https"] += ","
+			}
+			m["https"] += str
+		} else {
+			if len(m["http"]) > 0 {
+				m["http"] += ","
+			}
+			m["http"] += str
+		}
+		sfm[d.ServerName] = m
+		return true
+	})
+	return sfm
 }
