@@ -330,8 +330,7 @@ func (that *Process) createProgramCommand() (err error) {
 	// TODO that.setProgramRestartChangeMonitor(that.cmd.args[0])
 
 	// 父进程退出，则它生成的子进程也全部退出
-	that.cmd.SysProcAttr.Setpgid = true
-	that.cmd.SysProcAttr.Pdeathsig = syscall.SIGKILL
+	that.sysProcAttrSetPGid(that.cmd.SysProcAttr)
 	// 是否需要当前进程打开的句柄传给子进程
 	if len(that.option.ExtraFiles) > 0 {
 		that.cmd.ExtraFiles = that.option.ExtraFiles
@@ -438,7 +437,7 @@ func (that *Process) isAutoRestart() bool {
 }
 
 //阻塞等待进程运行结束
-func (that *Process) waitForExit(startSecs int64) {
+func (that *Process) waitForExit(_ int64) {
 	_ = that.cmd.Wait()
 	if that.cmd.ProcessState != nil {
 		logger.Infof("程序[%s]已经运行结束，退出码为:%v", that.option.Name, that.cmd.ProcessState)
