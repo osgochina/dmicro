@@ -83,9 +83,14 @@ func (that *DServer) BeforeStop(f StopFunc) {
 }
 
 // ProcessModel 设置多进程模式
+// 只有linux下才支持多进程模式
 func (that *DServer) ProcessModel(model ProcessModel) {
-	v := gcmd.GetOptVar("model", gconv.String(model))
-	that.procModel = ProcessModel(v.Int())
+	if runtime.GOOS == "linux" {
+		v := gcmd.GetOptVar("model", gconv.String(model))
+		that.procModel = ProcessModel(v.Int())
+		return
+	}
+	that.procModel = ProcessModelSingle
 }
 
 // Setup 启动服务，并执行传入的启动方法
