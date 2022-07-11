@@ -1,6 +1,7 @@
 package dserver
 
 import (
+	"context"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
@@ -88,10 +89,13 @@ func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
 	if !found {
 		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Name方法")
 	}
-
 	iValue := cValue.Elem().FieldByName("Service")
 	if iValue.CanSet() {
 		iValue.Set(reflect.ValueOf(that))
+	}
+	iValue = cValue.Elem().FieldByName("Context")
+	if iValue.CanSet() {
+		iValue.Set(reflect.ValueOf(context.Background()))
 	}
 	return s, nil
 }

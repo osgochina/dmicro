@@ -22,7 +22,7 @@ func (that *DefaultSandBox) Name() string {
 
 func (that *DefaultSandBox) Setup() error {
 	fmt.Println("DefaultSandBox Setup")
-
+	fmt.Println(that.Context)
 	var c = drpc.EndpointConfig{
 		PrintDetail: true,
 		Network:     "tcp",

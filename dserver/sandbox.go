@@ -1,5 +1,7 @@
 package dserver
 
+import "context"
+
 // ISandbox 服务沙盒的接口
 type ISandbox interface {
 	Name() string    // 沙盒名字
@@ -11,4 +13,5 @@ type ISandbox interface {
 type BaseSandbox struct {
 	Service *DService
 	Config  *Config
+	Context context.Context
 }
