@@ -1,7 +1,6 @@
 package dserver
 
 import (
-	"crypto/tls"
 	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/gogf/gf/container/garray"
@@ -15,9 +14,6 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
-	"github.com/osgochina/dmicro/drpc/netproto/kcp"
-	"github.com/osgochina/dmicro/drpc/netproto/normal"
-	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
 	"os"
@@ -78,7 +74,7 @@ func newDServer() *DServer {
 	return svr
 }
 
-// SetPidFile 设置pid文件
+// SetPidFile 设置pid文件路径
 func (that *DServer) SetPidFile(pidFile string) {
 	that.pidFile = pidFile
 }
@@ -99,22 +95,23 @@ func (that *DServer) ProcessModel(model ProcessModel) {
 	that.procModel = ProcessModelSingle
 }
 
+// 启动服务
 func (that *DServer) run(c *grumble.Context) {
-	//启动时间
-	that.started = gtime.Now()
-
 	//判断是否是守护进程运行
 	if e := that.demonize(that.config); e != nil {
 		logger.Fatalf("error:%v", e)
 	}
+	//记录启动时间
+	that.started = gtime.Now()
+
 	// 初始化平滑重启的钩子函数
 	that.initGraceful()
 
-	//启动自定义方法
+	//执行业务入口函数
 	that.startFunction(that)
 
 	//设置优雅退出时候需要做的工作
-	that.graceful.setShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
+	that.graceful.setShutdown(15*time.Second, that.firstStop, that.beforeExiting)
 
 	// 如果开启了多进程模式，并且当前进程在主进程中
 	if that.procModel == ProcessModelMulti && that.isMaster() {
@@ -126,18 +123,19 @@ func (that *DServer) run(c *grumble.Context) {
 		//写入pid文件
 		that.putPidFile()
 	}
-
-	//等待服务结束
+	//答疑服务信息
 	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 }
 
+// 多进程模式下启动service进程
 func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 	// 多进程模式下，master进程预先监听地址
 	err := that.inheritListenerList()
 	if err != nil {
-		logger.Fatalf("error:%v", err)
+		logger.Warningf("error:%v", err)
+		os.Exit(255)
 	}
-	// 启动进程
+	// 启动service进程
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
 		if dService.sList.Size() == 0 {
@@ -193,6 +191,7 @@ func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 	})
 }
 
+// 单进程模式下启动sandbox
 func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 	// 业务进程启动sandbox
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
@@ -217,11 +216,12 @@ func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 
 // Setup 启动服务，并执行传入的启动方法
 func (that *DServer) setup(startFunction StartFunc) {
+	// 如果启动进程的时候未传入任何参数，则默认使用start
 	if len(os.Args) == 1 {
-		that.Help()
-		os.Exit(0)
+		os.Args = append(os.Args, "start")
 	}
 	that.startFunction = startFunction
+	//解析命令行参数，并路由参数执行逻辑
 	err := that.grumbleApp.RunCommand(os.Args[1:])
 	if err != nil {
 		that.Help()
@@ -229,139 +229,6 @@ func (that *DServer) setup(startFunction StartFunc) {
 	}
 	//监听重启信号
 	that.graceful.graceSignal()
-	//
-	////解析命令行
-	//parser, err := gcmd.Parse(defaultOptions)
-	//if err != nil {
-	//	logger.Fatal(err)
-	//}
-	////解析参数
-	//if !that.parserArgs(parser) {
-	//	return
-	//}
-	////解析配置文件
-	//that.parserConfig(parser)
-	//
-	////启动时间
-	//that.started = gtime.Now()
-	//
-	//// 命令行解析
-	//that.cmdParser = parser
-	//
-	////判断是否是守护进程运行
-	//if e := that.demonize(that.config); e != nil {
-	//	logger.Fatalf("error:%v", e)
-	//}
-	////初始化日志配置
-	//if e := that.initLogSetting(that.config); e != nil {
-	//	logger.Fatalf("error:%v", e)
-	//}
-	//// 初始化平滑重启的钩子函数
-	//that.initGraceful()
-	////启动自定义方法
-	//startFunction(that)
-	//
-	////设置优雅退出时候需要做的工作
-	//that.graceful.setShutdown(15*time.Second, that.firstSweep, that.beforeExiting)
-	//
-	//// 如果开启了多进程模式，并且当前进程在主进程中
-	//if that.procModel == ProcessModelMulti && that.isMaster() {
-	//
-	//	// 多进程模式下，master进程预先监听地址
-	//	err = that.inheritListenerList()
-	//	if err != nil {
-	//		logger.Fatalf("error:%v", err)
-	//	}
-	//	// 启动进程
-	//	that.serviceList.Iterator(func(_ string, v interface{}) bool {
-	//		dService := v.(*DService)
-	//		if dService.sList.Size() == 0 {
-	//			return true
-	//		}
-	//		// 如果命令行传入了需要启动的服务名称，则需要把改服务名提取出来，作为启动参数
-	//		var sandBoxNames []string
-	//		if that.sandboxNames.Len() > 0 {
-	//			for _, name := range dService.sList.Keys() {
-	//				if that.sandboxNames.ContainsI(name) {
-	//					sandBoxNames = append(sandBoxNames, name)
-	//				}
-	//			}
-	//		} else {
-	//			sandBoxNames = dService.sList.Keys()
-	//		}
-	//		// 如果未匹配服务名称，则说明该service不需要启动
-	//		if len(sandBoxNames) == 0 {
-	//			return true
-	//		}
-	//		var args = []string{"start", gstr.Implode(",", sandBoxNames)}
-	//
-	//		if len(that.config.GetString("ENV_NAME")) > 0 {
-	//			args = append(args, fmt.Sprintf("--env=%s", that.config.GetString("ENV_NAME")))
-	//		}
-	//		confFile := that.cmdParser.GetOpt("config")
-	//		if len(confFile) > 0 {
-	//			args = append(args, fmt.Sprintf("--config=%s", confFile))
-	//		}
-	//		if that.config.GetBool("Debug") {
-	//			args = append(args, "--debug")
-	//		}
-	//		p, e := that.manager.NewProcessByOptions(process.NewProcOptions(
-	//			process.ProcCommand(that.cmdParser.GetArg(0)),
-	//			process.ProcName(dService.Name()),
-	//			process.ProcArgs(args...),
-	//			process.ProcSetEnvironment(isChildKey, "true"),
-	//			process.ProcSetEnvironment(multiProcessMasterEnv, "false"),
-	//			process.ProcStdoutLog("/dev/stdout", ""),
-	//			process.ProcRedirectStderr(true),
-	//			process.ProcAutoReStart(process.AutoReStartTrue),      // 自动重启
-	//			process.ProcExtraFiles(that.graceful.getExtraFiles()), // 与获取inheritedEnv的顺序不能错乱
-	//			process.ProcEnvironment(that.graceful.inheritedEnv.Map()),
-	//			process.ProcStopSignal("SIGQUIT", "SIGTERM"), // 退出信号
-	//			process.ProcStopWaitSecs(int(minShutdownTimeout/time.Second)),
-	//		))
-	//		if e != nil {
-	//			logger.Warning(e)
-	//		}
-	//		p.Start(true)
-	//		return true
-	//	})
-	//} else {
-	//	// 业务进程启动sandbox
-	//	that.serviceList.Iterator(func(_ string, v interface{}) bool {
-	//		dService := v.(*DService)
-	//		for name, sandbox := range dService.sList.Map() {
-	//			s := sandbox.(ISandbox)
-	//			// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
-	//			if that.sandboxNames.Len() > 0 && !that.sandboxNames.ContainsI(s.Name()) {
-	//				dService.removeSandbox(name)
-	//				return true
-	//			}
-	//			go func(s ISandbox) {
-	//				e := s.Setup()
-	//				if e != nil {
-	//					logger.Warningf("Sandbox Setup Return: %v", e)
-	//				}
-	//			}(s)
-	//		}
-	//		return true
-	//	})
-	//}
-	//// 多进程模式下，只有主进程需要写入pid文件
-	//if that.procModel == ProcessModelMulti && that.isMaster() {
-	//	//写入pid文件
-	//	that.putPidFile()
-	//}
-	//// 单进程模式下写入pid文件
-	//if that.procModel == ProcessModelSingle {
-	//	//写入pid文件
-	//	that.putPidFile()
-	//}
-	//
-	////等待服务结束
-	//logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
-	//
-	////监听重启信号
-	//that.graceful.graceSignal()
 }
 
 // AddSandBox 添加sandbox到服务中
@@ -390,11 +257,6 @@ func (that *DServer) AddSandBox(s ISandbox, services ...*DService) error {
 func (that *DServer) Config() *gcfg.Config {
 	return that.config
 }
-
-//// CmdParser 返回命令行解析
-//func (that *DServer) CmdParser() *gcmd.Parser {
-//	return that.cmdParser
-//}
 
 // StartTime 返回启动时间
 func (that *DServer) StartTime() *gtime.Time {
@@ -489,11 +351,6 @@ func (that *DServer) demonize(config *gcfg.Config) error {
 //写入pid文件
 func (that *DServer) putPidFile() {
 	pid := os.Getpid()
-
-	////在GraceMasterWorker模型下，只有子进程才会执行到该逻辑，所以需要把pid设置为父进程的id
-	//if graceful.GetModel() == graceful.GraceMasterWorker && graceful.IsChild() {
-	//	pid = os.Getppid()
-	//}
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
 		logger.Fatalf("os.OpenFile: %v", e)
@@ -515,7 +372,8 @@ func (that *DServer) Shutdown(timeout ...time.Duration) {
 	that.graceful.shutdownSingle(timeout...)
 }
 
-func (that *DServer) firstSweep() error {
+// 重启或优雅的关闭服务以前，优先调用的收尾方法。收到信号后首先调用
+func (that *DServer) firstStop() error {
 	if that.shutting {
 		return nil
 	}
@@ -539,7 +397,7 @@ func (that *DServer) firstSweep() error {
 	return nil
 }
 
-//进行结束收尾工作
+// 重启或优雅的关闭服务以前，处理完基本操作后，做最后的收尾工作，收尾完成就结束进程
 func (that *DServer) beforeExiting() error {
 	if that.procModel == ProcessModelMulti && that.isMaster() {
 		return nil
@@ -571,35 +429,9 @@ func (that *DServer) NewService(name string) *DService {
 	return newDService(name, that)
 }
 
-// InheritAddr master进程需要监听的配置
-type InheritAddr struct {
-	Network   string
-	Host      string
-	Port      int
-	TlsConfig *tls.Config
-	// ghttp服务专用
-	ServerName string
-}
-
+// SetInheritListener 多进程模式下，设置要被继承的监听地址
 func (that *DServer) SetInheritListener(address []InheritAddr) {
 	if that.isMaster() {
 		that.inheritAddr = address
 	}
-}
-
-// 初始化钩子函数
-func (that *DServer) initGraceful() {
-	normal.AddInheritedFunc(that.graceful.AddInherited)
-	normal.GetInheritedFunc(that.graceful.GetInheritedFunc)
-	quic.AddInheritedFunc(that.graceful.AddInheritedQUIC)
-	quic.GetInheritedFunc(that.graceful.GetInheritedFuncQUIC)
-	kcp.AddInheritedFunc(that.graceful.AddInheritedKCP)
-	kcp.GetInheritedFunc(that.graceful.GetInheritedFuncKCP)
-	that.graceful.setInherited = func() error {
-		_ = normal.SetInherited() //把监听的文件句柄数量写入环境变量，方便子进程使用
-		_ = quic.SetInherited()   // 把quic协议监听的文件句柄写入环境变量，方便子进程使用
-		_ = kcp.SetInherited()    // 把kcp协议监听的文件句柄写入环境变量，方便子进程使用
-		return nil
-	}
-	that.graceful.setShutdown(minShutdownTimeout, nil, nil)
 }

@@ -10,6 +10,9 @@ import (
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/netproto/kcp"
+	"github.com/osgochina/dmicro/drpc/netproto/normal"
+	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils"
 	"github.com/osgochina/dmicro/utils/errors"
@@ -19,6 +22,16 @@ import (
 	"syscall"
 	"time"
 )
+
+// InheritAddr master进程需要监听的配置
+type InheritAddr struct {
+	Network   string
+	Host      string
+	Port      int
+	TlsConfig *tls.Config
+	// ghttp服务专用
+	ServerName string
+}
 
 // 优雅重启
 type graceful struct {
@@ -141,6 +154,38 @@ func (that *graceful) isChild() bool {
 	return that.childBool
 }
 
+// 保存监听的地址
+func (that *graceful) setListenAddrMap(addr InheritAddr) {
+	if that.listenAddrMap == nil {
+		that.listenAddrMap = gmap.NewStrAnyMap(true)
+	}
+	// 做一次地址转换
+	host := addr.Host
+	if len(host) == 0 {
+		host = "0.0.0.0"
+	}
+	if host == "0.0.0.0" {
+		host = "[::]"
+	}
+	that.listenAddrMap.Set(fmt.Sprintf("%s:%d", host, addr.Port), addr)
+}
+
+// 初始化钩子函数
+func (that *DServer) initGraceful() {
+	normal.AddInheritedFunc(that.graceful.AddInherited)
+	normal.GetInheritedFunc(that.graceful.GetInheritedFunc)
+	quic.AddInheritedFunc(that.graceful.AddInheritedQUIC)
+	quic.GetInheritedFunc(that.graceful.GetInheritedFuncQUIC)
+	kcp.AddInheritedFunc(that.graceful.AddInheritedKCP)
+	kcp.GetInheritedFunc(that.graceful.GetInheritedFuncKCP)
+	that.graceful.setInherited = func() error {
+		_ = normal.SetInherited() //把监听的文件句柄数量写入环境变量，方便子进程使用
+		_ = quic.SetInherited()   // 把quic协议监听的文件句柄写入环境变量，方便子进程使用
+		_ = kcp.SetInherited()    // 把kcp协议监听的文件句柄写入环境变量，方便子进程使用
+		return nil
+	}
+}
+
 // inheritListenerList 在多进程模式下，调用该方法，预先初始化监听
 func (that *DServer) inheritListenerList() error {
 	for _, addr := range that.inheritAddr {
@@ -235,20 +280,4 @@ func (that *DServer) translateNetwork(network string) string {
 	default:
 		return "tcp"
 	}
-}
-
-// 保存监听的地址
-func (that *graceful) setListenAddrMap(addr InheritAddr) {
-	if that.listenAddrMap == nil {
-		that.listenAddrMap = gmap.NewStrAnyMap(true)
-	}
-	// 做一次地址转换
-	host := addr.Host
-	if len(host) == 0 {
-		host = "0.0.0.0"
-	}
-	if host == "0.0.0.0" {
-		host = "[::]"
-	}
-	that.listenAddrMap.Set(fmt.Sprintf("%s:%d", host, addr.Port), addr)
 }

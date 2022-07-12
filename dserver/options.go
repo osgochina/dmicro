@@ -2,8 +2,6 @@ package dserver
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
@@ -13,7 +11,6 @@ import (
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/signals"
 	"os"
-	"strings"
 )
 
 var defaultOptions = map[string]bool{
@@ -39,7 +36,7 @@ func SetOption(key string, v bool) {
 var (
 	helpContent = gstr.TrimLeft(`
 USAGE
-	%path% start|stop|reload|quit [OPTION] [default|custom] 
+	%path% start|stop|reload|quit [OPTION] [sandboxName1|sandboxName2...] 
 OPTION
 	-c,--config     指定要载入的配置文件，该参数与gf.gcfg.file参数二选一，建议使用该参数
 	-d,--daemon     使用守护进程模式启动
@@ -68,65 +65,6 @@ EXAMPLES
 // SetHelpContent 自定义帮助信息
 func SetHelpContent(content string) {
 	helpContent = content
-}
-
-// 解析命令行，根据返回值判断是否继续执行
-// 返回false，则结束进程，返回true继续执行
-func (that *DServer) parserArgs(parser *gcmd.Parser) bool {
-	command := gcmd.GetArg(1)
-	switch strings.ToLower(command) {
-	case "help":
-		that.Help()
-		return false
-	case "version":
-		that.Version()
-		return false
-	case "start":
-		that.initSandboxNames()
-		that.initPidFile(parser)
-		that.checkStart()
-		return true
-	case "stop":
-		that.initSandboxNames()
-		that.initPidFile(parser)
-		that.stop("stop")
-		return false
-	case "reload":
-		that.initSandboxNames()
-		that.initPidFile(parser)
-		that.stop("reload")
-		return false
-	case "quit":
-		that.initSandboxNames()
-		that.initPidFile(parser)
-		that.stop("quit")
-		return false
-	default:
-		for _, v := range gcmd.GetArgAll() {
-			switch v {
-			case "?", "h":
-				that.Help()
-				return false
-			case "i", "v":
-				that.Version()
-				return false
-			}
-		}
-		// 识别参数展示帮助信息和版本信息
-		array := garray.NewStrArrayFrom(os.Args)
-		if array.Search("--help") != -1 || array.Search("-h") != -1 {
-			that.Help()
-			return false
-		}
-		if array.Search("--version") != -1 || array.Search("-v") != -1 {
-			that.Version()
-			return false
-		}
-	}
-	that.initSandboxNames()
-	that.initPidFile(parser)
-	that.checkStart()
-	return true
 }
 
 // 停止服务
@@ -161,7 +99,7 @@ func (that *DServer) stop(signal string) {
 }
 
 // 初始化要启动的服务名
-func (that *DServer) initSandboxNamesV2(names []string) {
+func (that *DServer) initSandboxNames(names []string) {
 	// 获取要启动的sandbox名称
 	for _, sandboxName := range names {
 		if gstr.ContainsI(sandboxName, ",") {
@@ -175,33 +113,8 @@ func (that *DServer) initSandboxNamesV2(names []string) {
 	}
 }
 
-// 初始化要启动的服务名
-func (that *DServer) initSandboxNames() {
-	command := gcmd.GetArg(1)
-	switch strings.ToLower(command) {
-	case "start":
-		fallthrough
-	case "stop":
-		fallthrough
-	case "reload":
-		fallthrough
-	case "quit":
-		// 获取要启动的服务名，并存储
-		sandboxNames := gcmd.GetArg(2)
-		if len(sandboxNames) > 0 {
-			sandboxNames = gstr.Trim(sandboxNames)
-			sandboxNameArray := gstr.Split(sandboxNames, ",")
-			if len(sandboxNameArray) > 1 {
-				that.sandboxNames.Append(sandboxNameArray...)
-			} else {
-				that.sandboxNames.Append(sandboxNames)
-			}
-		}
-	}
-	return
-}
-
-func (that *DServer) initPidFileV2(pid string) {
+// 初始化pid文件的地址
+func (that *DServer) initPidFile(pid string) {
 	if len(pid) > 0 {
 		that.pidFile = pid
 		return
@@ -211,15 +124,6 @@ func (that *DServer) initPidFileV2(pid string) {
 		pidFile = fmt.Sprintf("%s.pid", that.sandboxNames.Join("-"))
 	}
 	that.pidFile = gfile.TempDir(pidFile)
-}
-
-// 初始化pid文件地址
-func (that *DServer) initPidFile(parser *gcmd.Parser) {
-	pidFile := fmt.Sprintf("%s.pid", gfile.Basename(parser.GetArg(0)))
-	if that.sandboxNames.Len() > 0 {
-		pidFile = fmt.Sprintf("%s.pid", that.sandboxNames.Join("-"))
-	}
-	that.pidFile = parser.GetOpt("pid", gfile.TempDir(pidFile))
 }
 
 // 检查服务是否已经启动
@@ -239,8 +143,8 @@ func (that *DServer) checkStart() {
 }
 
 // 解析配置文件信息
-func (that *DServer) parserConfigV2(config string) {
-	that.config = that.getGFConfV2(config)
+func (that *DServer) parserConfig(config string) {
+	that.config = that.getGFConf(config)
 	// 设置配置文件中log的配置
 	that.initLogCfg()
 }
@@ -262,6 +166,7 @@ func (that *DServer) parserEnv(env string) {
 	}
 }
 
+// 解析debug参数
 func (that *DServer) parserDebug(debug bool) {
 	if debug {
 		// 如果启动命令行强制设置了debug参数，则优先级最高
@@ -273,47 +178,6 @@ func (that *DServer) parserDebug(debug bool) {
 		// 3. 先从环境变量获取debug参数
 		// 4. 最终传导获取到debug值，把它设置到配置文件中
 		_ = that.config.Set("Debug", that.config.GetBool("Debug", genv.GetVar("DEBUG", false).Bool()))
-	}
-}
-
-//解析配置文件
-func (that *DServer) parserConfig(parser *gcmd.Parser) {
-	that.config = that.getGFConf(parser)
-	// 设置配置文件中log的配置
-	that.initLogCfg()
-	array := garray.NewStrArrayFrom(os.Args)
-	//判断是否需要后台运行
-	index := array.Search("--daemon")
-	if index != -1 {
-		_ = that.config.Set("Daemon", true)
-	}
-	index = array.Search("-d")
-	if index != -1 {
-		_ = that.config.Set("Daemon", true)
-	}
-	//通过命令行传入环境参数
-	env := parser.GetOpt("env", "")
-	//如果命令行传入了env参数，则使用命令行参数
-	if len(env) > 0 {
-		_ = genv.Set("ENV_NAME", gstr.ToLower(env))
-		_ = that.config.Set("ENV_NAME", gstr.ToLower(env))
-	} else if len(that.config.GetString("ENV_NAME")) <= 0 {
-		//如果命令行未传入env参数,且配置文件中页不存在ENV_NAME配置，则先查找环境变量ENV_NAME，并把环境变量中的ENV_NAME赋值给配置文件
-		_ = that.config.Set("ENV_NAME", gstr.ToLower(genv.Get("ENV_NAME", "product")))
-	}
-	//通过启动命令判断是否开启debug
-	index = array.Search("--debug")
-	if index != -1 {
-		// 如果启动命令行强制设置了debug参数，则优先级最高
-		_ = genv.Set("DEBUG", "true")
-		_ = that.config.Set("Debug", true)
-	} else {
-		// 1. 从命令行中获取debug参数,如果获取到则使用，未获取到这进行下一步
-		// 2. 从配置文件中获取debug参数,如果获取到则使用，未获取到这进行下一步
-		// 3. 先从环境变量获取debug参数
-		// 4. 最终传导获取到debug值，把它设置到配置文件中
-		debug := parser.GetOptVar("debug", that.config.GetBool("Debug", genv.GetVar("DEBUG", false).Bool()))
-		_ = that.config.Set("Debug", debug.Bool())
 	}
 }
 

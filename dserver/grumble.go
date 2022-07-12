@@ -9,24 +9,10 @@ import (
 func (that *DServer) initGrumble() {
 	that.grumbleApp = grumble.New(&grumble.Config{
 		Name: "DServer",
-		//Description:           "好用的服务管理工具",
-		//HistoryFile:           "/tmp/foo.hist",
-		//Prompt:                "DSvr » ",
-		//PromptColor:           color.New(color.FgGreen, color.Bold),
-		//HelpHeadlineColor:     color.New(color.FgGreen),
-		//HelpHeadlineUnderline: true,
-		//HelpSubCommands:       true,
-		//Flags: func(f *grumble.Flags) {
-		//
-		//},
 	})
 	that.grumbleApp.SetPrintASCIILogo(func(a *grumble.App) {
 		that.Version()
 	})
-	that.grumbleApp.SetPrintHelp(func(a *grumble.App, shell bool) {
-		that.Help()
-	})
-
 	that.grumbleApp.AddCommand(&grumble.Command{
 		Name:    "version",
 		Help:    "打印当前程序的版本信息",
@@ -42,6 +28,9 @@ func (that *DServer) initGrumble() {
 		Name:    "help",
 		Help:    "use 'help [command]' for command help",
 		Aliases: []string{"?", "h", "--help"},
+		Args: func(a *grumble.Args) {
+			a.StringList("command", "the name of the command")
+		},
 		Run: func(c *grumble.Context) error {
 			that.Help()
 			os.Exit(0)
@@ -66,13 +55,13 @@ func (that *DServer) initGrumble() {
 		},
 		Run: func(c *grumble.Context) error {
 			// 获取要启动的sandbox名称
-			that.initSandboxNamesV2(c.Args.StringList("sandboxNames"))
+			that.initSandboxNames(c.Args.StringList("sandboxNames"))
 			// 初始化pid文件的路径
-			that.initPidFileV2(c.Flags.String("pid"))
+			that.initPidFile(c.Flags.String("pid"))
 			// 判断服务进程是否已经启动
 			that.checkStart()
 			//解析配置文件
-			that.parserConfigV2(c.Flags.String("config"))
+			that.parserConfig(c.Flags.String("config"))
 			// 解析是否守护进程启动
 			that.parserDaemon(c.Flags.Bool("daemon"))
 			// 解析运行环境
@@ -99,9 +88,9 @@ func (that *DServer) initGrumble() {
 		},
 		Run: func(c *grumble.Context) error {
 			// 获取要启动的sandbox名称
-			that.initSandboxNamesV2(c.Args.StringList("sandboxNames"))
+			that.initSandboxNames(c.Args.StringList("sandboxNames"))
 			// 初始化pid文件的路径
-			that.initPidFileV2(c.Flags.String("pid"))
+			that.initPidFile(c.Flags.String("pid"))
 			that.stop("stop")
 			return nil
 		},
@@ -115,9 +104,9 @@ func (that *DServer) initGrumble() {
 		},
 		Run: func(c *grumble.Context) error {
 			// 获取要启动的sandbox名称
-			that.initSandboxNamesV2(c.Args.StringList("sandboxNames"))
+			that.initSandboxNames(c.Args.StringList("sandboxNames"))
 			// 初始化pid文件的路径
-			that.initPidFileV2(c.Flags.String("pid"))
+			that.initPidFile(c.Flags.String("pid"))
 			that.stop("reload")
 			return nil
 		},
@@ -131,9 +120,9 @@ func (that *DServer) initGrumble() {
 		},
 		Run: func(c *grumble.Context) error {
 			// 获取要启动的sandbox名称
-			that.initSandboxNamesV2(c.Args.StringList("sandboxNames"))
+			that.initSandboxNames(c.Args.StringList("sandboxNames"))
 			// 初始化pid文件的路径
-			that.initPidFileV2(c.Flags.String("pid"))
+			that.initPidFile(c.Flags.String("pid"))
 			that.stop("quit")
 			return nil
 		},

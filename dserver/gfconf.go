@@ -21,13 +21,7 @@ const (
 	commandEnvKeyForPath = "gf.gcfg.path" // commandEnvKeyForPath 设置配置文件搜索目录
 )
 
-// 获取gf框架的配置对象
-func (that *DServer) getGFConf(parser *gcmd.Parser) *gcfg.Config {
-	confFile := parser.GetOpt("config")
-	return that.getGFConfV2(confFile)
-}
-
-func (that *DServer) getGFConfV2(confFile string) *gcfg.Config {
+func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 	if len(confFile) > 0 {
 		//指定了具体的配置文件地址
 		if gstr.Contains(confFile, gfile.Separator) {
