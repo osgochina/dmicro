@@ -72,6 +72,7 @@ func (that *DServer) initGrumble() {
 			if e := that.initLogSetting(that.config); e != nil {
 				logger.Fatalf("error:%v", e)
 			}
+			// 启动
 			that.run(c)
 			return nil
 		},

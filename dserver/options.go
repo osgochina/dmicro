@@ -173,10 +173,9 @@ func (that *DServer) parserDebug(debug bool) {
 		_ = genv.Set("DEBUG", "true")
 		_ = that.config.Set("Debug", true)
 	} else {
-		// 1. 从命令行中获取debug参数,如果获取到则使用，未获取到这进行下一步
-		// 2. 从配置文件中获取debug参数,如果获取到则使用，未获取到这进行下一步
-		// 3. 先从环境变量获取debug参数
-		// 4. 最终传导获取到debug值，把它设置到配置文件中
+		// 1. 从配置文件中获取debug参数,如果获取到则使用，未获取到这进行下一步
+		// 2. 先从环境变量获取debug参数
+		// 3. 最终传导获取到debug值，把它设置到配置文件中
 		_ = that.config.Set("Debug", that.config.GetBool("Debug", genv.GetVar("DEBUG", false).Bool()))
 	}
 }

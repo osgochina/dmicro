@@ -97,5 +97,11 @@ func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
 	if iValue.CanSet() {
 		iValue.Set(reflect.ValueOf(context.Background()))
 	}
+	iValue = cValue.Elem().FieldByName("Config")
+	if iValue.CanSet() {
+		c := &Config{}
+		c.Config = that.server.config
+		iValue.Set(reflect.ValueOf(c))
+	}
 	return s, nil
 }
