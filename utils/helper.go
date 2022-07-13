@@ -71,6 +71,9 @@ func NewFakeAddr(network, host, port string) *FakeAddr {
 		port = "0"
 	}
 	addr := net.JoinHostPort(host, port)
+	if network == "unix" || network == "unixpacket" {
+		addr = host
+	}
 	return &FakeAddr{
 		network: network,
 		addr:    addr,

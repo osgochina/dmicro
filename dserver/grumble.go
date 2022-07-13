@@ -1,11 +1,17 @@
 package dserver
 
 import (
+	"fmt"
 	"github.com/desertbit/grumble"
+	"github.com/fatih/color"
+	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/logger"
 	"os"
+	"time"
 )
 
+// 正常进程
 func (that *DServer) initGrumble() {
 	that.grumbleApp = grumble.New(&grumble.Config{
 		Name: "DServer",
@@ -128,4 +134,55 @@ func (that *DServer) initGrumble() {
 			return nil
 		},
 	})
+}
+
+// ctrl进程
+func (that *DServer) initCtrlGrumble() {
+	that.grumbleApp = grumble.New(&grumble.Config{
+		Name:                  "DServer",
+		Description:           "好用的服务管理工具",
+		HistoryFile:           "/tmp/foo.hist",
+		Prompt:                "dSvr » ",
+		PromptColor:           color.New(color.FgGreen, color.Bold),
+		HelpHeadlineColor:     color.New(color.FgGreen),
+		HelpHeadlineUnderline: true,
+		HelpSubCommands:       true,
+	})
+	that.grumbleApp.SetPrintASCIILogo(func(a *grumble.App) {
+		that.Version()
+	})
+	that.grumbleApp.AddCommand(&grumble.Command{
+		Name:    "version",
+		Help:    "打印当前程序的版本信息",
+		Aliases: []string{"v"},
+		Run: func(c *grumble.Context) error {
+			that.Version()
+			return nil
+		},
+	})
+	statusCommand := &grumble.Command{
+		Name:    "status",
+		Help:    "查看当前服务状态",
+		Aliases: []string{"info"},
+		Run: func(c *grumble.Context) error {
+			cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "unix", PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
+			defer cli.Close()
+
+			sess, stat := cli.Dial("/tmp/dserver.scoket", pbproto.NewPbProtoFunc())
+			if !stat.OK() {
+				logger.Fatalf("%v", stat)
+			}
+			var result *Infos
+			stat = sess.Call("/ctrl/info",
+				[]int{},
+				&result,
+			).Status()
+			if !stat.OK() {
+				logger.Fatalf("%v", stat)
+			}
+			fmt.Println(result)
+			return nil
+		},
+	}
+	that.grumbleApp.AddCommand(statusCommand)
 }

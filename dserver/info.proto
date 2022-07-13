@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+
+package dserver;
+
+option go_package = "./;dserver";
+
+message Infos {
+    repeated Info list=1;
+}
+
+message Info {
+  string Name = 1;
+  string Status = 2;
+  string Uptime = 3;
+}
+
+

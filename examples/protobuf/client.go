@@ -10,12 +10,12 @@ import (
 
 func main() {
 
-	cli := drpc.NewEndpoint(drpc.EndpointConfig{PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
+	cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "unix", PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
 	defer cli.Close()
 
 	cli.RoutePush(new(Push))
 
-	sess, stat := cli.Dial("127.0.0.1:9091", pbproto.NewPbProtoFunc())
+	sess, stat := cli.Dial("/tmp/dserver.scoket", pbproto.NewPbProtoFunc())
 	if !stat.OK() {
 		logger.Fatalf("%v", stat)
 	}

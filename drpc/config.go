@@ -137,7 +137,7 @@ func (that *EndpointConfig) newAddr(network, ip, port string) (net.Addr, error) 
 	case "tcp", "tcp4", "tcp6":
 		return net.ResolveTCPAddr(network, net.JoinHostPort(ip, port))
 	case "unix", "unixpacket":
-		return net.ResolveUnixAddr(network, net.JoinHostPort(ip, port))
+		return net.ResolveUnixAddr(network, ip)
 	case "kcp", "udp", "udp4", "udp6", "quic":
 		udpAddr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, port))
 		if err != nil {

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	dserver.Setup(func(svr *dserver.DServer) {
-		svr.ProcessModel(dserver.ProcessModelMulti)
+		//svr.ProcessModel(dserver.ProcessModelMulti)
 		svr.SetInheritListener([]dserver.InheritAddr{
 			{Network: "tcp", Host: "127.0.0.1", Port: 8199, ServerName: "default"},
 			{Network: "http", Host: "127.0.0.1", Port: 8080, ServerName: "ghttp1"},

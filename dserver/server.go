@@ -69,8 +69,6 @@ func newDServer() *DServer {
 		masterBool:   genv.GetVar(multiProcessMasterEnv, true).Bool(),
 	}
 	svr.graceful = newGraceful(svr)
-	// 初始化命令逻辑
-	svr.initGrumble()
 	return svr
 }
 
@@ -113,6 +111,9 @@ func (that *DServer) run(c *grumble.Context) {
 	//设置优雅退出时候需要做的工作
 	that.graceful.setShutdown(15*time.Second, that.firstStop, that.beforeExiting)
 
+	if that.isMaster() {
+		that.endpoint()
+	}
 	// 如果开启了多进程模式，并且当前进程在主进程中
 	if that.procModel == ProcessModelMulti && that.isMaster() {
 		that.runProcessModelMulti(c)
@@ -192,7 +193,7 @@ func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 }
 
 // 单进程模式下启动sandbox
-func (that *DServer) runProcessModelSingle(c *grumble.Context) {
+func (that *DServer) runProcessModelSingle(_ *grumble.Context) {
 	// 业务进程启动sandbox
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
@@ -216,11 +217,24 @@ func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 
 // Setup 启动服务，并执行传入的启动方法
 func (that *DServer) setup(startFunction StartFunc) {
+	// ctrl命令
+	if len(os.Args) > 1 && os.Args[1] == "ctrl" {
+		os.Args = append(os.Args[0:1], os.Args[2:]...)
+		that.initCtrlGrumble()
+		err := that.grumbleApp.Run()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
 	// 如果启动进程的时候未传入任何参数，则默认使用start
 	if len(os.Args) == 1 {
 		os.Args = append(os.Args, "start")
 	}
 	that.startFunction = startFunction
+	// 初始化命令逻辑
+	that.initGrumble()
 	//解析命令行参数，并路由参数执行逻辑
 	err := that.grumbleApp.RunCommand(os.Args[1:])
 	if err != nil {
