@@ -396,7 +396,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			return true
 		}
 	}
-	internal.Printf("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+	internal.Noticef("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 	//修改会话状态，并且启动响应监听
 	sess.changeStatus(statusOk)
 	err = grpool.Add(sess.startReadAndHandle)
@@ -433,7 +433,7 @@ func (that *endpoint) ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Se
 		_ = sess.Close()
 		return nil, stat
 	}
-	internal.Printf("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+	internal.Noticef("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 	sess.changeStatus(statusOk)
 	err := grpool.Add(sess.startReadAndHandle)
 	if err != nil {
@@ -520,7 +520,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 				return
 			}
 
-			internal.Printf("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+			internal.Noticef("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 			that.sessHub.set(sess)
 			sess.changeStatus(statusOk)
 			// 启动消息侦听

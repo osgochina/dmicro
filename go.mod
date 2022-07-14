@@ -6,6 +6,7 @@ require (
 	github.com/gogf/gf v1.16.9
 	github.com/lucas-clemente/quic-go v0.25.0
 	github.com/miekg/dns v1.1.46
+	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33 // indirect
 	github.com/prometheus/common v0.26.0
 	github.com/xtaci/kcp-go/v5 v5.6.1
 	go.etcd.io/etcd/api/v3 v3.5.2

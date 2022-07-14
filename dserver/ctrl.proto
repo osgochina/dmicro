@@ -10,9 +10,16 @@ message Infos {
 }
 
 message Info {
-  string Name = 1;
-  string Status = 2;
-  string Uptime = 3;
+  string SandBoxName = 1;
+  string ServiceName = 2;
+  string Status = 3;
+  string Pid = 4;
+  string Uptime = 5;
+}
+
+
+message Result {
+
 }
 
 

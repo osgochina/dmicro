@@ -52,6 +52,7 @@ type DServer struct {
 	ctrlEndpoint  drpc.Endpoint
 	startFunction StartFunc
 	grumbleApp    *grumble.App
+	ctrlSession   drpc.Session
 }
 
 // StartFunc 启动回调方法
@@ -139,78 +140,17 @@ func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 	// 启动service进程
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
-		if dService.sList.Size() == 0 {
-			return true
-		}
-		// 如果命令行传入了需要启动的服务名称，则需要把改服务名提取出来，作为启动参数
-		var sandBoxNames []string
-		if that.sandboxNames.Len() > 0 {
-			for _, name := range dService.sList.Keys() {
-				if that.sandboxNames.ContainsI(name) {
-					sandBoxNames = append(sandBoxNames, name)
-				}
-			}
-		} else {
-			sandBoxNames = dService.sList.Keys()
-		}
-		// 如果未匹配服务名称，则说明该service不需要启动
-		if len(sandBoxNames) == 0 {
-			return true
-		}
-		var args = []string{"start"}
-
-		if len(that.config.GetString("ENV_NAME")) > 0 {
-			args = append(args, fmt.Sprintf("--env=%s", that.config.GetString("ENV_NAME")))
-		}
-		confFile := c.Flags.String("config")
-		if len(confFile) > 0 {
-			args = append(args, fmt.Sprintf("--config=%s", confFile))
-		}
-		if that.config.GetBool("Debug") {
-			args = append(args, "--debug")
-		}
-		args = append(args, sandBoxNames...)
-		p, e := that.manager.NewProcessByOptions(process.NewProcOptions(
-			process.ProcCommand(os.Args[0]),
-			process.ProcName(dService.Name()),
-			process.ProcArgs(args...),
-			process.ProcSetEnvironment(isChildKey, "true"),
-			process.ProcSetEnvironment(multiProcessMasterEnv, "false"),
-			process.ProcStdoutLog("/dev/stdout", ""),
-			process.ProcRedirectStderr(true),
-			process.ProcAutoReStart(process.AutoReStartTrue),      // 自动重启
-			process.ProcExtraFiles(that.graceful.getExtraFiles()), // 与获取inheritedEnv的顺序不能错乱
-			process.ProcEnvironment(that.graceful.inheritedEnv.Map()),
-			process.ProcStopSignal("SIGQUIT", "SIGTERM"), // 退出信号
-			process.ProcStopWaitSecs(int(minShutdownTimeout/time.Second)),
-		))
-		if e != nil {
-			logger.Warning(e)
-		}
-		p.Start(true)
+		dService.start(c)
 		return true
 	})
 }
 
 // 单进程模式下启动sandbox
-func (that *DServer) runProcessModelSingle(_ *grumble.Context) {
+func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 	// 业务进程启动sandbox
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
-		for name, sandbox := range dService.sList.Map() {
-			s := sandbox.(ISandbox)
-			// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
-			if that.sandboxNames.Len() > 0 && !that.sandboxNames.ContainsI(s.Name()) {
-				dService.removeSandbox(name)
-				return true
-			}
-			go func(s ISandbox) {
-				e := s.Setup()
-				if e != nil {
-					logger.Warningf("Sandbox Setup Return: %v", e)
-				}
-			}(s)
-		}
+		dService.start(c)
 		return true
 	})
 }
@@ -220,8 +160,13 @@ func (that *DServer) setup(startFunction StartFunc) {
 	// ctrl命令
 	if len(os.Args) > 1 && os.Args[1] == "ctrl" {
 		os.Args = append(os.Args[0:1], os.Args[2:]...)
+		err := that.connectDServer()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
 		that.initCtrlGrumble()
-		err := that.grumbleApp.Run()
+		err = that.grumbleApp.Run()
 		if err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -248,6 +193,9 @@ func (that *DServer) setup(startFunction StartFunc) {
 // AddSandBox 添加sandbox到服务中
 // services 是可选，如果不传入则表示使用默认服务
 func (that *DServer) AddSandBox(s ISandbox, services ...*DService) error {
+	if _, found := that.searchDServiceBySandboxName(s.Name()); found {
+		return gerror.Newf("Sandbox [%s] 已存在", s.Name())
+	}
 	var service *DService
 	if len(services) > 0 {
 		service = services[0]
@@ -265,6 +213,19 @@ func (that *DServer) AddSandBox(s ISandbox, services ...*DService) error {
 	}
 	that.serviceList.Set(service.Name(), service)
 	return nil
+}
+
+// 检查sandbox名字是否存在，全局sandbox名称唯一
+func (that *DServer) searchDServiceBySandboxName(name string) (*DService, bool) {
+	var found = false
+	for _, v := range that.serviceList.Map() {
+		dService := v.(*DService)
+		_, found = dService.SearchSandBox(name)
+		if found {
+			return dService, true
+		}
+	}
+	return nil, false
 }
 
 // Config 获取配置信息
@@ -419,14 +380,7 @@ func (that *DServer) beforeExiting() error {
 	//结束各组件
 	that.serviceList.Iterator(func(_ string, v interface{}) bool {
 		dService := v.(*DService)
-		for _, sandbox := range dService.sList.Map() {
-			s := sandbox.(ISandbox)
-			if e := s.Shutdown(); e != nil {
-				logger.Errorf("服务 %s .结束出错，error: %v", s.Name(), e)
-			} else {
-				logger.Printf("%s 服务 已结束.", s.Name())
-			}
-		}
+		dService.stop()
 		return true
 	})
 	return nil

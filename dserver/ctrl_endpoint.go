@@ -8,7 +8,7 @@ import (
 )
 
 func (that *DServer) endpoint() {
-	unix := fmt.Sprintf("/tmp/dserver.scoket")
+	unix := fmt.Sprintf("/tmp/dserver.sock")
 	if gfile.Exists(unix) {
 		_ = gfile.Remove(unix)
 	}

@@ -2,9 +2,16 @@ package dserver
 
 import (
 	"context"
+	"fmt"
+	"github.com/desertbit/grumble"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/supervisor/process"
+	"os"
 	"reflect"
+	"time"
 )
 
 type DService struct {
@@ -30,7 +37,7 @@ func (that *DService) Name() string {
 func (that *DService) SearchSandBox(name string) (ISandbox, bool) {
 	s, found := that.sList.Search(name)
 	if found {
-		return s.(ISandbox), true
+		return s.(*sandboxContainer).sandbox, true
 	}
 	return nil, false
 }
@@ -45,8 +52,131 @@ func (that *DService) addSandBox(s ISandbox) error {
 	if err != nil {
 		return err
 	}
-	that.sList.Set(s1.Name(), s1)
+	that.sList.Set(s1.Name(), &sandboxContainer{
+		sandbox: s1,
+		state:   process.Unknown,
+	})
 	return nil
+}
+
+func (that *DService) start(c *grumble.Context) {
+	if that.server.procModel == ProcessModelMulti {
+		if that.sList.Size() == 0 {
+			return
+		}
+		// 如果命令行传入了需要启动的服务名称，则需要把改服务名提取出来，作为启动参数
+		var sandBoxNames []string
+		if that.server.sandboxNames.Len() > 0 {
+			for _, name := range that.sList.Keys() {
+				if that.server.sandboxNames.ContainsI(name) {
+					sandBoxNames = append(sandBoxNames, name)
+				}
+			}
+		} else {
+			sandBoxNames = that.sList.Keys()
+		}
+		// 如果未匹配服务名称，则说明该service不需要启动
+		if len(sandBoxNames) == 0 {
+			return
+		}
+		var args = []string{"start"}
+
+		if len(that.server.config.GetString("ENV_NAME")) > 0 {
+			args = append(args, fmt.Sprintf("--env=%s", that.server.config.GetString("ENV_NAME")))
+		}
+		confFile := c.Flags.String("config")
+		if len(confFile) > 0 {
+			args = append(args, fmt.Sprintf("--config=%s", confFile))
+		}
+		if that.server.config.GetBool("Debug") {
+			args = append(args, "--debug")
+		}
+		args = append(args, sandBoxNames...)
+		p, e := that.server.manager.NewProcessByOptions(process.NewProcOptions(
+			process.ProcCommand(os.Args[0]),
+			process.ProcName(that.Name()),
+			process.ProcArgs(args...),
+			process.ProcSetEnvironment(isChildKey, "true"),
+			process.ProcSetEnvironment(multiProcessMasterEnv, "false"),
+			process.ProcStdoutLog("/dev/stdout", ""),
+			process.ProcRedirectStderr(true),
+			process.ProcAutoReStart(process.AutoReStartTrue),             // 自动重启
+			process.ProcExtraFiles(that.server.graceful.getExtraFiles()), // 与获取inheritedEnv的顺序不能错乱
+			process.ProcEnvironment(that.server.graceful.inheritedEnv.Map()),
+			process.ProcStopSignal("SIGQUIT", "SIGTERM"), // 退出信号
+			process.ProcStopWaitSecs(int(minShutdownTimeout/time.Second)),
+		))
+		if e != nil {
+			logger.Warning(e)
+		}
+		p.Start(true)
+		return
+	}
+
+	for name, sandbox := range that.sList.Map() {
+		s := sandbox.(*sandboxContainer)
+		// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
+		if that.server.sandboxNames.Len() > 0 && !that.server.sandboxNames.ContainsI(s.sandbox.Name()) {
+			that.removeSandbox(name)
+			return
+		}
+		s.started = gtime.Now()
+		s.state = process.Running
+		go func(s1 *sandboxContainer) {
+			e := s1.sandbox.Setup()
+			if e != nil && s1.state != process.Stopping {
+				s1.state = process.Stopped
+				logger.Warningf("Sandbox Setup Return: %v", e)
+			}
+		}(s)
+	}
+}
+
+func (that *DService) stop() {
+	for _, sandbox := range that.sList.Map() {
+		s := sandbox.(*sandboxContainer)
+		s.state = process.Stopping
+		if e := s.sandbox.Shutdown(); e != nil {
+			logger.Errorf("服务 %s .结束出错，error: %v", s.sandbox.Name(), e)
+		} else {
+			logger.Printf("%s 服务 已结束.", s.sandbox.Name())
+		}
+		s.state = process.Stopped
+	}
+	return
+}
+
+func (that *DService) startSandbox(name string) error {
+	s, found := that.sList.Search(name)
+	if !found {
+		return fmt.Errorf("未找到[%s]", name)
+	}
+	sc := s.(*sandboxContainer)
+	if sc.state == process.Starting || sc.state == process.Running {
+		return fmt.Errorf("sandbox[%s]正在运行中", name)
+	}
+	sc.started = gtime.Now()
+	sc.state = process.Running
+	go func(s1 *sandboxContainer) {
+		e := s1.sandbox.Setup()
+		if e != nil && s1.state != process.Stopping {
+			s1.state = process.Stopped
+			logger.Warningf("Sandbox Setup Return: %v", e)
+		}
+	}(sc)
+	return nil
+}
+
+func (that *DService) stopSandbox(name string) error {
+	s, found := that.sList.Search(name)
+	if !found {
+		return fmt.Errorf("未找到[%s]", name)
+	}
+	sc := s.(*sandboxContainer)
+	sc.state = process.Stopping
+	err := sc.sandbox.Shutdown()
+	sc.state = process.Stopped
+	return err
 }
 
 // 移除sandbox

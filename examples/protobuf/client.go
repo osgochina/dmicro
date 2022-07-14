@@ -15,7 +15,7 @@ func main() {
 
 	cli.RoutePush(new(Push))
 
-	sess, stat := cli.Dial("/tmp/dserver.scoket", pbproto.NewPbProtoFunc())
+	sess, stat := cli.Dial("127.0.0.1:9091", pbproto.NewPbProtoFunc())
 	if !stat.OK() {
 		logger.Fatalf("%v", stat)
 	}

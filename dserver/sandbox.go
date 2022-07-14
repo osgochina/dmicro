@@ -1,6 +1,10 @@
 package dserver
 
-import "context"
+import (
+	"context"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/osgochina/dmicro/supervisor/process"
+)
 
 // ISandbox 服务沙盒的接口
 type ISandbox interface {
@@ -14,4 +18,11 @@ type BaseSandbox struct {
 	Service *DService
 	Config  *Config
 	Context context.Context
+}
+
+// sandbox的容器
+type sandboxContainer struct {
+	sandbox ISandbox
+	started *gtime.Time //服务启动时间
+	state   process.State
 }

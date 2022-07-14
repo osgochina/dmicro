@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/fatih/color"
+	"github.com/gogf/gf/util/grand"
+	"github.com/modood/table"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/logger"
@@ -161,28 +163,83 @@ func (that *DServer) initCtrlGrumble() {
 		},
 	})
 	statusCommand := &grumble.Command{
-		Name:    "status",
+		Name:    "info",
 		Help:    "查看当前服务状态",
-		Aliases: []string{"info"},
+		Aliases: []string{"status"},
 		Run: func(c *grumble.Context) error {
-			cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "unix", PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
-			defer cli.Close()
 
-			sess, stat := cli.Dial("/tmp/dserver.scoket", pbproto.NewPbProtoFunc())
-			if !stat.OK() {
-				logger.Fatalf("%v", stat)
-			}
 			var result *Infos
-			stat = sess.Call("/ctrl/info",
-				[]int{},
+			stat := that.ctrlSession.Call("/ctrl/info",
+				nil,
 				&result,
 			).Status()
 			if !stat.OK() {
-				logger.Fatalf("%v", stat)
+				return stat.Cause()
 			}
-			fmt.Println(result)
+			table.Output(result.List)
 			return nil
 		},
 	}
 	that.grumbleApp.AddCommand(statusCommand)
+
+	startCommand := &grumble.Command{
+		Name: "start",
+		Help: "启动服务",
+		Args: func(a *grumble.Args) {
+			a.String("sandboxName", "sandbox names")
+		},
+		Run: func(c *grumble.Context) error {
+			name := c.Args.String("sandboxName")
+			var result *Result
+			stat := that.ctrlSession.Call("/ctrl/start",
+				name,
+				&result,
+			).Status()
+			if !stat.OK() {
+				return stat.Cause()
+			}
+			return nil
+		},
+	}
+	that.grumbleApp.AddCommand(startCommand)
+
+	stopCommand := &grumble.Command{
+		Name: "stop",
+		Help: "停止服务",
+		Args: func(a *grumble.Args) {
+			a.String("sandboxName", "sandbox names")
+		},
+		Run: func(c *grumble.Context) error {
+			name := c.Args.String("sandboxName")
+			var result *Result
+			stat := that.ctrlSession.Call("/ctrl/stop",
+				name,
+				&result,
+			).Status()
+			if !stat.OK() {
+				return stat.Cause()
+			}
+			return nil
+		},
+	}
+	that.grumbleApp.AddCommand(stopCommand)
+}
+
+// 链接到服务
+func (that *DServer) connectDServer() error {
+	_ = logger.SetLevelStr("ERROR")
+	local := fmt.Sprintf("/tmp/dserver.cli.%s", grand.S(6))
+	cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "unix", LocalIP: local, PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
+	var stat *drpc.Status
+	that.ctrlSession, stat = cli.Dial("/tmp/dserver.sock", pbproto.NewPbProtoFunc())
+	if !stat.OK() {
+		return fmt.Errorf("链接到DServer服务[%s]失败", "/tmp/dserver.sock")
+	}
+	go func() {
+		<-that.ctrlSession.CloseNotify()
+		fmt.Println("\nDServer服务已断开链接")
+		_ = that.grumbleApp.Close()
+		os.Exit(0)
+	}()
+	return nil
 }
