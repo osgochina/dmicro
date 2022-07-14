@@ -3,6 +3,7 @@ package process
 import (
 	"fmt"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gtime"
 	"syscall"
 	"time"
 )
@@ -62,7 +63,7 @@ func (that *Process) GetDescription() string {
 		}
 		return fmt.Sprintf("pid %d, uptime %d:%02d:%02d", that.cmd.Process.Pid, hours%24, minutes%60, seconds%60)
 	} else if that.state != Stopped {
-		return that.stopTime.String()
+		return gtime.New(that.stopTime).String()
 	}
 	return ""
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
@@ -37,22 +38,22 @@ const ProcessModelMulti ProcessModel = 1
 // DServer 服务对象
 type DServer struct {
 	manager        *process.Manager
-	serviceList    *gmap.StrAnyMap  //启动的服务列表
+	serviceList    *gmap.TreeMap    //启动的服务列表
 	started        *gtime.Time      //服务启动时间
 	shutting       bool             // 服务正在关闭
 	beforeStopFunc StopFunc         //服务关闭之前执行该方法
 	pidFile        string           //pid文件的路径
 	sandboxNames   *garray.StrArray // 启动服务的名称
-	//cmdParser      *gcmd.Parser     //命令行参数解析信息
-	config        *gcfg.Config  ///服务的配置信息
-	inheritAddr   []InheritAddr // 多进程模式，开启平滑重启逻辑模式下需要监听的列表
-	procModel     ProcessModel  // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
-	graceful      *graceful
-	masterBool    bool //是否是主进程
-	ctrlEndpoint  drpc.Endpoint
-	startFunction StartFunc
-	grumbleApp    *grumble.App
-	ctrlSession   drpc.Session
+	config         *gcfg.Config     ///服务的配置信息
+	inheritAddr    []InheritAddr    // 多进程模式，开启平滑重启逻辑模式下需要监听的列表
+	procModel      ProcessModel     // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
+	graceful       *graceful
+	masterBool     bool //是否是主进程
+	startFunction  StartFunc
+	grumbleApp     *grumble.App
+	openCtrl       bool          // 是否开启ctrl功能，默认是开启，
+	ctrlEndpoint   drpc.Endpoint // 作为服务提供管理接口
+	ctrlSession    drpc.Session  // 作为客户端，链接到服务
 }
 
 // StartFunc 启动回调方法
@@ -64,10 +65,11 @@ type StopFunc func(svr *DServer) bool
 // newDServer  创建服务
 func newDServer() *DServer {
 	svr := &DServer{
-		serviceList:  gmap.NewStrAnyMap(true),
+		serviceList:  gmap.NewTreeMap(gutil.ComparatorString, true),
 		sandboxNames: garray.NewStrArray(true),
 		manager:      process.NewManager(),
 		masterBool:   genv.GetVar(multiProcessMasterEnv, true).Bool(),
+		openCtrl:     true,
 	}
 	svr.graceful = newGraceful(svr)
 	return svr
@@ -112,7 +114,7 @@ func (that *DServer) run(c *grumble.Context) {
 	//设置优雅退出时候需要做的工作
 	that.graceful.setShutdown(15*time.Second, that.firstStop, that.beforeExiting)
 
-	if that.isMaster() {
+	if that.isMaster() && that.openCtrl {
 		that.endpoint()
 	}
 	// 如果开启了多进程模式，并且当前进程在主进程中
@@ -138,7 +140,7 @@ func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 		os.Exit(255)
 	}
 	// 启动service进程
-	that.serviceList.Iterator(func(_ string, v interface{}) bool {
+	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
 		dService := v.(*DService)
 		dService.start(c)
 		return true
@@ -148,7 +150,7 @@ func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 // 单进程模式下启动sandbox
 func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 	// 业务进程启动sandbox
-	that.serviceList.Iterator(func(_ string, v interface{}) bool {
+	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
 		dService := v.(*DService)
 		dService.start(c)
 		return true
@@ -157,21 +159,25 @@ func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 
 // Setup 启动服务，并执行传入的启动方法
 func (that *DServer) setup(startFunction StartFunc) {
-	// ctrl命令
-	if len(os.Args) > 1 && os.Args[1] == "ctrl" {
-		os.Args = append(os.Args[0:1], os.Args[2:]...)
-		err := that.connectDServer()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(0)
+	// 开启ctrl命令
+	if that.openCtrl {
+		// ctrl命令
+		if len(os.Args) > 1 && os.Args[1] == "ctrl" {
+			os.Args = append(os.Args[0:1], os.Args[2:]...)
+			_ = logger.SetLevelStr("ERROR")
+			_, err := that.getCtrlSession()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(0)
+			}
+			that.initCtrlGrumble()
+			err = that.grumbleApp.Run()
+			if err != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				os.Exit(1)
+			}
+			return
 		}
-		that.initCtrlGrumble()
-		err = that.grumbleApp.Run()
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
-		}
-		return
 	}
 	// 如果启动进程的时候未传入任何参数，则默认使用start
 	if len(os.Args) == 1 {
@@ -378,7 +384,7 @@ func (that *DServer) beforeExiting() error {
 		return nil
 	}
 	//结束各组件
-	that.serviceList.Iterator(func(_ string, v interface{}) bool {
+	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
 		dService := v.(*DService)
 		dService.stop()
 		return true

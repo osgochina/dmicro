@@ -111,6 +111,9 @@ func (that *DServer) initGrumble() {
 		Args: func(a *grumble.Args) {
 			a.StringList("sandboxNames", "sandbox names")
 		},
+		Flags: func(f *grumble.Flags) {
+			f.String("", "pid", "", " 设置pid文件的地址，默认是/tmp/[server].pid")
+		},
 		Run: func(c *grumble.Context) error {
 			// 获取要启动的sandbox名称
 			that.initSandboxNames(c.Args.StringList("sandboxNames"))
@@ -126,6 +129,9 @@ func (that *DServer) initGrumble() {
 		Help: "优雅的停止服务",
 		Args: func(a *grumble.Args) {
 			a.StringList("sandboxNames", "sandbox names")
+		},
+		Flags: func(f *grumble.Flags) {
+			f.String("", "pid", "", " 设置pid文件的地址，默认是/tmp/[server].pid")
 		},
 		Run: func(c *grumble.Context) error {
 			// 获取要启动的sandbox名称
@@ -167,9 +173,12 @@ func (that *DServer) initCtrlGrumble() {
 		Help:    "查看当前服务状态",
 		Aliases: []string{"status"},
 		Run: func(c *grumble.Context) error {
-
 			var result *Infos
-			stat := that.ctrlSession.Call("/ctrl/info",
+			sess, err := that.getCtrlSession()
+			if err != nil {
+				return err
+			}
+			stat := sess.Call("/ctrl/info",
 				nil,
 				&result,
 			).Status()
@@ -191,7 +200,11 @@ func (that *DServer) initCtrlGrumble() {
 		Run: func(c *grumble.Context) error {
 			name := c.Args.String("sandboxName")
 			var result *Result
-			stat := that.ctrlSession.Call("/ctrl/start",
+			sess, err := that.getCtrlSession()
+			if err != nil {
+				return err
+			}
+			stat := sess.Call("/ctrl/start",
 				name,
 				&result,
 			).Status()
@@ -212,7 +225,11 @@ func (that *DServer) initCtrlGrumble() {
 		Run: func(c *grumble.Context) error {
 			name := c.Args.String("sandboxName")
 			var result *Result
-			stat := that.ctrlSession.Call("/ctrl/stop",
+			sess, err := that.getCtrlSession()
+			if err != nil {
+				return err
+			}
+			stat := sess.Call("/ctrl/stop",
 				name,
 				&result,
 			).Status()
@@ -225,21 +242,31 @@ func (that *DServer) initCtrlGrumble() {
 	that.grumbleApp.AddCommand(stopCommand)
 }
 
-// 链接到服务
-func (that *DServer) connectDServer() error {
-	_ = logger.SetLevelStr("ERROR")
-	local := fmt.Sprintf("/tmp/dserver.cli.%s", grand.S(6))
-	cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "unix", LocalIP: local, PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
+func (that *DServer) getCtrlSession() (drpc.Session, error) {
+	if that.ctrlSession != nil && that.ctrlSession.Health() {
+		return that.ctrlSession, nil
+	}
+	localPath := fmt.Sprintf("/tmp/dserver.cli.%s", grand.S(6))
+	cli := drpc.NewEndpoint(drpc.EndpointConfig{
+		Network:        "unix",
+		LocalIP:        localPath,
+		PrintDetail:    false,
+		RedialTimes:    1,
+		RedialInterval: time.Second,
+	},
+	)
+	svrPath := "/tmp/dserver.sock"
 	var stat *drpc.Status
-	that.ctrlSession, stat = cli.Dial("/tmp/dserver.sock", pbproto.NewPbProtoFunc())
+	that.ctrlSession, stat = cli.Dial(svrPath, pbproto.NewPbProtoFunc())
 	if !stat.OK() {
-		return fmt.Errorf("链接到DServer服务[%s]失败", "/tmp/dserver.sock")
+		return nil, fmt.Errorf("链接到DServer服务[%s]失败", svrPath)
 	}
 	go func() {
 		<-that.ctrlSession.CloseNotify()
-		fmt.Println("\nDServer服务已断开链接")
-		_ = that.grumbleApp.Close()
-		os.Exit(0)
+		_, _ = that.grumbleApp.Println("DServer服务已断开链接")
+		_ = cli.Close()
+		that.ctrlSession = nil
 	}()
-	return nil
+
+	return that.ctrlSession, nil
 }

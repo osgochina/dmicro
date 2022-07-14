@@ -14,6 +14,11 @@ func GrumbleApp() *grumble.App {
 	return defaultServer.grumbleApp
 }
 
+// CloseCtrl 关闭ctrl管理功能
+func CloseCtrl() {
+	defaultServer.openCtrl = false
+}
+
 // Shutdown 关闭服务
 func Shutdown() {
 	defaultServer.Shutdown()

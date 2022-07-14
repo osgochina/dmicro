@@ -7,6 +7,8 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
 	"os"
@@ -17,14 +19,14 @@ import (
 type DService struct {
 	server *DServer
 	name   string
-	sList  *gmap.StrAnyMap //启动的服务列表
+	sList  *gmap.TreeMap //启动的服务列表
 }
 
 func newDService(name string, server *DServer) *DService {
 	return &DService{
 		name:   name,
 		server: server,
-		sList:  gmap.NewStrAnyMap(true),
+		sList:  gmap.NewTreeMap(gutil.ComparatorString, true),
 	}
 }
 
@@ -60,7 +62,7 @@ func (that *DService) addSandBox(s ISandbox) error {
 }
 
 func (that *DService) start(c *grumble.Context) {
-	if that.server.procModel == ProcessModelMulti {
+	if that.server.procModel == ProcessModelMulti && that.server.isMaster() {
 		if that.sList.Size() == 0 {
 			return
 		}
@@ -68,12 +70,12 @@ func (that *DService) start(c *grumble.Context) {
 		var sandBoxNames []string
 		if that.server.sandboxNames.Len() > 0 {
 			for _, name := range that.sList.Keys() {
-				if that.server.sandboxNames.ContainsI(name) {
-					sandBoxNames = append(sandBoxNames, name)
+				if that.server.sandboxNames.ContainsI(gconv.String(name)) {
+					sandBoxNames = append(sandBoxNames, gconv.String(name))
 				}
 			}
 		} else {
-			sandBoxNames = that.sList.Keys()
+			sandBoxNames = gconv.Strings(that.sList.Keys())
 		}
 		// 如果未匹配服务名称，则说明该service不需要启动
 		if len(sandBoxNames) == 0 {
@@ -117,7 +119,7 @@ func (that *DService) start(c *grumble.Context) {
 		s := sandbox.(*sandboxContainer)
 		// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
 		if that.server.sandboxNames.Len() > 0 && !that.server.sandboxNames.ContainsI(s.sandbox.Name()) {
-			that.removeSandbox(name)
+			that.removeSandbox(gconv.String(name))
 			return
 		}
 		s.started = gtime.Now()
@@ -135,13 +137,16 @@ func (that *DService) start(c *grumble.Context) {
 func (that *DService) stop() {
 	for _, sandbox := range that.sList.Map() {
 		s := sandbox.(*sandboxContainer)
-		s.state = process.Stopping
-		if e := s.sandbox.Shutdown(); e != nil {
-			logger.Errorf("服务 %s .结束出错，error: %v", s.sandbox.Name(), e)
-		} else {
-			logger.Printf("%s 服务 已结束.", s.sandbox.Name())
+		if s.state == process.Running {
+			s.state = process.Stopping
+			if e := s.sandbox.Shutdown(); e != nil {
+				logger.Errorf("服务 %s .结束出错，error: %v", s.sandbox.Name(), e)
+			} else {
+				logger.Printf("%s 服务 已结束.", s.sandbox.Name())
+			}
+			s.state = process.Stopped
+			s.stopTime = gtime.Now()
 		}
-		s.state = process.Stopped
 	}
 	return
 }
@@ -173,10 +178,14 @@ func (that *DService) stopSandbox(name string) error {
 		return fmt.Errorf("未找到[%s]", name)
 	}
 	sc := s.(*sandboxContainer)
-	sc.state = process.Stopping
-	err := sc.sandbox.Shutdown()
-	sc.state = process.Stopped
-	return err
+	if sc.state == process.Running {
+		sc.state = process.Stopping
+		err := sc.sandbox.Shutdown()
+		sc.state = process.Stopped
+		sc.stopTime = gtime.Now()
+		return err
+	}
+	return nil
 }
 
 // 移除sandbox
