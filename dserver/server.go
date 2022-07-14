@@ -37,6 +37,7 @@ const ProcessModelMulti ProcessModel = 1
 
 // DServer 服务对象
 type DServer struct {
+	name           string // 应用名
 	manager        *process.Manager
 	serviceList    *gmap.TreeMap    //启动的服务列表
 	started        *gtime.Time      //服务启动时间
@@ -63,8 +64,9 @@ type StartFunc func(svr *DServer)
 type StopFunc func(svr *DServer) bool
 
 // newDServer  创建服务
-func newDServer() *DServer {
+func newDServer(name string) *DServer {
 	svr := &DServer{
+		name:         name,
 		serviceList:  gmap.NewTreeMap(gutil.ComparatorString, true),
 		sandboxNames: garray.NewStrArray(true),
 		manager:      process.NewManager(),
@@ -120,13 +122,15 @@ func (that *DServer) run(c *grumble.Context) {
 	// 如果开启了多进程模式，并且当前进程在主进程中
 	if that.procModel == ProcessModelMulti && that.isMaster() {
 		that.runProcessModelMulti(c)
-		//写入pid文件
-		that.putPidFile()
 	} else {
 		that.runProcessModelSingle(c)
+	}
+	// 当前进程模式是单进程模式，或者进程模式是多进程模式中的主进程，需要写入pid文件，其他进程不能写入
+	if that.procModel == ProcessModelSingle || (that.procModel == ProcessModelMulti && that.isMaster()) {
 		//写入pid文件
 		that.putPidFile()
 	}
+
 	//答疑服务信息
 	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 }
@@ -360,11 +364,13 @@ func (that *DServer) firstStop() error {
 	}
 	that.shutting = true
 
-	if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
-		if e := gfile.Remove(that.pidFile); e != nil {
-			logger.Errorf("os.Remove: %v", e)
+	if (that.procModel == ProcessModelMulti && that.isMaster()) || that.procModel == ProcessModelSingle {
+		if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
+			if e := gfile.Remove(that.pidFile); e != nil {
+				logger.Errorf("os.Remove: %v", e)
+			}
+			logger.Printf("删除pid文件[%s]成功", that.pidFile)
 		}
-		logger.Printf("删除pid文件[%s]成功", that.pidFile)
 	}
 
 	//结束服务前调用该方法,如果结束回调方法返回false，则中断结束

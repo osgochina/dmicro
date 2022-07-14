@@ -454,3 +454,23 @@ func (that *Process) waitForExit(_ int64) {
 		_ = that.StderrLog.Close()
 	}
 }
+
+// Clone 进程
+func (that *Process) Clone() (*Process, error) {
+	proc := &Process{
+		Manager:    that.Manager,
+		option:     that.option,
+		startTime:  time.Unix(0, 0),
+		stopTime:   time.Unix(0, 0),
+		state:      Stopped,
+		inStart:    false,
+		stopByUser: false,
+		retryTimes: new(int32),
+	}
+
+	err := proc.createProgramCommand()
+	if err != nil {
+		return nil, err
+	}
+	return proc, nil
+}

@@ -8,6 +8,7 @@ import (
 
 func main() {
 	//dserver.CloseCtrl()
+	dserver.SetName("DMicro")
 	dserver.Setup(func(svr *dserver.DServer) {
 		svr.ProcessModel(dserver.ProcessModelMulti)
 		svr.SetInheritListener([]dserver.InheritAddr{

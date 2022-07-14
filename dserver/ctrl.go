@@ -13,7 +13,7 @@ import (
 )
 
 func (that *DServer) endpoint() {
-	unix := fmt.Sprintf("/tmp/dserver.sock")
+	unix := gfile.TempDir(fmt.Sprintf("%s.sock", that.name))
 	if gfile.Exists(unix) {
 		_ = gfile.Remove(unix)
 	}
@@ -28,6 +28,7 @@ func (that *DServer) endpoint() {
 		if err != nil {
 			logger.Warning(err)
 		}
+		_ = gfile.Remove(unix)
 	}()
 	time.Sleep(1 * time.Second)
 }
@@ -135,6 +136,45 @@ func (that *Ctrl) Start(name *string) (*Result, *drpc.Status) {
 		if !ok {
 			return nil, drpc.NewStatus(103, "开启失败")
 		}
+	}
+	return &Result{}, nil
+}
+
+// Reload 启动指定的服务
+func (that *Ctrl) Reload(name *string) (*Result, *drpc.Status) {
+	if len(*name) <= 0 {
+		return nil, drpc.NewStatus(100, "未传入sandbox name")
+	}
+	service, found := defaultServer.searchDServiceBySandboxName(*name)
+	if !found {
+		return nil, drpc.NewStatus(101, fmt.Sprintf("未找到[%s]", *name))
+	}
+	// 单进程模式，直接开启sandbox
+	if defaultServer.procModel == ProcessModelSingle {
+		return nil, drpc.NewStatus(102, "单进程模式不支持reload")
+	}
+	// 多进程模式，如果启动sandbox，会把sandbox所在的service全部启动
+	// 暂时不支持开启单个sandbox功能，后期可以考虑支持
+	if defaultServer.procModel == ProcessModelMulti {
+		ok, err := defaultServer.manager.GracefulReload(service.Name(), true)
+		if err != nil {
+			return nil, drpc.NewStatus(102, err.Error())
+		}
+		if !ok {
+			return nil, drpc.NewStatus(103, "平滑重启失败")
+		}
+	}
+	return &Result{}, nil
+}
+
+// Debug 设置debug模式
+func (that *Ctrl) Debug(debug *bool) (*Result, *drpc.Status) {
+	if *debug {
+		logger.SetDebug(true)
+		_ = defaultServer.config.Set("Debug", "true")
+	} else {
+		logger.SetDebug(false)
+		_ = defaultServer.config.Set("Debug", "false")
 	}
 	return &Result{}, nil
 }

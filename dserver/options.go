@@ -114,15 +114,12 @@ func (that *DServer) initSandboxNames(names []string) {
 }
 
 // 初始化pid文件的地址
-func (that *DServer) initPidFile(pid string) {
-	if len(pid) > 0 {
-		that.pidFile = pid
+func (that *DServer) initPidFile(pidPath string) {
+	if len(pidPath) > 0 {
+		that.pidFile = pidPath
 		return
 	}
-	pidFile := fmt.Sprintf("%s.pid", gfile.Basename(os.Args[0]))
-	if that.sandboxNames.Len() > 0 {
-		pidFile = fmt.Sprintf("%s.pid", that.sandboxNames.Join("-"))
-	}
+	pidFile := fmt.Sprintf("%s.pid", that.name)
 	that.pidFile = gfile.TempDir(pidFile)
 }
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/fatih/color"
+	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/grand"
 	"github.com/modood/table"
 	"github.com/osgochina/dmicro/drpc"
@@ -16,7 +18,7 @@ import (
 // 正常进程
 func (that *DServer) initGrumble() {
 	that.grumbleApp = grumble.New(&grumble.Config{
-		Name: "DServer",
+		Name: that.name,
 	})
 	that.grumbleApp.SetPrintASCIILogo(func(a *grumble.App) {
 		that.Version()
@@ -147,11 +149,11 @@ func (that *DServer) initGrumble() {
 // ctrl进程
 func (that *DServer) initCtrlGrumble() {
 	that.grumbleApp = grumble.New(&grumble.Config{
-		Name:                  "DServer",
+		Name:                  that.name,
 		Description:           "好用的服务管理工具",
-		HistoryFile:           "/tmp/foo.hist",
-		Prompt:                "dSvr » ",
-		PromptColor:           color.New(color.FgGreen, color.Bold),
+		HistoryFile:           fmt.Sprintf("%s/.%s.hist", genv.Get("HOME", "/tmp"), that.name),
+		Prompt:                fmt.Sprintf("%s » ", that.name),
+		PromptColor:           color.New(color.FgCyan, color.Bold),
 		HelpHeadlineColor:     color.New(color.FgGreen),
 		HelpHeadlineUnderline: true,
 		HelpSubCommands:       true,
@@ -171,7 +173,7 @@ func (that *DServer) initCtrlGrumble() {
 	statusCommand := &grumble.Command{
 		Name:    "info",
 		Help:    "查看当前服务状态",
-		Aliases: []string{"status"},
+		Aliases: []string{"status", "ps"},
 		Run: func(c *grumble.Context) error {
 			var result *Infos
 			sess, err := that.getCtrlSession()
@@ -211,6 +213,7 @@ func (that *DServer) initCtrlGrumble() {
 			if !stat.OK() {
 				return stat.Cause()
 			}
+			fmt.Println("启动服务成功")
 			return nil
 		},
 	}
@@ -236,17 +239,81 @@ func (that *DServer) initCtrlGrumble() {
 			if !stat.OK() {
 				return stat.Cause()
 			}
+			fmt.Println("停止服务成功")
 			return nil
 		},
 	}
 	that.grumbleApp.AddCommand(stopCommand)
+
+	reloadCommand := &grumble.Command{
+		Name: "reload",
+		Help: "平滑重启服务",
+		Args: func(a *grumble.Args) {
+			a.String("sandboxName", "sandbox name")
+		},
+		Run: func(c *grumble.Context) error {
+			name := c.Args.String("sandboxName")
+			var result *Result
+			sess, err := that.getCtrlSession()
+			if err != nil {
+				return err
+			}
+			stat := sess.Call("/ctrl/reload",
+				name,
+				&result,
+			).Status()
+			if !stat.OK() {
+				return stat.Cause()
+			}
+			fmt.Println("平滑重启成功")
+			return nil
+		},
+	}
+	that.grumbleApp.AddCommand(reloadCommand)
+
+	debugCommand := &grumble.Command{
+		Name: "debug",
+		Help: "debug开关",
+		Args: func(a *grumble.Args) {
+			a.String("switch", "'open'，'true','1'=true; 'close','false','0'=false")
+		},
+		Run: func(c *grumble.Context) error {
+			debug := true
+			debugStr := c.Args.String("switch")
+			if debugStr == "open" || debugStr == "true" || debugStr == "1" {
+				debug = true
+			} else if debugStr == "close" || debugStr == "false" || debugStr == "0" {
+				debug = false
+			}
+			var result *Result
+			sess, err := that.getCtrlSession()
+			if err != nil {
+				return err
+			}
+			stat := sess.Call("/ctrl/debug",
+				debug,
+				&result,
+			).Status()
+			if !stat.OK() {
+				return stat.Cause()
+			}
+			if debug {
+				fmt.Println("已开启debug模式")
+			} else {
+				fmt.Println("已关闭debug模式")
+			}
+
+			return nil
+		},
+	}
+	that.grumbleApp.AddCommand(debugCommand)
 }
 
 func (that *DServer) getCtrlSession() (drpc.Session, error) {
 	if that.ctrlSession != nil && that.ctrlSession.Health() {
 		return that.ctrlSession, nil
 	}
-	localPath := fmt.Sprintf("/tmp/dserver.cli.%s", grand.S(6))
+	localPath := gfile.TempDir(fmt.Sprintf("%s.cli.%s", that.name, grand.S(6)))
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{
 		Network:        "unix",
 		LocalIP:        localPath,
@@ -255,7 +322,7 @@ func (that *DServer) getCtrlSession() (drpc.Session, error) {
 		RedialInterval: time.Second,
 	},
 	)
-	svrPath := "/tmp/dserver.sock"
+	svrPath := gfile.TempDir(fmt.Sprintf("%s.sock", that.name))
 	var stat *drpc.Status
 	that.ctrlSession, stat = cli.Dial(svrPath, pbproto.NewPbProtoFunc())
 	if !stat.OK() {
@@ -266,6 +333,7 @@ func (that *DServer) getCtrlSession() (drpc.Session, error) {
 		_, _ = that.grumbleApp.Println("DServer服务已断开链接")
 		_ = cli.Close()
 		that.ctrlSession = nil
+		_ = gfile.Remove(localPath)
 	}()
 
 	return that.ctrlSession, nil

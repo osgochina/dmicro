@@ -171,3 +171,20 @@ func (that *Manager) StopProcess(name string, wait bool) (bool, error) {
 	proc.Stop(wait)
 	return true, nil
 }
+
+// GracefulReload 停止指定进程
+func (that *Manager) GracefulReload(name string, wait bool) (bool, error) {
+	logger.Infof("平滑重启进程[%s]", name)
+	proc := that.Find(name)
+	if proc == nil {
+		return false, fmt.Errorf("没有找到要重启的进程[%s]", name)
+	}
+	procClone, err := proc.Clone()
+	if err != nil {
+		return false, err
+	}
+	procClone.Start(wait)
+	proc.Stop(wait)
+	that.processes.Set(name, procClone)
+	return true, nil
+}
