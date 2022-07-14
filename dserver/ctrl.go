@@ -197,6 +197,16 @@ func (that *Ctrl) Debug(debug *bool) (*Result, *drpc.Status) {
 	return &Result{}, nil
 }
 
+func (that *Ctrl) OpenLogger(level *string) (*Result, *drpc.Status) {
+	logger.AddHandler("ctrl_logger", &ctrlLogger{sess: that.Session().(drpc.Session)})
+	return &Result{}, nil
+}
+
+func (that *Ctrl) CloseLogger(_ *string) (*Result, *drpc.Status) {
+	logger.RemoveHandler("ctrl_logger")
+	return &Result{}, nil
+}
+
 // GetDescription 获取进程描述
 func (that *Ctrl) createDescription(state process.State, startTime *gtime.Time, stopTime *gtime.Time) string {
 	if state == process.Running {

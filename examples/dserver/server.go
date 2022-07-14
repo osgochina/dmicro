@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/gogf/gf/os/gtime"
 	"github.com/osgochina/dmicro/dserver"
 	"github.com/osgochina/dmicro/examples/dserver/sandbox"
 	"github.com/osgochina/dmicro/logger"
+	"time"
 )
 
 func main() {
@@ -23,5 +25,15 @@ func main() {
 		if err != nil {
 			logger.Fatal(err)
 		}
+		go func() {
+
+			t := time.NewTicker(1 * time.Second)
+			for {
+				select {
+				case <-t.C:
+					logger.Infof("定时器打印日志：%s", gtime.Now().String())
+				}
+			}
+		}()
 	})
 }
