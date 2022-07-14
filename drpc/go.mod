@@ -1,6 +1,6 @@
 module github.com/osgochina/dmicro/drpc
 
-go 1.18
+go 1.16
 
 require (
 	github.com/gogf/gf v1.16.9
