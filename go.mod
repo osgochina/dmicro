@@ -4,7 +4,7 @@ require (
 	github.com/desertbit/grumble v1.1.3
 	github.com/fatih/color v1.12.0
 	github.com/gogf/gf v1.16.9
-	github.com/lucas-clemente/quic-go v0.28.0
+	github.com/lucas-clemente/quic-go v0.25.0
 	github.com/miekg/dns v1.1.46
 	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
 	github.com/prometheus/common v0.26.0
