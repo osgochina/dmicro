@@ -156,13 +156,31 @@ func (that *Ctrl) Reload(name *string) (*Result, *drpc.Status) {
 	// 多进程模式，如果启动sandbox，会把sandbox所在的service全部启动
 	// 暂时不支持开启单个sandbox功能，后期可以考虑支持
 	if defaultServer.procModel == ProcessModelMulti {
-		ok, err := defaultServer.manager.GracefulReload(service.Name(), true)
-		if err != nil {
-			return nil, drpc.NewStatus(102, err.Error())
+		// 判断是否开启了地址继承模式
+		if len(defaultServer.inheritAddr) > 0 {
+			// 平滑重启逻辑是先启动一个新的继承，再结束老的进程
+			ok, err := defaultServer.manager.GracefulReload(service.Name(), true)
+			if err != nil {
+				return nil, drpc.NewStatus(102, err.Error())
+			}
+			if !ok {
+				return nil, drpc.NewStatus(103, "平滑重启失败")
+			}
+		} else {
+			// 如果未开启地址继承模式，则不需要平滑重启，只需要先结束进程，再启动进程
+			ok, err := defaultServer.manager.StopProcess(service.Name(), true)
+			if err != nil {
+				return nil, drpc.NewStatus(102, err.Error())
+			}
+			ok, err = defaultServer.manager.StartProcess(service.Name(), true)
+			if err != nil {
+				return nil, drpc.NewStatus(102, err.Error())
+			}
+			if !ok {
+				return nil, drpc.NewStatus(103, "平滑重启失败")
+			}
 		}
-		if !ok {
-			return nil, drpc.NewStatus(103, "平滑重启失败")
-		}
+
 	}
 	return &Result{}, nil
 }
