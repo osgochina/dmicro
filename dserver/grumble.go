@@ -6,12 +6,14 @@ import (
 	"github.com/fatih/color"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/grand"
 	"github.com/modood/table"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/logger"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -146,8 +148,7 @@ func (that *DServer) initGrumble() {
 	})
 }
 
-// 是否在打印日志
-var ctrlLoging = false
+var ctrl_c_chan = make(chan struct{})
 
 // ctrl进程
 func (that *DServer) initCtrlGrumble() {
@@ -166,24 +167,7 @@ func (that *DServer) initCtrlGrumble() {
 			_, _ = a.Println("exit success!!!")
 			os.Exit(1)
 		}
-		if ctrlLoging {
-			var result *Result
-			sess, err := that.getCtrlSession()
-			if err != nil {
-				a.PrintError(err)
-				return
-			}
-			stat := sess.Call("/ctrl/close_logger",
-				nil,
-				&result,
-			).Status()
-			if !stat.OK() {
-				a.PrintError(err)
-				return
-			}
-			ctrlLoging = false
-			return
-		}
+		ctrl_c_chan <- struct{}{}
 		_, _ = a.Println("input Ctrl-c once more to exit")
 	})
 	that.grumbleApp.SetPrintASCIILogo(func(a *grumble.App) {
@@ -339,12 +323,15 @@ func (that *DServer) initCtrlGrumble() {
 	logCommand := &grumble.Command{
 		Name: "log",
 		Help: "打印出服务的运行日志",
-		Args: func(a *grumble.Args) {
-			//a.String("level", "info|debug|error")
+		Flags: func(f *grumble.Flags) {
+			f.String("l", "level", "all", "日志级别")
 		},
 		Run: func(c *grumble.Context) error {
-			level := "info"
-			//level := c.Args.String("level")
+			level := glog.LEVEL_ALL
+			levelStr := c.Flags.String("level")
+			if l, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
+				level = l
+			}
 			var result *Result
 			sess, err := that.getCtrlSession()
 			if err != nil {
@@ -357,7 +344,25 @@ func (that *DServer) initCtrlGrumble() {
 			if !stat.OK() {
 				return stat.Cause()
 			}
-			ctrlLoging = true
+			fmt.Println("开始打印服务端日志........")
+			go func() {
+				<-ctrl_c_chan
+
+				sess, err = that.getCtrlSession()
+				if err != nil {
+					c.App.PrintError(err)
+					return
+				}
+				stat = sess.Call("/ctrl/close_logger",
+					nil,
+					&result,
+				).Status()
+				if !stat.OK() {
+					c.App.PrintError(err)
+					return
+				}
+			}()
+
 			return nil
 		},
 	}

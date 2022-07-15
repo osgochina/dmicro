@@ -197,11 +197,18 @@ func (that *Ctrl) Debug(debug *bool) (*Result, *drpc.Status) {
 	return &Result{}, nil
 }
 
-func (that *Ctrl) OpenLogger(level *string) (*Result, *drpc.Status) {
-	logger.AddHandler("ctrl_logger", &ctrlLogger{sess: that.Session().(drpc.Session)})
+// OpenLogger 开启日志流
+func (that *Ctrl) OpenLogger(level *int) (*Result, *drpc.Status) {
+	logger.AddHandler("ctrl_logger", newCtrlLogger(*level, that.Session().(drpc.Session)))
+	go func() {
+		<-that.Session().CloseNotify()
+		logger.RemoveHandler("ctrl_logger")
+	}()
+
 	return &Result{}, nil
 }
 
+// CloseLogger 关闭日志流
 func (that *Ctrl) CloseLogger(_ *string) (*Result, *drpc.Status) {
 	logger.RemoveHandler("ctrl_logger")
 	return &Result{}, nil
