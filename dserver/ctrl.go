@@ -30,7 +30,6 @@ func (that *DServer) endpoint() {
 		}
 		_ = gfile.Remove(unix)
 	}()
-	time.Sleep(1 * time.Second)
 }
 
 type Ctrl struct {
