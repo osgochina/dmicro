@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// 单进程模式退出
 func (that *graceful) shutdownSingle(timeout ...time.Duration) {
 	pid := os.Getpid()
 	defer os.Exit(0)
@@ -110,7 +111,4 @@ func (that *graceful) shutdownMultiMaster() {
 	that.dServer.manager.ForEachProcess(func(p *process.Process) {
 		p.Stop(true)
 	})
-	//pid := that.mwPid
-	//logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
-	//_ = signals.KillPid(pid, signals.ToSignal("SIGTERM"), false)
 }

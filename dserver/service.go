@@ -16,12 +16,15 @@ import (
 	"time"
 )
 
+// DService 服务对象，每个DService中可以存在多个sandbox
+// 每个DServer中可以存在多个DService
 type DService struct {
 	server *DServer
 	name   string
 	sList  *gmap.TreeMap //启动的服务列表
 }
 
+// 创建DService对象
 func newDService(name string, server *DServer) *DService {
 	return &DService{
 		name:   name,
@@ -61,6 +64,7 @@ func (that *DService) addSandBox(s ISandbox) error {
 	return nil
 }
 
+// 启动该service
 func (that *DService) start(c *grumble.Context) {
 	if that.server.procModel == ProcessModelMulti && that.server.isMaster() {
 		if that.sList.Size() == 0 {
@@ -134,6 +138,7 @@ func (that *DService) start(c *grumble.Context) {
 	}
 }
 
+// 关闭该server
 func (that *DService) stop() {
 	for _, sandbox := range that.sList.Map() {
 		s := sandbox.(*sandboxContainer)
@@ -151,6 +156,7 @@ func (that *DService) stop() {
 	return
 }
 
+// 启动指定的sandbox
 func (that *DService) startSandbox(name string) error {
 	s, found := that.sList.Search(name)
 	if !found {
@@ -172,6 +178,7 @@ func (that *DService) startSandbox(name string) error {
 	return nil
 }
 
+// 关闭指定的sandbox
 func (that *DService) stopSandbox(name string) error {
 	s, found := that.sList.Search(name)
 	if !found {
@@ -190,7 +197,17 @@ func (that *DService) stopSandbox(name string) error {
 
 // 移除sandbox
 func (that *DService) removeSandbox(name string) {
-	that.sList.Remove(name)
+	value := that.sList.Remove(name)
+	if value == nil {
+		return
+	}
+	sandbox := value.(*sandboxContainer)
+	if sandbox.state == process.Running {
+		err := that.stopSandbox(name)
+		if err != nil {
+			logger.Error(err)
+		}
+	}
 }
 
 // 通过反射生成私有sandbox对象

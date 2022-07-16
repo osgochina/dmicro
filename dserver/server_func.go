@@ -35,3 +35,8 @@ func CloseCtrl() {
 func Shutdown() {
 	defaultServer.Shutdown()
 }
+
+// SetHelpContent 自定义帮助信息
+func SetHelpContent(content string) {
+	helpContent = content
+}

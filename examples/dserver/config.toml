@@ -12,6 +12,21 @@ Daemon = false
     Port = "8921"
 
 
+[sandbox.DefaultSandBox]
+    Network = "tcp"
+    ListenIP = "127.0.0.1"
+    ListenPort = 8199
+    LocalIP = "0.0.0.0"
+    LocalPort = 0
+    DefaultBodyCodec = "json"
+    DefaultContextAge = 30
+    SlowCometDuration = 30
+    PrintDetail = true
+    CountTime = true
+    DialTimeout = 30
+    RedialTimes = 1
+    RedialInterval = 30
+
 [logger]
     Path        = "/tmp/log/test-server"
     Level       = "all"

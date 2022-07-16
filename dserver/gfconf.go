@@ -21,6 +21,16 @@ const (
 	commandEnvKeyForPath = "gf.gcfg.path" // commandEnvKeyForPath 设置配置文件搜索目录
 )
 
+var resourceTryFiles = []string{"", "/", "config/", "config", "/config", "/config/"}
+var searchPaths *garray.StrArray
+
+func init() {
+	searchPaths = garray.NewStrArray(true)
+	searchPaths.Append(gfile.Pwd())
+	searchPaths.Append(gfile.SelfDir())
+}
+
+// 传入配置文件地址，获取gcfg对象
 func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 	if len(confFile) > 0 {
 		//指定了具体的配置文件地址
@@ -62,15 +72,6 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 		gcfg.SetContent("{}", gcfg.DefaultConfigFile)
 	}
 	return gcfg.Instance()
-}
-
-var resourceTryFiles = []string{"", "/", "config/", "config", "/config", "/config/"}
-var searchPaths *garray.StrArray
-
-func init() {
-	searchPaths = garray.NewStrArray(true)
-	searchPaths.Append(gfile.Pwd())
-	searchPaths.Append(gfile.SelfDir())
 }
 
 // 该方法是copy自gcfg组件，在默认目录搜索配置文件

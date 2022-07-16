@@ -23,7 +23,7 @@ type BaseSandbox struct {
 // sandbox的容器
 type sandboxContainer struct {
 	sandbox  ISandbox
-	started  *gtime.Time //服务启动时间
-	stopTime *gtime.Time //服务关闭时间
-	state    process.State
+	started  *gtime.Time   //服务启动时间
+	stopTime *gtime.Time   //服务关闭时间
+	state    process.State // sandbox的运行状态
 }

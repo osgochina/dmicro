@@ -21,15 +21,7 @@ func (that *DefaultSandBox) Name() string {
 }
 
 func (that *DefaultSandBox) Setup() error {
-	fmt.Println("DefaultSandBox Setup")
-	fmt.Println(that.Context)
-	var c = drpc.EndpointConfig{
-		PrintDetail: true,
-		Network:     "tcp",
-		LocalIP:     "127.0.0.1",
-		ListenPort:  8199,
-	}
-	that.endpoint = drpc.NewEndpoint(c)
+	that.endpoint = drpc.NewEndpoint(that.Config.EndpointConfig(that.Name()))
 	that.endpoint.SubRoute("/app").RouteCallFunc(Home)
 	return that.endpoint.ListenAndServe()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/osgochina/dmicro/logger"
 )
 
+// 日志级别的转换关系
 var levelStringMap = map[string]int{
 	"ALL":      glog.LEVEL_DEBU | glog.LEVEL_INFO | glog.LEVEL_NOTI | glog.LEVEL_WARN | glog.LEVEL_ERRO | glog.LEVEL_CRIT,
 	"DEV":      glog.LEVEL_DEBU | glog.LEVEL_INFO | glog.LEVEL_NOTI | glog.LEVEL_WARN | glog.LEVEL_ERRO | glog.LEVEL_CRIT,
@@ -27,14 +28,14 @@ var levelStringMap = map[string]int{
 	"CRITICAL": glog.LEVEL_CRIT,
 }
 
-type ctrlLogger struct {
+type ctrlLoggerHandler struct {
 	sess   drpc.Session
 	logger *glog.Logger
 	Level  int
 }
 
-func newCtrlLogger(level int, sess drpc.Session) *ctrlLogger {
-	c := &ctrlLogger{
+func newCtrlLogger(level int, sess drpc.Session) *ctrlLoggerHandler {
+	c := &ctrlLoggerHandler{
 		sess:  sess,
 		Level: level,
 	}
@@ -42,7 +43,8 @@ func newCtrlLogger(level int, sess drpc.Session) *ctrlLogger {
 	return c
 }
 
-func (that *ctrlLogger) Log(level int, v ...interface{}) {
+// Log 实现logger的Handler接口
+func (that *ctrlLoggerHandler) Log(level int, v ...interface{}) {
 	if that.checkLevel(level) {
 		switch level {
 		case glog.LEVEL_NOTI:
@@ -63,7 +65,8 @@ func (that *ctrlLogger) Log(level int, v ...interface{}) {
 	}
 }
 
-func (that *ctrlLogger) LogF(level int, format string, v ...interface{}) {
+// LogF 实现logger的Handler接口
+func (that *ctrlLoggerHandler) LogF(level int, format string, v ...interface{}) {
 	if that.checkLevel(level) {
 		switch level {
 		case glog.LEVEL_NOTI:
@@ -83,7 +86,9 @@ func (that *ctrlLogger) LogF(level int, format string, v ...interface{}) {
 		}
 	}
 }
-func (that *ctrlLogger) Write(p []byte) (n int, err error) {
+
+// glog的write接口，实现日志数据转发到ctrl客户端
+func (that *ctrlLoggerHandler) Write(p []byte) (n int, err error) {
 	if that.sess == nil || !that.sess.Health() {
 		logger.RemoveHandler("ctrl_logger")
 		return 0, nil
@@ -91,10 +96,13 @@ func (that *ctrlLogger) Write(p []byte) (n int, err error) {
 	that.sess.Push("/ctrl_logger_push/logger", p)
 	return len(p), nil
 }
-func (that *ctrlLogger) checkLevel(level int) bool {
+
+// 检查是否符合需要打印的日志级别
+func (that *ctrlLoggerHandler) checkLevel(level int) bool {
 	return that.Level&level > 0
 }
 
+// ctrl端注册的方法，接收服务端推送的日志信息
 type ctrlLoggerPush struct {
 	drpc.PushCtx
 }
