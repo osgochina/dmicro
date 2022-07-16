@@ -16,11 +16,6 @@ message Info {
   string Description = 4;
 }
 
-message Logger {
-  bytes data = 1;
-}
-
-
 message Result {
 
 }
