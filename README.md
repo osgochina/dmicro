@@ -44,26 +44,37 @@ golang版本 >= 1.15
 package main
 
 import (
+	"fmt"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/dserver"
 	"github.com/osgochina/dmicro/logger"
 )
-
-func main() {
-	//开启信号监听
-	go drpc.GraceSignal()
-	// 创建一个rpc服务
-	svr := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
-		LocalIP:     "127.0.0.1",
-		ListenPort:  9091,
-		PrintDetail: true,
-	})
-	//注册处理方法
-	svr.RouteCall(new(Math))
-	//启动监听
-	err := svr.ListenAndServe()
-	logger.Warning(err)
+// DRpcSandBox  默认的服务
+type DRpcSandBox struct {
+	dserver.BaseSandbox
+	endpoint drpc.Endpoint
 }
+
+func (that *DRpcSandBox) Name() string {
+	return "DRpcSandBox"
+}
+
+func (that *DRpcSandBox) Setup() error {
+	fmt.Println("DRpcSandBox Setup")
+	cfg := that.Config.EndpointConfig(that.Name())
+	cfg.ListenPort = 9091
+	cfg.CountTime = true
+	cfg.PrintDetail = true
+	that.endpoint = drpc.NewEndpoint(cfg)
+	that.endpoint.RouteCall(new(Math))
+	return that.endpoint.ListenAndServe()
+}
+
+func (that *DRpcSandBox) Shutdown() error {
+	fmt.Println("DRpcSandBox Shutdown")
+	return that.endpoint.Close()
+}
+
 
 // Math rpc请求的最终处理器，必须集成drpc.CallCtx
 type Math struct {
@@ -81,6 +92,18 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// response
 	return r, nil
 }
+
+func main() {
+	dserver.Authors = "osgochina@gmail.com"
+	dserver.SetName("DMicro_drpc")
+	dserver.Setup(func(svr *dserver.DServer) {
+		err := svr.AddSandBox(new(DRpcSandBox))
+		if err != nil {
+			logger.Fatal(err)
+		}
+	})
+}
+
 ```
 
 ## rpc客户端
