@@ -94,10 +94,10 @@ ldflags=()
 
 # 链接时设置变量值
 ldflags+=("-X" "\"main.BuildVersion=${build_version}\"")
-ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildVersion=${build_version}\"")
-ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildGoVersion=${go_version}\"")
-ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildGitCommitId=${build_git}\"")
-ldflags+=("-X" "\"github.com/osgochina/dmicro/easyservice.BuildTime=${build_date}\"")
+ldflags+=("-X" "\"github.com/osgochina/dmicro/dserver.BuildVersion=${build_version}\"")
+ldflags+=("-X" "\"github.com/osgochina/dmicro/dserver.BuildGoVersion=${go_version}\"")
+ldflags+=("-X" "\"github.com/osgochina/dmicro/dserver.BuildGitCommitId=${build_git}\"")
+ldflags+=("-X" "\"github.com/osgochina/dmicro/dserver.BuildTime=${build_date}\"")
 
 # -s -w 去除符号表
 ${goBin} build -v -ldflags "${ldflags[*]} -s -w"  -o "${output_file}" $build_file || exit 1

@@ -1,6 +1,7 @@
 package dserver
 
 import (
+	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/osgochina/dmicro/logger"
 	"os"
@@ -33,6 +34,8 @@ func (that *DServer) initGrumble() {
 			a.StringList("command", "the name of the command")
 		},
 		Run: func(c *grumble.Context) error {
+			that.Version()
+			fmt.Println()
 			that.Help()
 			os.Exit(0)
 			return nil
@@ -50,7 +53,7 @@ func (that *DServer) initGrumble() {
 			f.String("c", "config", "", "指定要载入的配置文件，该参数与gf.gcfg.file参数二选一，建议使用该参数")
 			f.Bool("d", "daemon", false, "使用守护进程模式启动")
 			f.String("e", "env", "product", "环境变量，表示当前启动所在的环境,有[dev,test,product]这三种，默认是product")
-			f.Bool("", "debug", false, "是否开启debug 默认debug=false")
+			f.Bool("", "debug", true, "是否开启debug 默认debug=true")
 			f.String("", "pid", "", " 设置pid文件的地址，默认是/tmp/[server].pid")
 			f.Int("m", "model", 0, " 进程模型，0表示单进程模型，1表示多进程模型")
 		},

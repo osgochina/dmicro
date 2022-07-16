@@ -43,6 +43,10 @@
   * [WebSocket支持](drpc/websocket.md)
   * [并发请求客户端](drpc/multiclient.md)
 
+* DServer服务管理
+  * [快速开始](dserver/quickstart.md)
+  * [理解DServer](dserver/readme.md)
+
 * 组件库
   * [EventBus(事件总线)](component/eventBus.md)
   
