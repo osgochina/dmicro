@@ -28,9 +28,10 @@ func (that *DefaultSandBox) Shutdown() error {
 func main() {
 	dserver.Authors = "osgochina@gmail.com"
 	dserver.SetName("DMicro_foo")
+	dserver.CloseCtrl()
 	dserver.Setup(func(svr *dserver.DServer) {
 
-		err := svr.AddSandBox(new(DefaultSandBox))
+		err := svr.AddSandBox(new(DefaultSandBox), svr.NewService("rpc"))
 		if err != nil {
 			logger.Fatal(err)
 		}

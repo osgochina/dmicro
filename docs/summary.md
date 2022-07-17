@@ -10,10 +10,14 @@
 
   * [快速开始](overview.md)
   * [常见问题](questions.md)
-    
+
+* DServer服务管理
+  * [理解DServer](dserver/readme.md)
+  * [快速开始](dserver/quickstart.md)
+  * [平滑重启](dserver/graceful.md)
+  * [控制命令CTRL](dserver/ctrl.md)
 
 * DRPC框架
-
   * [整体架构](drpc/diagram.md)
   * [端点 - Endpoint](drpc/endpoint.md)
   * [配置 - Config](drpc/config.md)
@@ -43,13 +47,6 @@
   * [WebSocket支持](drpc/websocket.md)
   * [并发请求客户端](drpc/multiclient.md)
 
-* DServer服务管理
-  * [快速开始](dserver/quickstart.md)
-  * [理解DServer](dserver/readme.md)
-
-* 组件库
-  * [EventBus(事件总线)](component/eventBus.md)
-  
 * EasyService简单服务
   * [创建服务](easyservice/start.md)
   * [启动命令选项](easyservice/option.md)
@@ -57,11 +54,13 @@
   * [平滑重启](easyservice/graceful.md)
   * [使用编译脚本](easyservice/build.md)
   
-* Supervisor进程监控管理
-  * [快速开始](supervisor/info.md)
+* 组件库
+  * [RPC Client(rpc客户端)](component/client.md)
+  * [Registry(服务注册中心)](component/registry.md)
+  * [Selector(服务发现)](component/selector.md)
+  * [EventBus(事件总线)](component/eventBus.md)
 
 * 性能测试
-
   * [性能测试](benchmark.md)
 
 

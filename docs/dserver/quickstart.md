@@ -303,4 +303,84 @@ $ go build drpc.go
 $ ./drpc start
 ```
 
+## 多个Sandbox
 
+```go
+// drpc_http.go
+
+func main() {
+	dserver.Authors = "osgochina@gmail.com"
+	dserver.SetName("DMicro_drpc")
+	dserver.Setup(func(svr *dserver.DServer) {
+		err := svr.AddSandBox(new(DRpcSandBox))
+		if err != nil {
+			logger.Fatal(err)
+		}
+		err = svr.AddSandBox(new(HttpSandBox))
+		if err != nil {
+			logger.Fatal(err)
+		}
+	})
+}
+```
+
+以上代码展示了同时载入`DRpcSandBox`和`HttpSandBox`的用法。
+
+`svr.AddSandBox`方法可以载入任意数量的sandbox。
+
+## Sandbox之间调用
+
+```go
+func (that *DRpcSandBox) Setup() error {
+	sandbox, found := that.Service.SearchSandBox("HttpSandBox")
+	if !found {
+		return fmt.Errorf("not found HttpSandBox")
+	}
+	httpSandBox := sandbox.(*HttpSandBox)
+	fmt.Println(httpSandBox.Name())
+	return nil
+}
+```
+
+通过`SearchSandBox(name string)`搜索同一个service中的其他sandbox.
+
+## 多个Service
+
+
+```go
+// drpc_http.go
+
+func main() {
+	dserver.Authors = "osgochina@gmail.com"
+	dserver.SetName("DMicro_drpc")
+	dserver.Setup(func(svr *dserver.DServer) {
+		err := svr.AddSandBox(new(DRpcSandBox),svr.NewService("rpc"))
+		if err != nil {
+			logger.Fatal(err)
+		}
+		err = svr.AddSandBox(new(HttpSandBox),svr.NewService("http"))
+		if err != nil {
+			logger.Fatal(err)
+		}
+	})
+}
+```
+
+调用`svr.AddSandBox`方法的时候，第二个可选参数，支持传入新的`Service`对象。
+
+通过`svr.NewService(name string)` 方法可以创建一个全新的对象。
+- 在单进程模式下可以隔离`sandbox`。
+- 多进程模式下，每个`Service`为一个独立的进程。
+
+## 开启多进程模式
+
+进程模式有两种开启方法。
+1. 通过在代码内调用`svr.ProcessModel(dserver.ProcessModelMulti)`开启多进程模式。
+2. 启动应用进程的时候传入`--model=1`开启多进程模式，`--model=0`开启单进程模式。
+
+注意，第二种启动命令`--model`的优先级更高。
+
+## 增加自定义命令
+
+如果你的应用需要增加自己的命令行参数，可以调用`dserver.GrumbleApp()`命令获取app对象，
+更多用法可以参考[grumble](github.com/desertbit/grumble)

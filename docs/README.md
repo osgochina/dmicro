@@ -1,5 +1,6 @@
+# dmicro [![GitHub release](https://img.shields.io/github/v/release/osgochina/dmicro.svg?style=flat-square)](https://github.com/osgochina/dmicro/releases) [![report card](https://goreportcard.com/badge/github.com/osgochina/dmicro?style=flat-square)](http://goreportcard.com/report/osgochina/dmicro) [![github issues](https://img.shields.io/github/issues/osgochina/dmicro.svg?style=flat-square)](https://github.com/osgochina/dmicro/issues?q=is%3Aopen+is%3Aissue) [![github closed issues](https://img.shields.io/github/issues-closed-raw/osgochina/dmicro.svg?style=flat-square)](https://github.com/osgochina/dmicro/issues?q=is%3Aissue+is%3Aclosed) [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/osgochina/dmicro) [![view examples](https://img.shields.io/badge/learn%20by-examples-00BCD4.svg?style=flat-square)](https://github.com/osgochina/dmicro/tree/main/examples)
 ## dmicro简介
-![logo](logo.svg ':size=180x140')
+<img src="./logo.svg" width="180" height="140" alt="dmicro logo"/>
 
 > dmicro是一个高效、可扩展且简单易用的微服务框架。包含drpc,easyserver等组件。
 
@@ -7,9 +8,12 @@
 
 其中`drpc`组件参考`erpc`项目的架构思想，依赖的基础库是`GoFrame`。
 
-* [erpc](https://gitee.com/henrylee/erpc)
-* [GoFrame](https://gitee.com/johng/gf)
+* [erpc](https://github.com/henrylee2cn/erpc)
+* [GoFrame](https://github.com/gogf/gf)
 
+## 详细文档
+
+[中文文档]( https://osgochina.gitee.io/dmicro)
 
 ## 安装
 
@@ -40,26 +44,37 @@ golang版本 >= 1.15
 package main
 
 import (
+	"fmt"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/dserver"
 	"github.com/osgochina/dmicro/logger"
 )
-
-func main() {
-	//开启信号监听
-	go drpc.GraceSignal()
-	// 创建一个rpc服务
-	svr := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
-		LocalIP:     "127.0.0.1",
-		ListenPort:  9091,
-		PrintDetail: true,
-	})
-	//注册处理方法
-	svr.RouteCall(new(Math))
-	//启动监听
-	err := svr.ListenAndServe()
-	logger.Warning(err)
+// DRpcSandBox  默认的服务
+type DRpcSandBox struct {
+	dserver.BaseSandbox
+	endpoint drpc.Endpoint
 }
+
+func (that *DRpcSandBox) Name() string {
+	return "DRpcSandBox"
+}
+
+func (that *DRpcSandBox) Setup() error {
+	fmt.Println("DRpcSandBox Setup")
+	cfg := that.Config.EndpointConfig(that.Name())
+	cfg.ListenPort = 9091
+	cfg.CountTime = true
+	cfg.PrintDetail = true
+	that.endpoint = drpc.NewEndpoint(cfg)
+	that.endpoint.RouteCall(new(Math))
+	return that.endpoint.ListenAndServe()
+}
+
+func (that *DRpcSandBox) Shutdown() error {
+	fmt.Println("DRpcSandBox Shutdown")
+	return that.endpoint.Close()
+}
+
 
 // Math rpc请求的最终处理器，必须集成drpc.CallCtx
 type Math struct {
@@ -77,6 +92,18 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// response
 	return r, nil
 }
+
+func main() {
+	dserver.Authors = "osgochina@gmail.com"
+	dserver.SetName("DMicro_drpc")
+	dserver.Setup(func(svr *dserver.DServer) {
+		err := svr.AddSandBox(new(DRpcSandBox))
+		if err != nil {
+			logger.Fatal(err)
+		}
+	})
+}
+
 ```
 
 ## rpc客户端
@@ -117,3 +144,4 @@ func main() {
 }
 ```
 通过以上的代码事例，大家基本可以了解`drpc`框架是怎么使用。
+
