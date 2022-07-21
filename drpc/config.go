@@ -150,13 +150,6 @@ func (that *EndpointConfig) newAddr(network, ip, port string) (net.Addr, error) 
 		a := utils.NewFakeAddr(n, ip, strconv.Itoa(udpAddr.Port))
 		a.SetUdpAddr(udpAddr)
 		return a, nil
-		//return &inherit.FakeAddr{
-		//	network: n,
-		//	addr:    udpAddr.String(),
-		//	host:    ip,
-		//	port:    strconv.Itoa(udpAddr.Port),
-		//	udpAddr: udpAddr,
-		//}, nil
 	}
 }
 
@@ -169,8 +162,8 @@ func DefaultBodyCodec() codec.Codec {
 }
 
 // SetDefaultBodyCodec 设置默认消息体编码格式
-func SetDefaultBodyCodec(codecID byte) error {
-	c, err := codec.Get(codecID)
+func SetDefaultBodyCodec(codecName string) error {
+	c, err := codec.GetByName(codecName)
 	if err != nil {
 		return err
 	}

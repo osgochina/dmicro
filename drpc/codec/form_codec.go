@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	NameForm = "form"
-	IdForm   = 'f'
+	FormName = "form"
+	FormId   = 'f'
 )
 
 func init() {
@@ -24,12 +24,12 @@ type FormCodec struct{}
 
 // Name returns codec name.
 func (FormCodec) Name() string {
-	return NameForm
+	return FormName
 }
 
 // ID returns codec id.
 func (FormCodec) ID() byte {
-	return IdForm
+	return FormId
 }
 
 func (FormCodec) Marshal(v interface{}) ([]byte, error) {
@@ -67,7 +67,7 @@ func setStructToForm(q url.Values, val reflect.Value) {
 	for i := 0; i < typ.NumField(); i++ {
 		typeField := typ.Field(i)
 		structField := val.Field(i)
-		inputFieldName := typeField.Tag.Get(NameForm)
+		inputFieldName := typeField.Tag.Get(FormName)
 		if inputFieldName == "" {
 			if structField.Kind() == reflect.Struct {
 				setStructToForm(q, structField)
@@ -165,7 +165,7 @@ func mapFormToStruct(val reflect.Value, form map[string][]string) error {
 		}
 
 		structFieldKind := structField.Kind()
-		inputFieldName := typeField.Tag.Get(NameForm)
+		inputFieldName := typeField.Tag.Get(FormName)
 		if inputFieldName == "" {
 			// if NAME_FORM tag is nil, we inspect if the field is a struct.
 			// this would not make sense for JSON parsing but it does for a form

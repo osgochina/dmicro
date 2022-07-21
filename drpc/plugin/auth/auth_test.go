@@ -3,6 +3,7 @@ package auth_test
 import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/plugin/auth"
 	"testing"
@@ -87,7 +88,7 @@ var authBearer = auth.NewBearerPlugin(
 		internal.Infof("auth info: %s, result: %s", clientAuthInfo, ret)
 		return nil
 	},
-	drpc.WithBodyCodec('s'),
+	drpc.WithBodyCodec(codec.PlainName),
 )
 
 var authChecker = auth.NewCheckerPlugin(
@@ -103,7 +104,7 @@ var authChecker = auth.NewCheckerPlugin(
 		}
 		return "pass", nil
 	},
-	drpc.WithBodyCodec('s'),
+	drpc.WithBodyCodec(codec.PlainName),
 )
 
 type Home struct {

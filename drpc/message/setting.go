@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/status"
 	"math"
 )
@@ -100,9 +101,10 @@ func WithDelMeta(key string) MsgSetting {
 }
 
 // WithBodyCodec 设置消息的消息体编码格式
-func WithBodyCodec(bodyCodec byte) MsgSetting {
+func WithBodyCodec(bodyCodecName string) MsgSetting {
 	return func(m Message) {
-		m.SetBodyCodec(bodyCodec)
+		c, _ := codec.GetByName(bodyCodecName)
+		m.SetBodyCodec(c.ID())
 	}
 }
 

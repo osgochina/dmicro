@@ -3,8 +3,8 @@ package codec
 import "encoding/xml"
 
 const (
-	NameXml = "xml"
-	IdXml   = 'x'
+	XmlName = "xml"
+	XmlId   = 'x'
 )
 
 func init() {
@@ -15,12 +15,12 @@ type XMLCodec struct{}
 
 // Name returns codec name.
 func (XMLCodec) Name() string {
-	return NameXml
+	return XmlName
 }
 
 // ID returns codec id.
 func (XMLCodec) ID() byte {
-	return IdXml
+	return XmlId
 }
 
 func (XMLCodec) Marshal(v interface{}) ([]byte, error) {

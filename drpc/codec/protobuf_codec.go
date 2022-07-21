@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	NameProtobuf = "protobuf"
-	IdProtobuf   = 'p'
+	ProtobufName = "protobuf"
+	ProtobufId   = 'p'
 )
 
 func init() {
@@ -17,11 +17,11 @@ func init() {
 type ProtoCodec struct{}
 
 func (ProtoCodec) Name() string {
-	return NameProtobuf
+	return ProtobufName
 }
 
 func (ProtoCodec) ID() byte {
-	return IdProtobuf
+	return ProtobufId
 }
 
 // Marshal 编码

@@ -5,18 +5,18 @@ import "encoding/json"
 var _ Codec = new(JSONCodec)
 
 const (
-	NameJson = "json"
-	IdJson   = 'j'
+	JsonName = "json"
+	JsonId   = 'j'
 )
 
 type JSONCodec struct{}
 
 func (JSONCodec) ID() byte {
-	return IdJson
+	return JsonId
 }
 
 func (JSONCodec) Name() string {
-	return NameJson
+	return JsonName
 }
 
 func (JSONCodec) Marshal(v interface{}) ([]byte, error) {

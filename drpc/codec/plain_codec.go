@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	NamePlain = "plain"
-	IdPlain   = 's'
+	PlainName = "plain"
+	PlainId   = 's'
 )
 
 func init() {
@@ -21,12 +21,12 @@ type PlainCodec struct{}
 
 // Name returns codec name.
 func (PlainCodec) Name() string {
-	return NamePlain
+	return PlainName
 }
 
 // ID returns codec id.
 func (PlainCodec) ID() byte {
-	return IdPlain
+	return PlainId
 }
 
 func (PlainCodec) Marshal(v interface{}) ([]byte, error) {
