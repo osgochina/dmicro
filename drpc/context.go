@@ -45,7 +45,7 @@ type WriteCtx interface {
 	// StatusOK 状态是否ok
 	StatusOK() bool
 
-	// Status 当前步骤的状态
+	// Status 当前消息状态
 	Status() *status.Status
 }
 
@@ -62,7 +62,7 @@ type inputCtx interface {
 	// VisitMeta 浏览消息的元数据
 	VisitMeta(f func(key, value interface{}) bool)
 
-	// CopyMeta 赋值消息的元数据
+	// CopyMeta 获取消息的元数据副本
 	CopyMeta() *gmap.Map
 
 	// ServiceMethod 该消息需要访问的服务名

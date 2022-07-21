@@ -344,7 +344,7 @@ type AfterWritePushPlugin interface {
 	AfterWritePush(WriteCtx) *Status
 }
 
-// 写入 PUSH消息之后执行该事件
+// 写入PUSH消息之后执行该事件
 func (that *pluginSingleContainer) afterWritePush(ctx WriteCtx) *Status {
 	var stat *Status
 	for _, plugin := range that.plugins {
