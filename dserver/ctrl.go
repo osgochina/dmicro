@@ -14,7 +14,9 @@ import (
 
 func (that *DServer) endpoint() {
 	unix := gfile.TempDir(fmt.Sprintf("%s.sock", that.name))
-	if gfile.Exists(unix) {
+	// 判断socket文件是否存在
+	_, err := os.Stat(unix)
+	if !os.IsNotExist(err) {
 		_ = gfile.Remove(unix)
 	}
 	cfg := drpc.EndpointConfig{
