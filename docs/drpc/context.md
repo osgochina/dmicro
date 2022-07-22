@@ -1,4 +1,4 @@
-# Ctx 上下文
+# Ctx 请求对象
 
 在`drpc`服务中，每个请求的`request`都是单独开启一个`goroutine`进行处理，`Ctx`对象中包含了该次请求的所有信息。请求结束以后会被销毁。
 
@@ -416,7 +416,7 @@ var handleFunc = func(ctx *handlerCtx, argValue reflect.Value) {
 
 
 ``` mermaid
-flowchart TB
+flowchart LR
     生成Ctx对象 --> 阻塞读取消息 --> 匹配消息 --> 调用业务注册的HandleFunc --> 替换Ctx --> 调用业务方法
 ```
 

@@ -5,6 +5,11 @@
 
 `codec`位于`proto`内层。
 
+```mermaid
+flowchart LR
+     Message --> Proto --> TFilter --> Codec --> Socket
+```
+
 默认支持的编码解码器(codec)
 
 | id  | name | 介绍     |
