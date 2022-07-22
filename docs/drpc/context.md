@@ -2,13 +2,66 @@
 
 在`drpc`服务中，每个请求的`request`都是单独开启一个`goroutine`进行处理，`Ctx`对象中包含了该次请求的所有信息。请求结束以后会被销毁。
 
-
+`ctx`对象是在请求初始化的时候，根据消息内容，动态生成并赋值的。用到了框架的反射特性。
 
 ## 如何使用
 
-### `CallCtx`
+### 在`Call`消息对象使用
 
-## `Ctx`支持的的方法
+注册为`Call`消息对象。客户端可以通过`"/test_call/test"`请求。
+
+```go
+type TestCall struct {
+	drpc.CallCtx
+}
+// 注册方法名为"/test_call/test"
+func (that *TestCall) Test(arg *string) (string, *drpc.Status) {
+	that.Input()  // 当前请求的消息
+	that.Output() // 当前请求的响应消息
+	that.Swap()   // 当前session的交换空间
+	return *arg, nil
+}
+```
+
+### 在`Push`消息对象使用
+
+注册为`Push`消息对象。客户端可以通过`"/test_push/test"`请求。
+```go
+type TestPush struct {
+	drpc.PushCtx
+}
+
+// 注册方法名为"/test_push/test"
+func (that *TestPush) Test(arg *string) *drpc.Status {
+	that.Swap() // 当前session的交换空间
+	return nil
+}
+```
+### 在`Unknown`func中使用
+请求的时候，如果要请求的serviceName不存在，则会触发endpoint设置的`Unknown`方法，开发人员可以注册自己的处理方法。
+```go
+// 设置为命中push消息的处理方法
+endpoint.SetUnknownPush(func(ctx drpc.UnknownPushCtx) *status.Status {
+    fmt.Println("UnknownPush")
+    ctx.Context()
+    ctx.Swap()
+    return nil
+})
+// 设置未命中call消息的处理方法
+endpoint.SetUnknownCall(func(ctx drpc.UnknownCallCtx) (interface{}, *status.Status) {
+  fmt.Println("UnknownCall")
+  ctx.Context()
+  ctx.Swap()
+  return nil, nil
+})
+```
+
+### 在`Plugin`插件中使用
+
+请参考[插件开发](./plugin_develop.md)章节.
+
+
+## 各种`Ctx`中能使用的方法
 
 <table>
 <thead>
@@ -244,7 +297,7 @@
 </tr>
 <tr>
   <td>SetMeta()</td>
-  <td>设置指定key的值</td>
+  <td>设置元数据</td>
   <td></td>
   <td></td>
   <td></td>
@@ -322,4 +375,48 @@
 
 
 ## 实现原理
+
+要讲清楚`Ctx`的原理，首先要理解`golang`中的反射(reflect), 可以先看看文档[Go语言反射](http://c.biancheng.net/golang/reflect/)
+
+以下要讲的内容都是建立在大家已经理解反射概念的基础上。
+
+讲清楚`Ctx`从两个方面来理解
+* 注册反射方法
+* 调用已注册的方法
+
+### 注册反射方法
+
+在`drpc/router.go`435行。
+```go
+// 定义要注册的call struct中的CallCtx的位置
+type CallCtrlValue struct {
+  ctrl   reflect.Value
+  ctxPtr *CallCtx
+}
+// 注册handleFunc，与路由serviceName字符串做一一对应。
+var handleFunc = func(ctx *handlerCtx, argValue reflect.Value) {
+    obj := pool.Get().(*CallCtrlValue)
+	// 调用serviceName匹配的真正方法，并把其CallCtx替换成动态生成的*handlerCtx
+    *obj.ctxPtr = ctx
+    rets := methodFunc.Call([]reflect.Value{obj.ctrl, argValue})
+	// 获取其返回值，判断是否调用成功，如果调用成功则把第一个业务返回值赋值给output消息的body
+    stat := (*status.Status)(unsafe.Pointer(rets[1].Pointer()))
+    if !stat.OK() {
+        ctx.stat = stat
+        ctx.output.SetStatus(stat)
+    } else {
+        ctx.output.SetBody(rets[0].Interface())
+    }
+    pool.Put(obj)
+}
+```
+通过反射，重写`Call`方法。
+
+### 调用已注册的方法
+
+
+``` mermaid
+flowchart TB
+    生成Ctx对象 --> 阻塞读取消息 --> 匹配消息 --> 调用业务注册的HandleFunc --> 替换Ctx --> 调用业务方法
+```
 
