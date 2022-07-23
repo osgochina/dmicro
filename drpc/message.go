@@ -59,11 +59,13 @@ var (
 	//  NOTE: newBodyFunc is only for reading form connection.
 	//  func WithNewBody(newBodyFunc socket.NewBodyFunc) MessageSetting
 	WithNewBody = message.WithNewBody
-	// WithXFerPipe sets transfer filter pipe.
-	// NOTE: Panic if the filterID is not registered.
-	// SUGGEST: The length can not be bigger than 255!
-	//  func WithXferPipe(filterID ...byte) MessageSetting
-	WithXFerPipe       = message.WithXFerPipe
+
+	// WithTFilterPipe 设置传输过滤器.
+	// 提示: 如果filterID未注册，则会产生Panic错误。
+	// 建议: 最大长度不能超过255!
+	//  func WithTFilterPipe(filterID ...byte) MessageSetting
+	WithTFilterPipe = message.WithTFilterPipe
+
 	GetAcceptBodyCodec = message.GetAcceptBodyCodec
 )
 

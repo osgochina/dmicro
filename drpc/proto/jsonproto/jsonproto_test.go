@@ -6,7 +6,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto/jsonproto"
-	"github.com/osgochina/dmicro/drpc/tfilter/gzip"
+	"github.com/osgochina/dmicro/drpc/tfilter"
 	"testing"
 	"time"
 )
@@ -29,7 +29,7 @@ func (h *Home) RetString(arg *map[string]string) (string, *drpc.Status) {
 }
 
 func TestJSONProto(t *testing.T) {
-	gzip.Reg('g', "gizp-5", 5)
+	tfilter.Reg('g', "gizp-5", 5)
 
 	// Server
 	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})

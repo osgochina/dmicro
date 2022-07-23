@@ -3,7 +3,7 @@ package message
 import (
 	"github.com/gogf/gf/test/gtest"
 	"github.com/osgochina/dmicro/drpc/status"
-	"github.com/osgochina/dmicro/drpc/tfilter/gzip"
+	"github.com/osgochina/dmicro/drpc/tfilter"
 	"testing"
 )
 
@@ -18,7 +18,7 @@ func TestMessageSizeLimit(t *testing.T) {
 
 func TestMessageString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		gzip.Reg('g', "gzip", 5)
+		tfilter.Reg('g', "gzip", 5)
 		var m = GetMessage()
 		defer PutMessage(m)
 		m.SetSeq(21)

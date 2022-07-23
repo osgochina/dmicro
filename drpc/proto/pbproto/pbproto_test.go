@@ -7,7 +7,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto/pb_test"
-	"github.com/osgochina/dmicro/drpc/tfilter/gzip"
+	"github.com/osgochina/dmicro/drpc/tfilter"
 	"testing"
 	"time"
 )
@@ -38,7 +38,7 @@ func (that *Push) Test(arg *pb_test.Push) *drpc.Status {
 }
 
 func TestPbProto(t *testing.T) {
-	gzip.Reg('g', "gizp-5", 5)
+	tfilter.Reg('g', "gizp-5", 5)
 
 	// server
 	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090, DefaultBodyCodec: codec.NameProtobuf})

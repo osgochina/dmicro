@@ -4,13 +4,13 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
-	"github.com/osgochina/dmicro/drpc/tfilter/gzip"
+	"github.com/osgochina/dmicro/drpc/tfilter"
 	"testing"
 	"time"
 )
 
 func TestRawProto(t *testing.T) {
-	gzip.Reg('g', "gizp-5", 5)
+	tfilter.Reg('g', "gizp-5", 5)
 
 	// server
 	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})

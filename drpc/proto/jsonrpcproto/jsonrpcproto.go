@@ -13,6 +13,9 @@ import (
 	"sync"
 )
 
+// 注意，json rpc协议实现了标准的jsonrpc协议，
+// 不支持tfilter和其他drpc支持的一些标准，使用的时候需要注意
+
 func NewJSONRPCProtoFunc() proto.ProtoFunc {
 	return func(rw proto.IOWithReadBuffer) proto.Proto {
 		return &jsonRPCProto{
@@ -97,7 +100,7 @@ func (that *jsonRPCProto) Pack(m proto.Message) error {
 		}
 	}
 	if m.MType() == message.TypeReply {
-		m.SetBodyCodec(codec.IdJson)
+		m.SetBodyCodec(codec.JsonId)
 		if m.StatusOK() {
 			body := &Response{
 				Jsonrpc: "2.0",
@@ -166,7 +169,7 @@ func (that *jsonRPCProto) Unpack(m proto.Message) error {
 	} else {
 		m.SetMType(message.TypeReply)
 	}
-	m.SetBodyCodec(codec.IdJson)
+	m.SetBodyCodec(codec.JsonId)
 	if m.Status(false) == nil {
 		m.Status(true)
 	}

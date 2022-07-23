@@ -60,7 +60,7 @@ func GetByName(name string) (TransferFilter, error) {
 	return tFilter, nil
 }
 
-// PipeTFilter 传输过滤器管道
+// PipeTFilter 传输过滤器切片，能批量执行注册的tFilter
 type PipeTFilter struct {
 	filters []TransferFilter
 }
@@ -122,7 +122,7 @@ func (that *PipeTFilter) IDs() []byte {
 	return ids
 }
 
-//获取当前传输过滤器管道中的名字
+// Names 获取当前传输过滤器管道中的名字
 func (that *PipeTFilter) Names() []string {
 	var names = make([]string, that.Len())
 	if that.Len() == 0 {

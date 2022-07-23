@@ -129,8 +129,8 @@ func WithMType(mType byte) MsgSetting {
 	}
 }
 
-// WithXFerPipe 设置消息的管道类型
-func WithXFerPipe(filterID ...byte) MsgSetting {
+// WithTFilterPipe 设置消息的管道类型
+func WithTFilterPipe(filterID ...byte) MsgSetting {
 	return func(m Message) {
 		if err := m.PipeTFilter().Append(filterID...); err != nil {
 			panic(err)

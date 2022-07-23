@@ -12,7 +12,6 @@ import (
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/drpc/tfilter"
-	"github.com/osgochina/dmicro/drpc/tfilter/gzip"
 	"github.com/osgochina/dmicro/utils/dbuffer"
 	"io"
 	"net/http"
@@ -120,7 +119,7 @@ func (that *httpProto) Pack(msg proto.Message) error {
 	var header = make(http.Header, msg.Meta().Size())
 	msg.PipeTFilter().Iterator(func(_ int, filter tfilter.TransferFilter) bool {
 		//是否支持gzip
-		if !gzip.Is(filter.ID()) {
+		if filter.ID() != tfilter.GzipId {
 			err = fmt.Errorf("unsupport tfilter : %s", filter.Name())
 			return false
 		}

@@ -11,6 +11,15 @@ import (
 	"sync"
 )
 
+/**
+	Protobuf协议的格式 使用网络字节序，大端
+	{4 bytes 表示整个消息的长度}
+	{1 byte  表示传输管道过滤器id的长度}
+	{传输管道过滤器id序列化后的内容}
+	# 以下的内容都是经过传输管道过滤器处理过的数据
+	Body: Protobuf bytes
+**/
+
 // NewPbProtoFunc 创建protobuf协议方法
 func NewPbProtoFunc() proto.ProtoFunc {
 	return func(rw proto.IOWithReadBuffer) proto.Proto {
@@ -126,8 +135,14 @@ func (that *protoPB) Unpack(m proto.Message) error {
 	m.SetSeq(s.Seq)
 	m.SetMType(byte(s.Mtype))
 	m.SetServiceMethod(s.ServiceMethod)
-	m.Status(true).UnmarshalJSON(s.Status)
-	m.Meta().UnmarshalJSON(s.Meta)
+	err = m.Status(true).UnmarshalJSON(s.Status)
+	if err != nil {
+		return err
+	}
+	err = m.Meta().UnmarshalJSON(s.Meta)
+	if err != nil {
+		return err
+	}
 
 	// 解析消息体
 	m.SetBodyCodec(byte(s.BodyCodec))

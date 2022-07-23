@@ -11,6 +11,15 @@ import (
 	"sync"
 )
 
+/**
+	json协议的格式 使用网络字节序，大端
+	{4 bytes 表示整个消息的长度}
+	{1 byte  表示传输管道过滤器id的长度}
+	{传输管道过滤器id序列化后的内容}
+	# 以下的内容都是经过传输管道过滤器处理过的数据
+	Body: json string
+**/
+
 func NewJSONProtoFunc() proto.ProtoFunc {
 	return func(rw proto.IOWithReadBuffer) proto.Proto {
 		return &jsonProto{

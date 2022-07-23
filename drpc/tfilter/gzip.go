@@ -1,24 +1,21 @@
-package gzip
+package tfilter
 
 import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"github.com/osgochina/dmicro/drpc/tfilter"
 	"io/ioutil"
 	"sync"
 )
 
-var ids = map[byte]bool{}
+const (
+	GzipId   = 'z'
+	GzipName = "gzip"
+)
 
-// Reg registers a gzip filter for transfer.
-func Reg(id byte, name string, level int) {
-	tfilter.Reg(newGzip(id, name, level))
-	ids[id] = true
-}
-
-func Is(id byte) bool {
-	return ids[id]
+// RegGzip registers a gzip filter for transfer.
+func RegGzip(level int) {
+	Reg(newGzip(GzipId, GzipName, level))
 }
 
 type Gzip struct {

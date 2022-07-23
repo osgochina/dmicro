@@ -1,21 +1,25 @@
-package md5
+package tfilter
 
 import (
 	"bytes"
 	"crypto/md5"
 	"errors"
-	"github.com/osgochina/dmicro/drpc/tfilter"
 )
 
 const md5Length = 16
 
+const (
+	Md5Id   = '5'
+	Md5Name = "md5"
+)
+
 var errDataCheck = errors.New("check failed")
 
-// Reg 注册md5校验过滤器
-func Reg(id byte, name string) {
-	tfilter.Reg(&md5Hash{
-		id:   id,
-		name: name,
+// RegMD5 注册md5校验过滤器
+func RegMD5() {
+	Reg(&md5Hash{
+		id:   Md5Id,
+		name: Md5Name,
 	})
 }
 

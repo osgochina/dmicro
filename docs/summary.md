@@ -34,7 +34,7 @@
     * [JsonRPC协议](drpc/proto_jsonrpc.md)
     * [ProtoBuf协议](drpc/proto_protobuf.md)
   * [编解码器 - Codec](drpc/codec.md)
-  * [传输管道过滤器 - TFilter](drpc/tfilter.md)
+  * [传输过滤器 - TFilter](drpc/tfilter.md)
   * [套接字 - Socket](drpc/socket.md)
   * [钩子 - Hook](drpc/hook.md)
   * [插件 - Plugin](drpc/plugin.md)
