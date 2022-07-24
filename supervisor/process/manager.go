@@ -53,6 +53,18 @@ func (that *Manager) NewProcessByOptions(opts ProcOptions) (*Process, error) {
 	return p, nil
 }
 
+// NewProcessByProcess 创建进程
+// proc: Process对象
+func (that *Manager) NewProcessByProcess(proc *Process) (*Process, error) {
+	if _, found := that.processes.Search(proc.GetName()); found {
+		return nil, gerror.Newf("进程[%s]已存在", proc.GetName())
+	}
+	proc.Manager = that
+	that.processes.Set(proc.GetName(), proc)
+	logger.Info("创建进程:", proc.GetName())
+	return proc, nil
+}
+
 // NewProcessCmd 创建进程
 // path: shell命令
 // environment: 环境变量
