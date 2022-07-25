@@ -27,7 +27,7 @@ func TestAuth(t *testing.T) {
 		var result interface{}
 		stat = sess.Call("/home/test",
 			map[string]string{
-				"author": "henrylee2cn",
+				"author": "clownfish",
 			},
 			&result,
 			drpc.WithSetMeta("peer_id", "110"),
@@ -63,7 +63,7 @@ func TestAuthChecker(t *testing.T) {
 		var result interface{}
 		stat = sess.Call("/home/test",
 			map[string]string{
-				"author": "henrylee2cn",
+				"author": "clownfish",
 			},
 			&result,
 			drpc.WithSetMeta("peer_id", "110"),

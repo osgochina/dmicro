@@ -1,8 +1,11 @@
-### 心跳
+package main
 
-#### 如何使用
+import (
+	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
+	"time"
+)
 
-```go
 func main() {
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		ListenPort:  9090,
@@ -21,10 +24,3 @@ func main() {
 	cli.Dial(":9090")
 	time.Sleep(time.Second * 20)
 }
-```
-
-#### 原理
-
-- 客户端端点服务启动后`AfterNewEndpoint`，开启一个单独的协程来遍历会话，并发送心跳.
-- 服务端端点启动的时候`AfterNewEndpoint`，开启一个协程，遍历会话，检查超时时间.
-- 服务端注册`ping`处理方法，更新心跳数据。

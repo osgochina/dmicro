@@ -43,7 +43,7 @@ func TestIgnoreCase(t *testing.T) {
 		var result interface{}
 		stat = sess.Call("/home/TesT",
 			map[string]string{
-				"author": "henrylee2cn",
+				"author": "clownfish",
 			},
 			&result,
 			message.WithSetMeta("peer_id", "110"),
