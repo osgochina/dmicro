@@ -39,7 +39,6 @@
   * [钩子 - Hook](drpc/hook.md)
   * [插件 - Plugin](drpc/plugin.md)
     * [插件开发](drpc/plugin_develop.md)
-    * [Auth认证](drpc/plugin_auth.md)
     * [心跳](drpc/plugin_heartbeat.md)
     * [忽略大小写](drpc/plugin_ignorecase.md)
     * [安全传输](drpc/plugin_securebody.md)
@@ -56,10 +55,10 @@
     * [使用编译脚本](easyservice/build.md)
   
   * 组件库
+    * [EventBus(事件总线)](component/eventBus.md)
     * [RPC Client(rpc客户端)](component/client.md)
     * [Registry(服务注册中心)](component/registry.md)
     * [Selector(服务发现)](component/selector.md)
-    * [EventBus(事件总线)](component/eventBus.md)
 
   * 性能测试
     * [性能测试](benchmark.md)
