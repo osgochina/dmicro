@@ -2,37 +2,68 @@ package tests
 
 import (
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/tests/benchmark"
+	"runtime"
+	"sync"
 	"testing"
+	"time"
 )
 
-var client = drpc.NewEndpoint(drpc.EndpointConfig{DefaultBodyCodec: "protobuf"})
+type MyCall struct {
+	drpc.CallCtx
+}
 
-func BenchmarkClient(b *testing.B) {
+func (that *MyCall) Echo(args *benchmark.BenchmarkMessage) (*benchmark.BenchmarkMessage, *drpc.Status) {
+	s := "OK"
+	var i int32 = 100
+	args.Field1 = s
+	args.Field2 = i
+	runtime.Gosched()
+	return args, nil
+}
 
+func serverProtoBuf() {
+	logger.SetDebug(false)
+	svr := drpc.NewEndpoint(drpc.EndpointConfig{
+		DefaultBodyCodec: codec.ProtobufName,
+		ListenPort:       8199,
+	})
+	svr.RouteCall(new(MyCall))
+	svr.ListenAndServe(pbproto.NewPbProtoFunc())
+}
+
+var clientProtobuf = drpc.NewEndpoint(drpc.EndpointConfig{DefaultBodyCodec: codec.ProtobufName})
+
+var once = sync.Once{}
+
+func BenchmarkClientProtobuf(b *testing.B) {
+
+	once.Do(func() {
+		go serverProtoBuf()
+	})
+	time.Sleep(2 * time.Second)
+	b.ResetTimer()
+	b.StartTimer()
 	logger.SetDebug(false)
 	b.ResetTimer()
 	serviceMethod := "/my_call/echo"
 	args := prepareArgs()
 	b.RunParallel(func(pb *testing.PB) {
-		sess, err := client.Dial("127.0.0.1:8199", pbproto.NewPbProtoFunc())
+		sess, err := clientProtobuf.Dial("127.0.0.1:8199", pbproto.NewPbProtoFunc())
 		if !err.OK() {
 			b.Fatal(err)
 		}
 		for pb.Next() {
 			var reply benchmark.BenchmarkMessage
-			if sess.Call(serviceMethod, args, &reply).StatusOK() {
-
+			if !sess.Call(serviceMethod, args, &reply).StatusOK() {
+				b.Fatal("调用出错")
 			}
 		}
 	})
 	b.ReportAllocs()
-}
-
-func call(client drpc.Endpoint) {
-
 }
 
 func prepareArgs() *benchmark.BenchmarkMessage {

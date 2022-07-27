@@ -61,6 +61,8 @@ require github.com/osgochina/dmicro latest
 import "github.com/osgochina/dmicro"
 ```
 
+国内镜像: https://gitee.com/osgochina/dmicro
+
 ## 限制
 ```shell
 golang版本 >= 1.16
