@@ -9,9 +9,6 @@ import (
 
 // 正常进程
 func (that *DServer) initGrumble() {
-	that.grumbleApp = grumble.New(&grumble.Config{
-		Name: that.name,
-	})
 	that.grumbleApp.SetPrintASCIILogo(func(a *grumble.App) {
 		that.Version()
 	})

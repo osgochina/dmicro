@@ -74,6 +74,12 @@ func newDServer(name string) *DServer {
 		openCtrl:     true,
 	}
 	svr.graceful = newGraceful(svr)
+	// 初始化grumbleApp
+	svr.grumbleApp = grumble.New(&grumble.Config{
+		Name: svr.name,
+	})
+	// 初始化命令行逻辑
+	svr.initGrumble()
 	return svr
 }
 
@@ -187,9 +193,9 @@ func (that *DServer) setup(startFunction StartFunc) {
 	if len(os.Args) == 1 {
 		os.Args = append(os.Args, "start")
 	}
+	// 启动用户启动方法
 	that.startFunction = startFunction
-	// 初始化命令逻辑
-	that.initGrumble()
+
 	//解析命令行参数，并路由参数执行逻辑
 	err := that.grumbleApp.RunCommand(os.Args[1:])
 	if err != nil {
@@ -414,4 +420,8 @@ func (that *DServer) SetInheritListener(address []InheritAddr) {
 	if that.isMaster() {
 		that.inheritAddr = address
 	}
+}
+
+func (that *DServer) Grumble() *grumble.App {
+	return that.grumbleApp
 }

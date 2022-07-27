@@ -2,7 +2,6 @@ package dserver
 
 import (
 	"fmt"
-	"github.com/desertbit/grumble"
 	"github.com/gogf/gf/os/gfile"
 	"os"
 )
@@ -21,10 +20,10 @@ func Setup(startFunction StartFunc) {
 	defaultServer.setup(startFunction)
 }
 
-// GrumbleApp 增加自定义命令
-func GrumbleApp() *grumble.App {
-	return defaultServer.grumbleApp
-}
+//// GrumbleApp 增加自定义命令
+//func GrumbleApp() *grumble.App {
+//	return defaultServer.grumbleApp
+//}
 
 // CloseCtrl 关闭ctrl管理功能
 func CloseCtrl() {
