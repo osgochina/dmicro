@@ -37,12 +37,12 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 		if gstr.Contains(confFile, gfile.Separator) {
 			confPath := gfile.Abs(confFile)
 			if gfile.Exists(confPath) {
-				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
+				gcfg.SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
 				return gcfg.Instance()
 			}
 			confPath = fmt.Sprintf("%s%s%s", gfile.MainPkgPath(), gfile.Separator, gfile.Basename(confPath))
 			if gfile.Exists(confPath) {
-				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
+				gcfg.SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
 				return gcfg.Instance()
 			}
 		} else {
@@ -51,7 +51,7 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 			if !gfile.Exists(confPath) {
 				logger.Errorf("配置文件 %s 不存在", confFile)
 			} else {
-				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
+				gcfg.SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
 			}
 		}
 		return gcfg.Instance()
