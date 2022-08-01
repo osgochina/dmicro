@@ -63,5 +63,7 @@
   * 性能测试
     * [性能测试](benchmark.md)
 
+* 学习DMicro
+  * [Go 微服务开发框架 DMicro 的设计思路](blog/dmicro_design.md)
 
   

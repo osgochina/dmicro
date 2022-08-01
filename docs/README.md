@@ -234,6 +234,17 @@ Commands:
 DMicro_drpc »
 ```
 
+## TODO
+- [x] `Registry` 服务注册
+- [x] `Selector` 服务发现
+- [x] `Eventbus` 事件总线
+- [x] `Supervisor` 进程管理
+- [ ] `Code gen` 代码生成
+- [ ] `Tracing` 链路追踪
+- [ ] `Metrics` 统计告警
+- [ ] `Broker` 限流熔断
+- [ ] `OpenAPI` 文档自动生成
+
 ## 感谢
 
 `DMicro`该项目的诞生离不开`erpc`和`GoFrame`两个优秀的项目。

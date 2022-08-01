@@ -64,7 +64,7 @@ type Message interface {
 	Reset(settings ...MsgSetting) Message
 	Header
 	Body
-	// PipeTFilter 针对传入的数据做
+	// PipeTFilter 报文数据过滤处理管道
 	PipeTFilter() *tfilter.PipeTFilter
 
 	// Size 消息长度
