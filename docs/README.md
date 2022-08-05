@@ -245,6 +245,16 @@ DMicro_drpc »
 - [ ] `Broker` 限流熔断
 - [ ] `OpenAPI` 文档自动生成
 
+## 帮助
+
+* 你可以阅读[`DMicro`文档](https://osgochina.gitee.io/dmicro/)，
+* 微信交流群: 扫码或者微信添加`osgochina`备注`DMicro`加群。
+
+| 添加好友后拉群 |
+|---------|
+| <img height="200" src="./weixin.jpg" width="200"/>   |
+
+
 ## 感谢
 
 `DMicro`该项目的诞生离不开`erpc`和`GoFrame`两个优秀的项目。
