@@ -1,35 +1,34 @@
-package client
+package server
 
 import (
 	"context"
 	"crypto/tls"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto"
+	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
-	"github.com/osgochina/dmicro/selector"
+	"net"
 	"time"
 )
 
 type Options struct {
 	Context           context.Context // 上下文
 	Network           string          // 网络类型
-	LocalIP           string          // 本地网络
+	ListenAddress     string          // 要监听的地址
 	TlsCertFile       string
 	TlsKeyFile        string
 	TLSConfig         *tls.Config
 	ProtoFunc         proto.ProtoFunc
 	SessionAge        time.Duration
 	ContextAge        time.Duration
-	DialTimeout       time.Duration
 	SlowCometDuration time.Duration
 	BodyCodec         string
 	PrintDetail       bool
 	CountTime         bool
-	HeartbeatTime     time.Duration
 	Registry          registry.Registry
-	Selector          selector.Selector
-	RetryTimes        int
 	GlobalPlugin      []drpc.Plugin
+	EnableHeartbeat   bool
 }
 
 type Option func(*Options)
@@ -39,16 +38,14 @@ func NewOptions(options ...Option) Options {
 	opts := Options{
 		Context:           context.Background(),
 		Network:           "tcp",
-		LocalIP:           "0.0.0.0",
+		ListenAddress:     "0.0.0.0:0",
 		BodyCodec:         defaultBodyCodec,
 		SessionAge:        defaultSessionAge,
 		ContextAge:        defaultContextAge,
-		DialTimeout:       defaultDialTimeout,
 		SlowCometDuration: defaultSlowCometDuration,
-		RetryTimes:        defaultRetryTimes,
 		PrintDetail:       false,
 		CountTime:         false,
-		HeartbeatTime:     time.Duration(0),
+		EnableHeartbeat:   false,
 		ProtoFunc:         drpc.DefaultProtoFunc(),
 	}
 	for _, o := range options {
@@ -58,18 +55,28 @@ func NewOptions(options ...Option) Options {
 	return opts
 }
 
-func (that *Options) EndpointConfig() drpc.EndpointConfig {
+func (that Options) EndpointConfig() drpc.EndpointConfig {
 
 	c := drpc.EndpointConfig{
 		Network:           that.Network,
-		LocalIP:           that.LocalIP,
 		DefaultBodyCodec:  that.BodyCodec,
 		DefaultSessionAge: that.SessionAge,
 		DefaultContextAge: that.ContextAge,
 		SlowCometDuration: that.SlowCometDuration,
 		PrintDetail:       that.PrintDetail,
 		CountTime:         that.CountTime,
-		DialTimeout:       that.DialTimeout,
+	}
+	switch that.Network {
+	case "tcp", "tcp4", "tcp6", "kcp", "udp", "udp4", "udp6", "quic":
+		ip, port, err := net.SplitHostPort(that.ListenAddress)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		c.ListenIP = ip
+		c.ListenPort = gconv.Uint16(port)
+	case "unix", "unixpacket":
+		c.ListenIP = that.ListenAddress
+		c.ListenPort = 0
 	}
 	return c
 }
@@ -78,15 +85,6 @@ func (that *Options) EndpointConfig() drpc.EndpointConfig {
 func OptRegistry(r registry.Registry) Option {
 	return func(o *Options) {
 		o.Registry = r
-		// set in the selector
-		_ = o.Selector.Init(selector.Registry(r))
-	}
-}
-
-// OptSelector 设置选择器
-func OptSelector(s selector.Selector) Option {
-	return func(o *Options) {
-		o.Selector = s
 	}
 }
 
@@ -97,10 +95,10 @@ func OptGlobalPlugin(plugin ...drpc.Plugin) Option {
 	}
 }
 
-// OptHeartbeatTime 设置心跳包时间
-func OptHeartbeatTime(t time.Duration) Option {
+// OptEnableHeartbeat 是否开启心跳包
+func OptEnableHeartbeat(t bool) Option {
 	return func(o *Options) {
-		o.HeartbeatTime = t
+		o.EnableHeartbeat = t
 	}
 }
 
@@ -123,13 +121,6 @@ func OptTlsConfig(config *tls.Config) Option {
 func OptProtoFunc(pf proto.ProtoFunc) Option {
 	return func(o *Options) {
 		o.ProtoFunc = pf
-	}
-}
-
-// OptRetryTimes 设置重试次数
-func OptRetryTimes(n int) Option {
-	return func(o *Options) {
-		o.RetryTimes = n
 	}
 }
 
@@ -182,9 +173,9 @@ func OptNetwork(net string) Option {
 	}
 }
 
-// OptLocalIP 设置本地监听的地址
-func OptLocalIP(addr string) Option {
+// OptListenAddress 设置监听的网络地址
+func OptListenAddress(addr string) Option {
 	return func(o *Options) {
-		o.LocalIP = addr
+		o.ListenAddress = addr
 	}
 }

@@ -13,20 +13,20 @@ import (
 
 var (
 	// DefaultBodyCodec 默认的消息编码
-	DefaultBodyCodec = "json"
+	defaultBodyCodec = "json"
 	// DefaultSessionAge 默认session会话生命周期
-	DefaultSessionAge = time.Duration(0)
+	defaultSessionAge = time.Duration(0)
 	// DefaultContextAge 默认单次请求生命周期
-	DefaultContextAge = time.Duration(0)
+	defaultContextAge = time.Duration(0)
 	// DefaultDialTimeout 作为客户端角色时，请求服务端的超时时间
-	DefaultDialTimeout = time.Second * 5
+	defaultDialTimeout = time.Second * 5
 	// DefaultSlowCometDuration 慢处理定义时间
-	DefaultSlowCometDuration = time.Duration(0)
+	defaultSlowCometDuration = time.Duration(0)
 	// DefaultRetryTimes 默认重试次数
-	DefaultRetryTimes = 2
+	defaultRetryTimes = 2
 
 	// RerClientClosed 客户端已关闭错误信息
-	RerClientClosed = drpc.NewStatus(100, "client is closed", "")
+	rerClientClosed = drpc.NewStatus(100, "client is closed", "")
 )
 
 // RpcClient rpc客户端结构体
@@ -46,9 +46,9 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 	var heartbeatPing heartbeat.Ping
 	if opts.HeartbeatTime > time.Duration(0) {
 		heartbeatPing = heartbeat.NewPing(int(opts.HeartbeatTime/time.Second), false)
-		opts.GlobalLeftPlugin = append(opts.GlobalLeftPlugin, heartbeatPing)
+		opts.GlobalPlugin = append(opts.GlobalPlugin, heartbeatPing)
 	}
-	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalLeftPlugin...)
+	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalPlugin...)
 	// 优先使用已生成的证书对象
 	if opts.TLSConfig != nil {
 		endpoint.SetTLSConfig(opts.TLSConfig)
@@ -78,7 +78,7 @@ func (that *RpcClient) Options() Options {
 func (that *RpcClient) Call(serviceMethod string, args interface{}, result interface{}, setting ...message.MsgSetting) drpc.CallCmd {
 	select {
 	case <-that.closeCh:
-		return drpc.NewFakeCallCmd(serviceMethod, args, result, RerClientClosed)
+		return drpc.NewFakeCallCmd(serviceMethod, args, result, rerClientClosed)
 	default:
 	}
 	var (
@@ -109,7 +109,7 @@ func (that *RpcClient) Call(serviceMethod string, args interface{}, result inter
 func (that *RpcClient) Push(serviceMethod string, arg interface{}, setting ...message.MsgSetting) *drpc.Status {
 	select {
 	case <-that.closeCh:
-		return RerClientClosed
+		return rerClientClosed
 	default:
 	}
 	var (
@@ -145,7 +145,7 @@ func (that *RpcClient) AsyncCall(serviceMethod string, arg interface{}, result i
 	}
 	select {
 	case <-that.closeCh:
-		callCmd := drpc.NewFakeCallCmd(serviceMethod, arg, result, RerClientClosed)
+		callCmd := drpc.NewFakeCallCmd(serviceMethod, arg, result, rerClientClosed)
 		callCmdChan <- callCmd
 		return callCmd
 	default:
