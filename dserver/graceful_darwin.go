@@ -13,5 +13,5 @@ func (that *graceful) graceSignal() {
 	signal.Notify(that.signal, os.Interrupt, os.Kill)
 	<-that.signal // wait for SIGINT
 	signal.Stop(that.signal)
-	that.Shutdown()
+	that.shutdownSingle()
 }
