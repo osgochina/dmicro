@@ -57,6 +57,7 @@
   * 组件库
     * [EventBus(事件总线)](component/eventBus.md)
     * [RPC Client(rpc客户端)](component/client.md)
+    * [RPC Server(rpc服务端)](component/server.md)
     * [Registry(服务注册中心)](component/registry.md)
     * [Selector(服务发现)](component/selector.md)
 
