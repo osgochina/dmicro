@@ -16,7 +16,7 @@ func main() {
 		logger.Fatal(err)
 	}
 	sel := selector.NewSelector(selector.Registry(registry.DefaultRegistry))
-	cli := client.NewRpcClient(serviceName, client.Selector(sel))
+	cli := client.NewRpcClient(serviceName, client.OptSelector(sel))
 	for {
 		var result int
 		stat := cli.Call("/math/add",
