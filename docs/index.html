@@ -8,6 +8,7 @@
   <meta name="description" content="DMicro微服务框架文档">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//cdn.bootcdn.net/ajax/libs/docsify/4.12.1/themes/vue.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.css">
   <style>
     .app-name img{
       width:90px;
@@ -29,6 +30,8 @@
       repo: 'https://github.com/osgochina/dmicro/',
       search: "auto",
       logo: '/logo.svg',
+      formatUpdated: '{MM}/{DD} {HH}:{mm}',
+      onlyCover: false,
     }
   </script>
   <!-- Docsify v4 -->
@@ -38,12 +41,25 @@
   <!--golang的语法高亮-->
   <script src="//cdn.bootcdn.net/ajax/libs/prism/1.24.1/components/prism-go.min.js"></script>
   <!--复制到剪贴板-->
-  <script src="//unpkg.com/docsify-copy-code@2"></script>
+  <script src="//cdn.bootcdn.net/ajax/libs/docsify-copy-code/2.1.1/docsify-copy-code.min.js"></script>
   <!--图片缩放 - Zoom image-->
   <script src="//cdn.bootcdn.net/ajax/libs/docsify/4.12.1/plugins/zoom-image.min.js"></script>
   <!--美人鱼图-->
   <script src="//unpkg.com/mermaid/dist/mermaid.min.js"></script>
   <script src="//unpkg.com/docsify-mermaid@latest/dist/docsify-mermaid.js"></script>
-  <script>mermaid.initialize({ startOnLoad: true });</script>
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/gitalk.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true });
+    const gitalk = new Gitalk({
+      clientID: '771434d6a06ae303b905',
+      clientSecret: '93a0b924061d19254b35fbd0543c9cbd69a514d6',
+      repo: 'https://github.com/osgochina/dmicro-talk',
+      owner: 'osgochina',
+      admin: ['osgochina'],
+      // facebook-like distraction free mode
+      distractionFreeMode: false
+    })
+  </script>
 </body>
 </html>
