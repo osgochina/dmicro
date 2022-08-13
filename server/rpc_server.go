@@ -5,6 +5,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/registry"
 	"net"
 	"sync"
 	"time"
@@ -23,23 +24,30 @@ var (
 
 // RpcServer rpc服务端
 type RpcServer struct {
-	serviceName string // 服务名称
-	endpoint    drpc.Endpoint
-	opts        Options
-	closeCh     chan bool
-	closeMu     sync.Mutex
+	endpoint drpc.Endpoint
+	opts     Options
+	closeCh  chan bool
+	closeMu  sync.Mutex
 }
 
 // NewRpcServer 创建rpcServer
 func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 
-	opts := NewOptions(opt...)
+	opts := NewOptions(append([]Option{OptServiceName(serviceName)}, opt...)...)
 	//如果设置了心跳包，则发送心跳
 	var heartbeatPong heartbeat.Pong
 	if opts.EnableHeartbeat {
 		heartbeatPong = heartbeat.NewPong()
 		opts.GlobalPlugin = append(opts.GlobalPlugin, heartbeatPong)
 	}
+	// 增加服务注册中心组件
+	reg := opts.Registry
+	if reg == nil {
+		reg = registry.DefaultRegistry
+		// mdns组件需要初始化服务名称和版本
+		_ = reg.Init(registry.ServiceName(opts.ServiceName), registry.ServiceVersion(opts.ServiceVersion))
+	}
+	opts.GlobalPlugin = append(opts.GlobalPlugin, registry.NewRegistryPlugin(reg))
 	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalPlugin...)
 	// 优先使用已生成的证书对象
 	if opts.TLSConfig != nil {
@@ -54,9 +62,8 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 		}
 	}
 	rc := &RpcServer{
-		serviceName: serviceName,
-		opts:        opts,
-		endpoint:    endpoint,
+		opts:     opts,
+		endpoint: endpoint,
 	}
 	return rc
 }

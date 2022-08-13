@@ -3,7 +3,6 @@ package selector
 import (
 	"github.com/osgochina/dmicro/registry"
 	"github.com/osgochina/dmicro/registry/cache"
-	"github.com/osgochina/dmicro/registry/etcd"
 	"time"
 )
 
@@ -98,7 +97,7 @@ func NewSelector(opts ...Option) Selector {
 	}
 
 	if sOpt.Registry == nil {
-		sOpt.Registry = etcd.NewRegistry()
+		sOpt.Registry = registry.NewRegistry()
 	}
 	s := &registrySelector{
 		so: sOpt,

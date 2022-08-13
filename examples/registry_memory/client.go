@@ -5,19 +5,19 @@ import (
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
-	"github.com/osgochina/dmicro/registry/etcd"
-	"github.com/osgochina/dmicro/selector"
 	"time"
 )
 
 func main() {
-	serviceName := "testregistry"
-	etcd.SetPrefix("/chelun/registry/dev/")
-	reg := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
-		registry.ServiceName(serviceName),
-	)
-	sel := selector.NewSelector(selector.Registry(reg))
-	cli := client.NewRpcClient(serviceName, client.Selector(sel))
+	svr := &registry.Service{
+		Nodes: []*registry.Node{
+			{
+				//Id:      "foo-1.0.0-123",
+				Address: "127.0.0.1:9091",
+			},
+		},
+	}
+	cli := client.NewRpcClient("testregistry", client.OptCustomService(svr))
 	for {
 		var result int
 		stat := cli.Call("/math/add",

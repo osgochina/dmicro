@@ -267,7 +267,7 @@ func (that *cache) update(res *registry.Result) {
 	// 如果服务的节点已经不存在了，且是删除配置的时间，则从缓存中删除该服务
 	if len(res.Service.Nodes) == 0 {
 		switch res.Action {
-		case "delete":
+		case registry.Delete:
 			that.del(res.Service.Name)
 		}
 		return
@@ -282,7 +282,7 @@ func (that *cache) update(res *registry.Result) {
 		}
 	}
 	switch res.Action {
-	case "create", "update":
+	case registry.Create, registry.Update:
 		// 如果service为nil，则此次触发的事件，更新的信息不存在缓存中，则表示需要把该信息写入缓存
 		if service == nil {
 			that.set(res.Service.Name, append(services, res.Service))
@@ -304,7 +304,7 @@ func (that *cache) update(res *registry.Result) {
 		// 更新配置信息到缓存
 		services[index] = res.Service
 		that.set(res.Service.Name, services)
-	case "delete":
+	case registry.Delete:
 		//如果已经删除，则不需要在执行了
 		if service == nil {
 			return
@@ -344,7 +344,7 @@ func (that *cache) update(res *registry.Result) {
 		}
 		// 保存服务的多版本配置信息
 		that.set(service.Name, srvS)
-	case "override":
+	case registry.Override:
 		// 如果是覆盖事件，则删除该缓存
 		if service == nil {
 			return
@@ -364,7 +364,8 @@ func (that *cache) del(service string) {
 	delete(that.ttls, service)
 }
 
-func (that *cache) GetService(service string, opts ...registry.GetOption) ([]*registry.Service, error) {
+// GetService 根据服务名获取服务列表
+func (that *cache) GetService(service string, _ ...registry.GetOption) ([]*registry.Service, error) {
 	// 获取服务列表
 	services, err := that.get(service)
 	if err != nil {

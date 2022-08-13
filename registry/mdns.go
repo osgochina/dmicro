@@ -91,7 +91,7 @@ func (that *mdnsRegistry) Options() Options {
 }
 
 // Register 注册服务节点
-func (that *mdnsRegistry) Register(service *Service, opts ...RegisterOption) error {
+func (that *mdnsRegistry) Register(service *Service, _ ...RegisterOption) error {
 	that.Lock()
 	defer that.Unlock()
 
@@ -168,7 +168,7 @@ func (that *mdnsRegistry) Register(service *Service, opts ...RegisterOption) err
 }
 
 // Deregister 取消注册节点
-func (that *mdnsRegistry) Deregister(service *Service, opts ...DeregisterOption) error {
+func (that *mdnsRegistry) Deregister(service *Service, _ ...DeregisterOption) error {
 	that.Lock()
 	defer that.Unlock()
 
@@ -200,7 +200,7 @@ func (that *mdnsRegistry) Deregister(service *Service, opts ...DeregisterOption)
 }
 
 // GetService 获取指定的服务信息
-func (that *mdnsRegistry) GetService(service string, opts ...GetOption) ([]*Service, error) {
+func (that *mdnsRegistry) GetService(service string, _ ...GetOption) ([]*Service, error) {
 	serviceMap := make(map[string]*Service)
 	entries := make(chan *mdns.ServiceEntry, 10)
 	done := make(chan bool)
@@ -285,7 +285,7 @@ func (that *mdnsRegistry) GetService(service string, opts ...GetOption) ([]*Serv
 }
 
 // ListServices 获取服务列表
-func (that *mdnsRegistry) ListServices(opts ...ListOption) ([]*Service, error) {
+func (that *mdnsRegistry) ListServices(_ ...ListOption) ([]*Service, error) {
 	serviceMap := make(map[string]bool)
 	entries := make(chan *mdns.ServiceEntry, 10)
 	done := make(chan bool)
@@ -433,11 +433,11 @@ func (that *mdnsWatcher) Next() (*Result, error) {
 			if len(that.wo.Service) > 0 && txt.Service != that.wo.Service {
 				continue
 			}
-			var action string
+			var action EventType
 			if e.TTL == 0 {
-				action = "delete"
+				action = Delete
 			} else {
-				action = "create"
+				action = Create
 			}
 			service := &Service{
 				Name:    txt.Service,

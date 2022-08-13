@@ -17,6 +17,10 @@
   * [平滑重启](dserver/graceful.md)
   * [控制命令CTRL](dserver/ctrl.md)
 
+* RPC
+  * [RPC 服务端(RPC Server)](rpcserver/server.md)
+  * [RPC 客户端(RPC Client)](rpcclient/client.md)
+  
 * DRPC框架
   * [整体架构](drpc/diagram.md)
   * [端点 - Endpoint](drpc/endpoint.md)
@@ -55,11 +59,9 @@
     * [使用编译脚本](easyservice/build.md)
   
   * 组件库
-    * [EventBus(事件总线)](component/eventBus.md)
-    * [RPC Client(rpc客户端)](component/client.md)
-    * [RPC Server(rpc服务端)](component/server.md)
     * [Registry(服务注册中心)](component/registry.md)
     * [Selector(服务发现)](component/selector.md)
+    * [EventBus(事件总线)](component/eventBus.md)
 
   * 性能测试
     * [性能测试](benchmark.md)

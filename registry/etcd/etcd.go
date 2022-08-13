@@ -244,7 +244,7 @@ func (that *etcdRegistry) registerNode(s *registry.Service, node *registry.Node,
 }
 
 // Deregister 取消注册
-func (that *etcdRegistry) Deregister(s *registry.Service, opts ...registry.DeregisterOption) error {
+func (that *etcdRegistry) Deregister(s *registry.Service, _ ...registry.DeregisterOption) error {
 	if len(s.Nodes) == 0 {
 		return gerror.New("至少要传入一个node节点")
 	}
@@ -269,7 +269,7 @@ func (that *etcdRegistry) Deregister(s *registry.Service, opts ...registry.Dereg
 }
 
 // GetService 从etcd注册表中获取当前注册的节点列表，注意因为一个服务可以同时存在多个版本，所以需要按版本区分
-func (that *etcdRegistry) GetService(name string, opts ...registry.GetOption) ([]*registry.Service, error) {
+func (that *etcdRegistry) GetService(name string, _ ...registry.GetOption) ([]*registry.Service, error) {
 
 	// 获取当前注册的内容
 	ctx, cancel := context.WithTimeout(context.Background(), that.options.Timeout)
@@ -308,7 +308,7 @@ func (that *etcdRegistry) GetService(name string, opts ...registry.GetOption) ([
 }
 
 // ListServices 获取服务列表
-func (that *etcdRegistry) ListServices(opts ...registry.ListOption) ([]*registry.Service, error) {
+func (that *etcdRegistry) ListServices(_ ...registry.ListOption) ([]*registry.Service, error) {
 	// 根据版本区分服务列表
 	versions := make(map[string]*registry.Service)
 

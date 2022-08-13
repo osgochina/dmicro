@@ -101,12 +101,12 @@ func (that *PluginRegistry) Register() error {
 
 	regFunc := func(service *Service) error {
 		ttl := DefaultRegisterTTL
-		//if config.Context != nil {
-		ttl1, ok := config.Context.Value("RegisterTTL").(time.Duration)
-		if ok {
-			ttl = ttl1
+		if config.Context != nil {
+			ttl1, ok := config.Context.Value("RegisterTTL").(time.Duration)
+			if ok {
+				ttl = ttl1
+			}
 		}
-		//}
 
 		rOpts := []RegisterOption{RegisterTTL(ttl)}
 		var regErr error
@@ -157,7 +157,7 @@ func (that *PluginRegistry) Register() error {
 }
 
 // BeforeCloseEndpoint 关闭服务之前先取消注册
-func (that *PluginRegistry) BeforeCloseEndpoint(endpoint drpc.Endpoint) error {
+func (that *PluginRegistry) BeforeCloseEndpoint(_ drpc.Endpoint) error {
 	err := that.Deregister()
 	that.exit <- true
 	return err

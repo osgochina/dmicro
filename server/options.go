@@ -14,6 +14,8 @@ import (
 
 type Options struct {
 	Context           context.Context // 上下文
+	ServiceName       string          // 服务名称
+	ServiceVersion    string          // 服务版本
 	Network           string          // 网络类型
 	ListenAddress     string          // 要监听的地址
 	TlsCertFile       string
@@ -79,6 +81,20 @@ func (that Options) EndpointConfig() drpc.EndpointConfig {
 		c.ListenPort = 0
 	}
 	return c
+}
+
+// OptServiceName 设置服务名称
+func OptServiceName(name string) Option {
+	return func(o *Options) {
+		o.ServiceName = name
+	}
+}
+
+// OptServiceVersion 当前服务版本
+func OptServiceVersion(version string) Option {
+	return func(o *Options) {
+		o.ServiceVersion = version
+	}
 }
 
 // OptRegistry 设置服务注册中心

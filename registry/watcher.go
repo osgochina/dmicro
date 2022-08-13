@@ -11,7 +11,7 @@ type Watcher interface {
 
 // Result 监视器返回对象
 type Result struct {
-	Action  string
+	Action  EventType
 	Service *Service
 }
 
@@ -25,6 +25,8 @@ const (
 	Delete
 	// Update 服务的信息更新了
 	Update
+	// Override 覆盖
+	Override
 )
 
 func (t EventType) String() string {
@@ -35,6 +37,8 @@ func (t EventType) String() string {
 		return "delete"
 	case Update:
 		return "update"
+	case Override:
+		return "override"
 	default:
 		return "unknown"
 	}

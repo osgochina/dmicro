@@ -49,17 +49,17 @@ func (that *etcdWatcher) Next() (*registry.Result, error) {
 		}
 		for _, ev := range wresp.Events {
 			service := decode(ev.Kv.Value)
-			var action string
+			var action registry.EventType
 
 			switch ev.Type {
 			case clientv3.EventTypePut:
 				if ev.IsCreate() {
-					action = "create"
+					action = registry.Create
 				} else if ev.IsModify() {
-					action = "update"
+					action = registry.Update
 				}
 			case clientv3.EventTypeDelete:
-				action = "delete"
+				action = registry.Delete
 
 				// get service from prevKv
 				service = decode(ev.PrevKv.Value)

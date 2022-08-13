@@ -5,13 +5,17 @@ import (
 	"crypto/tls"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto"
+	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
+	"github.com/osgochina/dmicro/registry/memory"
 	"github.com/osgochina/dmicro/selector"
 	"time"
 )
 
 type Options struct {
 	Context           context.Context // 上下文
+	ServiceName       string          // 服务名称
+	ServiceVersion    string          // 服务版本
 	Network           string          // 网络类型
 	LocalIP           string          // 本地网络
 	TlsCertFile       string
@@ -74,12 +78,30 @@ func (that *Options) EndpointConfig() drpc.EndpointConfig {
 	return c
 }
 
+// OptServiceName 设置服务名称
+func OptServiceName(name string) Option {
+	return func(o *Options) {
+		o.ServiceName = name
+	}
+}
+
+// OptServiceVersion 当前服务版本
+func OptServiceVersion(version string) Option {
+	return func(o *Options) {
+		o.ServiceVersion = version
+	}
+}
+
 // OptRegistry 设置服务注册中心
 func OptRegistry(r registry.Registry) Option {
 	return func(o *Options) {
 		o.Registry = r
-		// set in the selector
-		_ = o.Selector.Init(selector.Registry(r))
+		// 初始化默认selector
+		if o.Selector == nil {
+			o.Selector = selector.NewSelector(selector.Registry(r))
+		} else {
+			_ = o.Selector.Init(selector.Registry(r))
+		}
 	}
 }
 
@@ -186,5 +208,36 @@ func OptNetwork(net string) Option {
 func OptLocalIP(addr string) Option {
 	return func(o *Options) {
 		o.LocalIP = addr
+	}
+}
+
+// OptCustomService 自定义service
+func OptCustomService(service *registry.Service) Option {
+	return func(o *Options) {
+		o.ServiceVersion = "1.0.0"
+		if len(service.Name) > 0 {
+			o.ServiceName = service.Name
+		} else {
+			service.Name = o.ServiceName
+		}
+		if len(service.Version) > 0 {
+			o.ServiceVersion = service.Version
+		} else {
+			service.Version = o.ServiceVersion
+		}
+		o.Registry = memory.NewRegistry()
+		err := o.Registry.Register(service)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		// 初始化默认selector
+		if o.Selector == nil {
+			o.Selector = selector.NewSelector(selector.Registry(o.Registry))
+		} else {
+			err = o.Selector.Init(selector.Registry(o.Registry))
+			if err != nil {
+				logger.Fatal(err)
+			}
+		}
 	}
 }

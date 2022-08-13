@@ -40,8 +40,9 @@ func NewRegistry(opts ...registry.Option) registry.Registry {
 	}
 
 	reg := &memRegistry{
-		options: options,
-		records: records,
+		options:  options,
+		records:  records,
+		watchers: make(map[string]*memWatcher),
 	}
 
 	go reg.ttlPrune()
@@ -103,7 +104,7 @@ func (that *memRegistry) Register(s *registry.Service, opts ...registry.Register
 		that.records[s.Name][s.Version] = r
 		logger.Debugf("Registry added new service: %s, version: %s", s.Name, s.Version)
 		// 发送事件
-		go that.event(&registry.Result{Action: "update", Service: s})
+		go that.event(&registry.Result{Action: registry.Update, Service: s})
 		return nil
 	}
 	addedNodes := false
@@ -131,7 +132,7 @@ func (that *memRegistry) Register(s *registry.Service, opts ...registry.Register
 	//如果有新的节点增加,需要发送事件
 	if addedNodes {
 		logger.Debugf("Registry added new node to service: %s, version: %s", s.Name, s.Version)
-		go that.event(&registry.Result{Action: "update", Service: s})
+		go that.event(&registry.Result{Action: registry.Update, Service: s})
 		return nil
 	}
 
@@ -145,7 +146,7 @@ func (that *memRegistry) Register(s *registry.Service, opts ...registry.Register
 }
 
 // Deregister 注销服务
-func (that *memRegistry) Deregister(s *registry.Service, opts ...registry.DeregisterOption) error {
+func (that *memRegistry) Deregister(s *registry.Service, _ ...registry.DeregisterOption) error {
 
 	that.Lock()
 	defer that.Unlock()
@@ -176,13 +177,13 @@ func (that *memRegistry) Deregister(s *registry.Service, opts ...registry.Deregi
 		delete(that.records, s.Name)
 	}
 	//触发事件
-	go that.event(&registry.Result{Action: "delete", Service: s})
+	go that.event(&registry.Result{Action: registry.Delete, Service: s})
 
 	return nil
 }
 
 // GetService 通过service name获取service对象
-func (that *memRegistry) GetService(name string, opts ...registry.GetOption) ([]*registry.Service, error) {
+func (that *memRegistry) GetService(name string, _ ...registry.GetOption) ([]*registry.Service, error) {
 	that.Lock()
 	defer that.Unlock()
 	records, ok := that.records[name]
@@ -199,7 +200,7 @@ func (that *memRegistry) GetService(name string, opts ...registry.GetOption) ([]
 }
 
 // ListServices 获取所有service对象
-func (that *memRegistry) ListServices(opts ...registry.ListOption) ([]*registry.Service, error) {
+func (that *memRegistry) ListServices(_ ...registry.ListOption) ([]*registry.Service, error) {
 
 	that.RLock()
 	defer that.RUnlock()

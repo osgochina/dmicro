@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/registry"
 	"github.com/osgochina/dmicro/selector"
 	"sync"
 	"time"
@@ -31,17 +32,15 @@ var (
 
 // RpcClient rpc客户端结构体
 type RpcClient struct {
-	serviceName string // 服务名称
-	endpoint    drpc.Endpoint
-	opts        Options
-	closeCh     chan bool
-	closeMu     sync.Mutex
+	endpoint drpc.Endpoint
+	opts     Options
+	closeCh  chan bool
+	closeMu  sync.Mutex
 }
 
 // NewRpcClient 创建rpc客户端
 func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
-
-	opts := NewOptions(opt...)
+	opts := NewOptions(append([]Option{OptServiceName(serviceName)}, opt...)...)
 	//如果设置了心跳包，则发送心跳
 	var heartbeatPing heartbeat.Ping
 	if opts.HeartbeatTime > time.Duration(0) {
@@ -62,9 +61,8 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 		}
 	}
 	rc := &RpcClient{
-		serviceName: serviceName,
-		opts:        opts,
-		endpoint:    endpoint,
+		opts:     opts,
+		endpoint: endpoint,
 	}
 	return rc
 }
@@ -197,16 +195,16 @@ func (that *RpcClient) Close() {
 // 选择session
 func (that *RpcClient) selectSession(serviceMethod string) (drpc.Session, *drpc.Status) {
 
-	next, err := that.next(that.serviceName)
+	next, err := that.next(that.Options().ServiceName)
 	if err != nil {
 		return nil, err
 	}
 	node, e := next()
 	if e != nil {
 		if e == selector.ErrNotFound {
-			return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client service %s: %s", that.serviceName, e.Error()))
+			return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client service %s: %s", that.Options().ServiceName, e.Error()))
 		}
-		return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", that.serviceName, e.Error()))
+		return nil, drpc.NewStatus(drpc.CodeInternalServerError, fmt.Sprintf("dmicro.client error selecting %s node: %s", that.Options().ServiceName, e.Error()))
 	}
 	addr := node.Address
 	s, found := that.endpoint.GetSession(addr)
@@ -226,6 +224,9 @@ func (that *RpcClient) selectSession(serviceMethod string) (drpc.Session, *drpc.
 
 // 获取服务可用的节点列表
 func (that *RpcClient) next(serviceName string) (selector.Next, *drpc.Status) {
+	if that.opts.Selector == nil {
+		that.defaultSelector(serviceName)
+	}
 	next, err := that.opts.Selector.Select(serviceName)
 	if err != nil {
 		if err == selector.ErrNotFound {
@@ -235,4 +236,19 @@ func (that *RpcClient) next(serviceName string) (selector.Next, *drpc.Status) {
 	}
 
 	return next, nil
+}
+
+// 如果没有设置selector,则初始化
+func (that *RpcClient) defaultSelector(serviceName string) {
+	that.opts.Registry = registry.DefaultRegistry
+	err := that.opts.Registry.Init(registry.ServiceName(serviceName))
+	if err != nil {
+		logger.Error(err)
+	}
+	// 初始化默认selector
+	if that.opts.Selector == nil {
+		that.opts.Selector = selector.NewSelector(selector.Registry(that.opts.Registry))
+	} else {
+		_ = that.opts.Selector.Init(selector.Registry(that.opts.Registry))
+	}
 }
