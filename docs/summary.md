@@ -1,15 +1,9 @@
-* 前言
-
-  * [项目介绍](README.md)
-
-* 版本管理
-
-  * [版本更新记录](changelog.md)
-
 * 快速入门
 
+  * [项目介绍](README.md)
   * [快速开始](overview.md)
   * [常见问题](questions.md)
+  * [版本更新记录](changelog.md)
 
 * DServer服务管理
   * [理解DServer](dserver/readme.md)
@@ -51,20 +45,20 @@
   * [WebSocket支持](drpc/websocket.md)
   * [并发请求客户端](drpc/multiclient.md)
 
-  * EasyService简单服务
-    * [创建服务](easyservice/start.md)
-    * [启动命令选项](easyservice/option.md)
-    * [服务沙盒](easyservice/sandbox.md)
-    * [平滑重启](easyservice/graceful.md)
-    * [使用编译脚本](easyservice/build.md)
+* EasyService简单服务
+  * [创建服务](easyservice/start.md)
+  * [启动命令选项](easyservice/option.md)
+  * [服务沙盒](easyservice/sandbox.md)
+  * [平滑重启](easyservice/graceful.md)
+  * [使用编译脚本](easyservice/build.md)
   
-  * 组件库
-    * [Registry(服务注册中心)](component/registry.md)
-    * [Selector(服务发现)](component/selector.md)
-    * [EventBus(事件总线)](component/eventBus.md)
+* 组件库
+  * [Registry(服务注册中心)](component/registry.md)
+  * [Selector(服务发现)](component/selector.md)
+  * [EventBus(事件总线)](component/eventBus.md)
 
-  * 性能测试
-    * [性能测试](benchmark.md)
+* 性能测试
+  * [性能测试](benchmark.md)
 
 * 学习DMicro
   * [Go 微服务开发框架 DMicro 的设计思路](blog/dmicro_design.md)

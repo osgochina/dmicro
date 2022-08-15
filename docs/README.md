@@ -190,7 +190,9 @@ func main() {
 ```
 通过以上的代码事例，大家基本可以了解`drpc`框架是怎么使用。
 
-## 使用`ctrl`命令管理正在运行的`server`
+## `ctrl`命令
+
+使用`ctrl`命令管理正在运行的`server`
 
 - 打开新的命令行窗口运行`ctrl`命令
 
@@ -247,7 +249,7 @@ DMicro_drpc »
 - [ ] `Broker` 限流熔断
 - [ ] `OpenAPI` 文档自动生成
 
-## 帮助
+## 获取帮助
 
 * 你可以阅读[`DMicro`文档](https://osgochina.gitee.io/dmicro/)，
 * 微信交流群: 扫码或者微信添加`osgochina`备注`DMicro`加群。
