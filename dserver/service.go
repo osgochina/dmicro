@@ -53,12 +53,13 @@ func (that *DService) addSandBox(s ISandbox) error {
 	if found {
 		return gerror.Newf("Sandbox [%s] 已存在", name)
 	}
-	s1, err := that.makeSandBox(s)
+	s1, kind, err := that.makeSandBox(s)
 	if err != nil {
 		return err
 	}
 	that.sList.Set(s1.Name(), &sandboxContainer{
 		sandbox: s1,
+		kind:    kind,
 		state:   process.Unknown,
 	})
 	return nil
@@ -73,13 +74,21 @@ func (that *DService) start(c *grumble.Context) {
 		// 如果命令行传入了需要启动的服务名称，则需要把改服务名提取出来，作为启动参数
 		var sandBoxNames []string
 		if that.server.sandboxNames.Len() > 0 {
-			for _, name := range that.sList.Keys() {
+			for name, s := range that.sList.Map() {
+				if s1, ok := s.(sandboxContainer); ok && s1.kind != serviceKindSandbox {
+					continue
+				}
 				if that.server.sandboxNames.ContainsI(gconv.String(name)) {
 					sandBoxNames = append(sandBoxNames, gconv.String(name))
 				}
 			}
 		} else {
-			sandBoxNames = gconv.Strings(that.sList.Keys())
+			for name, s := range that.sList.Map() {
+				if s1, ok := s.(sandboxContainer); ok && s1.kind != serviceKindSandbox {
+					continue
+				}
+				sandBoxNames = append(sandBoxNames, gconv.String(name))
+			}
 		}
 		// 如果未匹配服务名称，则说明该service不需要启动
 		if len(sandBoxNames) == 0 {
@@ -121,10 +130,14 @@ func (that *DService) start(c *grumble.Context) {
 
 	for name, sandbox := range that.sList.Map() {
 		s := sandbox.(*sandboxContainer)
+		if s.kind != serviceKindSandbox {
+			that.removeSandbox(gconv.String(name))
+			continue
+		}
 		// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
 		if that.server.sandboxNames.Len() > 0 && !that.server.sandboxNames.ContainsI(s.sandbox.Name()) {
 			that.removeSandbox(gconv.String(name))
-			return
+			continue
 		}
 		s.started = gtime.Now()
 		s.state = process.Running
@@ -148,6 +161,48 @@ func (that *DService) stop() {
 				logger.Errorf("服务 %s .结束出错，error: %v", s.sandbox.Name(), e)
 			} else {
 				logger.Printf("%s 服务 已结束.", s.sandbox.Name())
+			}
+			s.state = process.Stopped
+			s.stopTime = gtime.Now()
+		}
+	}
+	return
+}
+
+// 启动job
+func (that *DService) startJob(c *grumble.Context) {
+	for name, sandbox := range that.sList.Map() {
+		s := sandbox.(*sandboxContainer)
+		if s.kind != jobKindSandbox {
+			that.removeSandbox(gconv.String(name))
+			continue
+		}
+		// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
+		if that.server.sandboxNames.Len() > 0 && !that.server.sandboxNames.ContainsI(s.sandbox.Name()) {
+			that.removeSandbox(gconv.String(name))
+			continue
+		}
+		s.started = gtime.Now()
+		s.state = process.Running
+		logger.Printf("开始启动Job %s.", s.sandbox.Name())
+		e := s.sandbox.Setup()
+		if e != nil && s.state != process.Stopping {
+			s.state = process.Stopped
+			logger.Warningf("Sandbox Setup Return: %v", e)
+		}
+	}
+}
+
+// 关闭该server
+func (that *DService) stopJob() {
+	for _, sandbox := range that.sList.Map() {
+		s := sandbox.(*sandboxContainer)
+		if s.state == process.Running {
+			s.state = process.Stopping
+			if e := s.sandbox.Shutdown(); e != nil {
+				logger.Errorf("Job %s .结束出错，error: %v", s.sandbox.Name(), e)
+			} else {
+				logger.Printf("Job %s 已结束.", s.sandbox.Name())
 			}
 			s.state = process.Stopped
 			s.stopTime = gtime.Now()
@@ -211,39 +266,39 @@ func (that *DService) removeSandbox(name string) {
 }
 
 // 通过反射生成私有sandbox对象
-func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
+func (that *DService) makeSandBox(s ISandbox) (ISandbox, kindSandbox, error) {
 	var (
 		cType  = reflect.TypeOf(s)
 		cValue = reflect.ValueOf(s)
 	)
 	//判断是否是指针类型
 	if cType.Kind() != reflect.Ptr {
-		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象不是指针类型: %s", cType.String())
+		return nil, "", gerror.Newf("生成Sandbox: 传入的Sandbox对象不是指针类型: %s", cType.String())
 	}
 	var cTypeElem = cType.Elem()
 	//判断是否是struct类型
 	if cTypeElem.Kind() != reflect.Struct {
-		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象不是struct类型: %s", cType.String())
+		return nil, "", gerror.Newf("生成Sandbox: 传入的Sandbox对象不是struct类型: %s", cType.String())
 	}
 	//如果结构体没有实现 SandboxCtx 的方法，或者不是匿名结构体
 	iType, ok := cTypeElem.FieldByName("BaseSandbox")
 	if !ok || !iType.Anonymous {
-		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未继承 dserver.BaseSandbox : %s", cType.String())
+		return nil, "", gerror.Newf("生成Sandbox: 传入的Sandbox对象未继承 dserver.BaseSandbox : %s", cType.String())
 	}
 
 	_, found := cType.MethodByName("Setup")
 	if !found {
-		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Setup方法")
+		return nil, "", gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Setup方法")
 	}
 
 	_, found = cType.MethodByName("Shutdown")
 	if !found {
-		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Shutdown方法")
+		return nil, "", gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Shutdown方法")
 	}
 
 	_, found = cType.MethodByName("Name")
 	if !found {
-		return nil, gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Name方法")
+		return nil, "", gerror.Newf("生成Sandbox: 传入的Sandbox对象未实现Name方法")
 	}
 	iValue := cValue.Elem().FieldByName("Service")
 	if iValue.CanSet() {
@@ -259,5 +314,13 @@ func (that *DService) makeSandBox(s ISandbox) (ISandbox, error) {
 		c.Config = that.server.config
 		iValue.Set(reflect.ValueOf(c))
 	}
-	return s, nil
+	_, ok = cTypeElem.FieldByName("ServiceSandbox")
+	if ok {
+		return s, serviceKindSandbox, nil
+	}
+	_, ok = cTypeElem.FieldByName("JobSandbox")
+	if ok {
+		return s, jobKindSandbox, nil
+	}
+	return s, serviceKindSandbox, nil
 }

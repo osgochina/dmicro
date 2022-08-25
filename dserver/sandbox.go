@@ -6,6 +6,14 @@ import (
 	"github.com/osgochina/dmicro/supervisor/process"
 )
 
+// KindSandbox sandbox种类
+type kindSandbox string
+
+const (
+	jobKindSandbox     kindSandbox = "job"     // 一次性的任务
+	serviceKindSandbox kindSandbox = "service" // 持续提供服务
+)
+
 // ISandbox 服务沙盒的接口
 type ISandbox interface {
 	Name() string    // 沙盒名字
@@ -15,14 +23,25 @@ type ISandbox interface {
 
 // BaseSandbox sandbox的基类，必须继承它
 type BaseSandbox struct {
+	Context context.Context
 	Service *DService
 	Config  *Config
-	Context context.Context
+}
+
+// ServiceSandbox 服务
+type ServiceSandbox struct {
+	BaseSandbox
+}
+
+// JobSandbox 一次性任务
+type JobSandbox struct {
+	BaseSandbox
 }
 
 // sandbox的容器
 type sandboxContainer struct {
 	sandbox  ISandbox
+	kind     kindSandbox   // 容器的种类
 	started  *gtime.Time   //服务启动时间
 	stopTime *gtime.Time   //服务关闭时间
 	state    process.State // sandbox的运行状态

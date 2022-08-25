@@ -167,6 +167,21 @@ func (that *DServer) runProcessModelSingle(c *grumble.Context) {
 	})
 }
 
+// 启动job服务
+func (that *DServer) runJob(c *grumble.Context) {
+	//记录启动时间
+	that.started = gtime.Now()
+	//执行业务入口函数
+	that.startFunction(that)
+	// 业务进程启动sandbox
+	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
+		dService := v.(*DService)
+		dService.startJob(c)
+		dService.stopJob()
+		return true
+	})
+}
+
 // Setup 启动服务，并执行传入的启动方法
 func (that *DServer) setup(startFunction StartFunc) {
 	// 开启ctrl命令

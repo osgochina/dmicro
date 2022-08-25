@@ -23,5 +23,9 @@ func main() {
 		if err != nil {
 			logger.Fatal(err)
 		}
+		err = svr.AddSandBox(new(sandbox.JobSandbox), svr.NewService("admin"))
+		if err != nil {
+			logger.Fatal(err)
+		}
 	})
 }

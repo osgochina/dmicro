@@ -8,7 +8,7 @@ import (
 
 // DefaultSandBox  默认的服务
 type DefaultSandBox struct {
-	dserver.BaseSandbox
+	dserver.ServiceSandbox
 	endpoint drpc.Endpoint
 	TestName string
 }

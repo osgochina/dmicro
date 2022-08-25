@@ -135,4 +135,34 @@ func (that *DServer) initGrumble() {
 			return nil
 		},
 	})
+	that.grumbleApp.AddCommand(&grumble.Command{
+		Name: "job",
+		Help: "执行一次性job",
+		Args: func(a *grumble.Args) {
+			a.StringList("sandboxNames", "sandbox names")
+		},
+		Flags: func(f *grumble.Flags) {
+			f.String("c", "config", "", "指定要载入的配置文件，该参数与gf.gcfg.file参数二选一，建议使用该参数")
+			f.String("e", "env", "product", "环境变量，表示当前启动所在的环境,有[dev,test,product]这三种，默认是product")
+			f.Bool("", "debug", true, "是否开启debug 默认debug=true")
+		},
+		Run: func(c *grumble.Context) error {
+			// 获取要启动的sandbox名称
+			that.initSandboxNames(c.Args.StringList("sandboxNames"))
+			//解析配置文件
+			that.parserConfig(c.Flags.String("config"))
+			// 解析运行环境
+			that.parserEnv(c.Flags.String("env"))
+			// 解析debug参数
+			that.parserDebug(c.Flags.Bool("debug"))
+			//初始化日志配置
+			if e := that.initLogSetting(that.config); e != nil {
+				logger.Fatalf("error:%v", e)
+			}
+			// 启动
+			that.runJob(c)
+			os.Exit(0)
+			return nil
+		},
+	})
 }
