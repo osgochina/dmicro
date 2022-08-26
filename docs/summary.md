@@ -9,7 +9,7 @@
   * [理解DServer](dserver/readme.md)
   * [快速开始](dserver/quickstart.md)
   * [平滑重启](dserver/graceful.md)
-  * [控制命令CTRL](dserver/ctrl.md)
+  * [控制命令CTL](dserver/ctl.md)
 
 * RPC
   * [RPC 服务端(RPC Server)](rpcserver/server.md)

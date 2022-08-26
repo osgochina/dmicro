@@ -197,7 +197,7 @@ func main() {
 - 打开新的命令行窗口运行`ctrl`命令
 
 ```shell
-$ ./rbc_server.exe ctrl
+$ ./rbc_server.exe ctl
 
   ____    ____
  |  _ \  / ___|    ___   _ __  __   __   ___   _ __ 

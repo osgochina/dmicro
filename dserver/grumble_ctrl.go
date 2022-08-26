@@ -18,7 +18,7 @@ import (
 
 var ctrlCChan = make(chan struct{})
 
-// ctrl进程命令行
+// ctl进程命令行
 func (that *DServer) initCtrlGrumble() {
 	that.grumbleApp = grumble.New(&grumble.Config{
 		Name:                  that.name,
@@ -60,7 +60,7 @@ func (that *DServer) initCtrlGrumble() {
 			if err != nil {
 				return err
 			}
-			stat := sess.Call("/ctrl/info",
+			stat := sess.Call("/ctl/info",
 				nil,
 				&result,
 			).Status()
@@ -85,7 +85,7 @@ func (that *DServer) initCtrlGrumble() {
 			if err != nil {
 				return err
 			}
-			stat := sess.Call("/ctrl/start",
+			stat := sess.Call("/ctl/start",
 				name,
 				&result,
 			).Status()
@@ -110,7 +110,7 @@ func (that *DServer) initCtrlGrumble() {
 			if err != nil {
 				return err
 			}
-			stat := sess.Call("/ctrl/stop",
+			stat := sess.Call("/ctl/stop",
 				name,
 				&result,
 			).Status()
@@ -135,7 +135,7 @@ func (that *DServer) initCtrlGrumble() {
 			if err != nil {
 				return err
 			}
-			stat := sess.Call("/ctrl/reload",
+			stat := sess.Call("/ctl/reload",
 				name,
 				&result,
 			).Status()
@@ -166,7 +166,7 @@ func (that *DServer) initCtrlGrumble() {
 			if err != nil {
 				return err
 			}
-			stat := sess.Call("/ctrl/debug",
+			stat := sess.Call("/ctl/debug",
 				debug,
 				&result,
 			).Status()
@@ -200,7 +200,7 @@ func (that *DServer) initCtrlGrumble() {
 			if err != nil {
 				return err
 			}
-			stat := sess.Call("/ctrl/open_logger",
+			stat := sess.Call("/ctl/open_logger",
 				level,
 				&result,
 			).Status()
@@ -216,7 +216,7 @@ func (that *DServer) initCtrlGrumble() {
 					c.App.PrintError(err)
 					return
 				}
-				stat = sess.Call("/ctrl/close_logger",
+				stat = sess.Call("/ctl/close_logger",
 					nil,
 					&result,
 				).Status()

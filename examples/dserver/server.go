@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	//dserver.CloseCtrl()
+	//dserver.CloseCtl()
 	dserver.SetName("DMicro")
 	dserver.Setup(func(svr *dserver.DServer) {
 		svr.ProcessModel(dserver.ProcessModelMulti)
@@ -23,9 +23,9 @@ func main() {
 		if err != nil {
 			logger.Fatal(err)
 		}
-		err = svr.AddSandBox(new(sandbox.JobSandbox), svr.NewService("admin"))
-		if err != nil {
-			logger.Fatal(err)
-		}
+		//err = svr.AddSandBox(new(sandbox.JobSandbox), svr.NewService("admin"))
+		//if err != nil {
+		//	logger.Fatal(err)
+		//}
 	})
 }

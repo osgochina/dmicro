@@ -64,6 +64,7 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 	rc := &RpcServer{
 		opts:     opts,
 		endpoint: endpoint,
+		closeCh:  make(chan bool),
 	}
 	return rc
 }

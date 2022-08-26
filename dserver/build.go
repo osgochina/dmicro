@@ -40,7 +40,7 @@ func (that *DServer) Version() {
 var (
 	helpContent = gstr.TrimLeft(`
 USAGE
-  %path% start|stop|reload|quit|ctrl [OPTION] [sandboxName1|sandboxName2...] 
+  %path% start|stop|reload|quit|ctl [OPTION] [sandboxName1|sandboxName2...] 
 OPTION
   -c,--config     指定要载入的配置文件，该参数与gf.gcfg.file参数二选一，建议使用该参数
   -d,--daemon     使用守护进程模式启动
@@ -62,7 +62,7 @@ EXAMPLES
   %path% reload
   %path% version
   %path% help
-  %path% ctrl // 该命令可以链接到已启动的服务
+  %path% ctl // 该命令可以链接到已启动的服务
 `)
 )
 

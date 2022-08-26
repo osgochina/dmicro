@@ -24,7 +24,7 @@ func (that *DServer) endpoint() {
 		ListenIP: unix,
 	}
 	that.ctrlEndpoint = drpc.NewEndpoint(cfg)
-	that.ctrlEndpoint.RouteCall(new(Ctrl))
+	that.ctrlEndpoint.RouteCall(new(Ctl))
 	go func() {
 		err := that.ctrlEndpoint.ListenAndServe(pbproto.NewPbProtoFunc())
 		if err != nil {
@@ -34,11 +34,11 @@ func (that *DServer) endpoint() {
 	}()
 }
 
-type Ctrl struct {
+type Ctl struct {
 	drpc.CallCtx
 }
 
-func (that *Ctrl) Info(_ *string) (*Infos, *drpc.Status) {
+func (that *Ctl) Info(_ *string) (*Infos, *drpc.Status) {
 	var infos = new(Infos)
 	// 单进程
 	if defaultServer.procModel == ProcessModelSingle {
@@ -81,7 +81,7 @@ func (that *Ctrl) Info(_ *string) (*Infos, *drpc.Status) {
 }
 
 // Stop 停止指定的服务
-func (that *Ctrl) Stop(name *string) (*Result, *drpc.Status) {
+func (that *Ctl) Stop(name *string) (*Result, *drpc.Status) {
 	if len(*name) <= 0 {
 		return nil, drpc.NewStatus(100, "未传入sandbox name")
 	}
@@ -112,7 +112,7 @@ func (that *Ctrl) Stop(name *string) (*Result, *drpc.Status) {
 }
 
 // Start 启动指定的服务
-func (that *Ctrl) Start(name *string) (*Result, *drpc.Status) {
+func (that *Ctl) Start(name *string) (*Result, *drpc.Status) {
 	if len(*name) <= 0 {
 		return nil, drpc.NewStatus(100, "未传入sandbox name")
 	}
@@ -142,7 +142,7 @@ func (that *Ctrl) Start(name *string) (*Result, *drpc.Status) {
 }
 
 // Reload 启动指定的服务
-func (that *Ctrl) Reload(name *string) (*Result, *drpc.Status) {
+func (that *Ctl) Reload(name *string) (*Result, *drpc.Status) {
 	if len(*name) <= 0 {
 		return nil, drpc.NewStatus(100, "未传入sandbox name")
 	}
@@ -187,7 +187,7 @@ func (that *Ctrl) Reload(name *string) (*Result, *drpc.Status) {
 }
 
 // Debug 设置debug模式
-func (that *Ctrl) Debug(debug *bool) (*Result, *drpc.Status) {
+func (that *Ctl) Debug(debug *bool) (*Result, *drpc.Status) {
 	if *debug {
 		logger.SetDebug(true)
 		_ = defaultServer.config.Set("Debug", "true")
@@ -199,24 +199,24 @@ func (that *Ctrl) Debug(debug *bool) (*Result, *drpc.Status) {
 }
 
 // OpenLogger 开启日志流
-func (that *Ctrl) OpenLogger(level *int) (*Result, *drpc.Status) {
-	logger.AddHandler("ctrl_logger", newCtrlLogger(*level, that.Session().(drpc.Session)))
+func (that *Ctl) OpenLogger(level *int) (*Result, *drpc.Status) {
+	logger.AddHandler("ctl_logger", newCtrlLogger(*level, that.Session().(drpc.Session)))
 	go func() {
 		<-that.Session().CloseNotify()
-		logger.RemoveHandler("ctrl_logger")
+		logger.RemoveHandler("ctl_logger")
 	}()
 
 	return &Result{}, nil
 }
 
 // CloseLogger 关闭日志流
-func (that *Ctrl) CloseLogger(_ *string) (*Result, *drpc.Status) {
-	logger.RemoveHandler("ctrl_logger")
+func (that *Ctl) CloseLogger(_ *string) (*Result, *drpc.Status) {
+	logger.RemoveHandler("ctl_logger")
 	return &Result{}, nil
 }
 
 // GetDescription 获取进程描述
-func (that *Ctrl) createDescription(state process.State, startTime *gtime.Time, stopTime *gtime.Time) string {
+func (that *Ctl) createDescription(state process.State, startTime *gtime.Time, stopTime *gtime.Time) string {
 	if state == process.Running {
 		seconds := int(time.Now().Sub(startTime.Time).Seconds())
 		minutes := seconds / 60

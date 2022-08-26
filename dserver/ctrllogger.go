@@ -87,13 +87,13 @@ func (that *ctrlLoggerHandler) LogF(level int, format string, v ...interface{}) 
 	}
 }
 
-// glog的write接口，实现日志数据转发到ctrl客户端
+// glog的write接口，实现日志数据转发到ctl客户端
 func (that *ctrlLoggerHandler) Write(p []byte) (n int, err error) {
 	if that.sess == nil || !that.sess.Health() {
-		logger.RemoveHandler("ctrl_logger")
+		logger.RemoveHandler("ctl_logger")
 		return 0, nil
 	}
-	that.sess.Push("/ctrl_logger_push/logger", p)
+	that.sess.Push("/ctl_logger_push/logger", p)
 	return len(p), nil
 }
 
@@ -102,7 +102,7 @@ func (that *ctrlLoggerHandler) checkLevel(level int) bool {
 	return that.Level&level > 0
 }
 
-// ctrl端注册的方法，接收服务端推送的日志信息
+// ctl端注册的方法，接收服务端推送的日志信息
 type ctrlLoggerPush struct {
 	drpc.PushCtx
 }

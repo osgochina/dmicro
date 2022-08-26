@@ -7,7 +7,7 @@ import (
 func main() {
 	dserver.Authors = "osgochina@gmail.com"
 	dserver.SetName("DMicro_simple")
-	dserver.CloseCtrl()
+	dserver.CloseCtl()
 	dserver.Setup(func(svr *dserver.DServer) {
 	})
 }

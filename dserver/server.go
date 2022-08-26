@@ -52,7 +52,7 @@ type DServer struct {
 	masterBool     bool //是否是主进程
 	startFunction  StartFunc
 	grumbleApp     *grumble.App
-	openCtrl       bool          // 是否开启ctrl功能，默认是开启，
+	openCtl        bool          // 是否开启ctl功能，默认是开启，
 	ctrlEndpoint   drpc.Endpoint // 作为服务提供管理接口
 	ctrlSession    drpc.Session  // 作为客户端，链接到服务
 }
@@ -71,7 +71,7 @@ func newDServer(name string) *DServer {
 		sandboxNames: garray.NewStrArray(true),
 		manager:      process.NewManager(),
 		masterBool:   genv.GetVar(multiProcessMasterEnv, true).Bool(),
-		openCtrl:     true,
+		openCtl:      true,
 	}
 	svr.graceful = newGraceful(svr)
 	// 初始化grumbleApp
@@ -122,7 +122,7 @@ func (that *DServer) run(c *grumble.Context) {
 	//设置优雅退出时候需要做的工作
 	that.graceful.setShutdown(15*time.Second, that.firstStop, that.beforeExiting)
 
-	if that.isMaster() && that.openCtrl {
+	if that.isMaster() && that.openCtl {
 		that.endpoint()
 	}
 	// 如果开启了多进程模式，并且当前进程在主进程中
@@ -184,10 +184,10 @@ func (that *DServer) runJob(c *grumble.Context) {
 
 // Setup 启动服务，并执行传入的启动方法
 func (that *DServer) setup(startFunction StartFunc) {
-	// 开启ctrl命令
-	if that.openCtrl {
-		// ctrl命令
-		if len(os.Args) > 1 && os.Args[1] == "ctrl" {
+	// 开启ctl命令
+	if that.openCtl {
+		// ctl命令
+		if len(os.Args) > 1 && os.Args[1] == "ctl" {
 			os.Args = append(os.Args[0:1], os.Args[2:]...)
 			_ = logger.SetLevelStr("ERROR")
 			_, err := that.getCtrlSession()

@@ -63,6 +63,7 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 	rc := &RpcClient{
 		opts:     opts,
 		endpoint: endpoint,
+		closeCh:  make(chan bool),
 	}
 	return rc
 }

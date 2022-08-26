@@ -25,9 +25,9 @@ func Setup(startFunction StartFunc) {
 //	return defaultServer.grumbleApp
 //}
 
-// CloseCtrl 关闭ctrl管理功能
-func CloseCtrl() {
-	defaultServer.openCtrl = false
+// CloseCtl 关闭ctl管理功能
+func CloseCtl() {
+	defaultServer.openCtl = false
 }
 
 // Shutdown 关闭服务
