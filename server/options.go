@@ -35,8 +35,8 @@ type Options struct {
 
 type Option func(*Options)
 
-// NewOptions 初始化配置
-func NewOptions(options ...Option) Options {
+// newOptions 初始化配置
+func newOptions(options ...Option) Options {
 	opts := Options{
 		Context:           context.Background(),
 		Network:           "tcp",

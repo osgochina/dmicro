@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/server"
 	"time"
 )
 
@@ -58,4 +59,27 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 	}
 
 	return cfg
+}
+
+// RpcServerOption 获取rpc server的参数
+func (that *Config) RpcServerOption(sandboxName string) []server.Option {
+
+	var opts []server.Option
+	cfg := that.Config.GetJson(fmt.Sprintf("sandbox.%s", sandboxName))
+	if cfg.IsNil() {
+		return opts
+	}
+
+	opts = append(opts, server.OptNetwork(cfg.GetString("Network", "tcp")))
+	opts = append(opts, server.OptListenAddress(
+		fmt.Sprintf("%s:%d", cfg.GetString("ListenIP", "0.0.0.0"), cfg.GetUint16("ListenPort", 0)),
+	))
+	opts = append(opts, server.OptBodyCodec(cfg.GetString("DefaultBodyCodec", drpc.DefaultBodyCodec().Name())))
+	opts = append(opts, server.OptSessionAge(time.Duration(cfg.GetInt("DefaultSessionAge", 0))*time.Second))
+	opts = append(opts, server.OptContextAge(time.Duration(cfg.GetInt("DefaultContextAge", 0))*time.Second))
+	opts = append(opts, server.OptSlowCometDuration(time.Duration(cfg.GetInt("SlowCometDuration", 0))*time.Second))
+	opts = append(opts, server.OptPrintDetail(cfg.GetBool("PrintDetail", false)))
+	opts = append(opts, server.OptCountTime(cfg.GetBool("CountTime", false)))
+
+	return opts
 }

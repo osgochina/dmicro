@@ -33,7 +33,7 @@ type RpcServer struct {
 // NewRpcServer 创建rpcServer
 func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 
-	opts := NewOptions(append([]Option{OptServiceName(serviceName)}, opt...)...)
+	opts := newOptions(append([]Option{OptServiceName(serviceName)}, opt...)...)
 	//如果设置了心跳包，则发送心跳
 	var heartbeatPong heartbeat.Pong
 	if opts.EnableHeartbeat {
