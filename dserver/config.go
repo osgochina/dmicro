@@ -65,7 +65,7 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 func (that *Config) RpcServerOption(serverName string) []server.Option {
 
 	var opts []server.Option
-	cfg := that.Config.GetJson(fmt.Sprintf("rpcServer.%s", serverName))
+	cfg := that.Config.GetJson(serverName)
 	if cfg.IsNil() {
 		return opts
 	}
