@@ -9,6 +9,22 @@
 
 ## 快速开始
 
+```go
+func main() {
+	serviceName := "foo"
+	serviceVersion := "1.0.0"
+	svr := server.NewRpcServer(serviceName,
+		server.OptListenAddress("127.0.0.1:9091"),
+		server.OptCountTime(true),
+		server.OptPrintDetail(true),
+		server.OptServiceVersion(serviceVersion),
+		server.OptRegistry(reg),
+	)
+	svr.RouteCall(new(Math))
+	_ = svr.ListenAndServe()
+}
+```
+
 ## 支持的配置方法
 
 ## 使用组件

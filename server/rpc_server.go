@@ -147,7 +147,14 @@ func (that *RpcServer) GetSession(sessionId string) (drpc.Session, bool) {
 
 // ListenAndServe 启动并监听服务
 func (that *RpcServer) ListenAndServe(protoFunc ...proto.ProtoFunc) error {
-	return that.endpoint.ListenAndServe(protoFunc...)
+	//如果未传入传输协议，则使用opts中配置的协议
+	var protoFs []proto.ProtoFunc
+	if len(protoFunc) > 0 {
+		protoFs = protoFunc
+	} else if that.opts.ProtoFunc != nil {
+		protoFs = []proto.ProtoFunc{that.opts.ProtoFunc}
+	}
+	return that.endpoint.ListenAndServe(protoFs...)
 }
 
 // ServeConn 传入指定的conn，生成session

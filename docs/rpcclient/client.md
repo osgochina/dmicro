@@ -10,6 +10,23 @@
 
 ## 快速开始
 
+```go
+func main() {
+	serviceName := "foo"
+	cli := client.NewRpcClient(serviceName)
+	var result int
+	stat := cli.Call("/math/add",
+		[]int{1, 2, 3, 4, 5},
+		&result,
+		message.WithSetMeta("author", "liuzhiming"),
+	).Status()
+	if !stat.OK() {
+		logger.Fatalf("%v", stat)
+	}
+	logger.Printf("result: %d", result)
+}
+
+```
 
 ## 支持的配置方法
 

@@ -62,10 +62,10 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 }
 
 // RpcServerOption 获取rpc server的参数
-func (that *Config) RpcServerOption(sandboxName string) []server.Option {
+func (that *Config) RpcServerOption(serverName string) []server.Option {
 
 	var opts []server.Option
-	cfg := that.Config.GetJson(fmt.Sprintf("sandbox.%s", sandboxName))
+	cfg := that.Config.GetJson(fmt.Sprintf("rpcServer.%s", serverName))
 	if cfg.IsNil() {
 		return opts
 	}
