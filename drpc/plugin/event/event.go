@@ -3,6 +3,7 @@ package event
 import (
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
+	"github.com/osgochina/dmicro/eventbus"
 )
 
 const (
@@ -12,7 +13,9 @@ const (
 	OnCloseEvent   = "endpoint_close"
 )
 
-type eventPlugin struct{}
+type eventPlugin struct {
+	bus *eventbus.EventBus
+}
 
 var (
 	_ drpc.AfterAcceptPlugin        = new(eventPlugin)
@@ -24,8 +27,10 @@ var (
 	_ drpc.AfterReadReplyBodyPlugin = new(eventPlugin)
 )
 
-func NewEventPlugin() *eventPlugin {
-	return &eventPlugin{}
+func NewEventPlugin(bus *eventbus.EventBus) *eventPlugin {
+	return &eventPlugin{
+		bus: bus,
+	}
 }
 
 func (that *eventPlugin) Name() string {
@@ -34,9 +39,8 @@ func (that *eventPlugin) Name() string {
 
 // AfterAccept 作为服务端角色，接受客户端链接后触发该事件
 func (that *eventPlugin) AfterAccept(sess drpc.EarlySession) *drpc.Status {
-	eventBus := sess.Endpoint().EventBus()
-	if eventBus.HasListeners(OnAcceptEvent) {
-		err := eventBus.Publish(newOnAccept(sess))
+	if that.bus.HasListeners(OnAcceptEvent) {
+		err := that.bus.Publish(newOnAccept(sess))
 		if err != nil {
 			internal.Warning(err)
 		}
@@ -46,9 +50,8 @@ func (that *eventPlugin) AfterAccept(sess drpc.EarlySession) *drpc.Status {
 
 // AfterDial 链接成功后，触发onConnect事件
 func (that *eventPlugin) AfterDial(sess drpc.EarlySession, isRedial bool) *drpc.Status {
-	eventBus := sess.Endpoint().EventBus()
-	if eventBus.HasListeners(OnConnectEvent) {
-		err := eventBus.Publish(newOnConnect(true, sess, isRedial, nil))
+	if that.bus.HasListeners(OnConnectEvent) {
+		err := that.bus.Publish(newOnConnect(true, sess, isRedial, nil))
 		if err != nil {
 			internal.Warning(err)
 		}
@@ -58,9 +61,8 @@ func (that *eventPlugin) AfterDial(sess drpc.EarlySession, isRedial bool) *drpc.
 
 // AfterDialFail 链接失败后，触发onConnect事件
 func (that *eventPlugin) AfterDialFail(sess drpc.EarlySession, err error, isRedial bool) *drpc.Status {
-	eventBus := sess.Endpoint().EventBus()
-	if eventBus.HasListeners(OnConnectEvent) {
-		err := eventBus.Publish(newOnConnect(false, sess, isRedial, err))
+	if that.bus.HasListeners(OnConnectEvent) {
+		err = that.bus.Publish(newOnConnect(false, sess, isRedial, err))
 		if err != nil {
 			internal.Warning(err)
 		}
@@ -70,9 +72,8 @@ func (that *eventPlugin) AfterDialFail(sess drpc.EarlySession, err error, isRedi
 
 // AfterDisconnect 链接断开触发该事件
 func (that *eventPlugin) AfterDisconnect(sess drpc.BaseSession) *drpc.Status {
-	eventBus := sess.Endpoint().EventBus()
-	if eventBus.HasListeners(OnCloseEvent) {
-		err := eventBus.Publish(newOnClose(sess))
+	if that.bus.HasListeners(OnCloseEvent) {
+		err := that.bus.Publish(newOnClose(sess))
 		if err != nil {
 			internal.Warning(err)
 		}
@@ -82,9 +83,8 @@ func (that *eventPlugin) AfterDisconnect(sess drpc.BaseSession) *drpc.Status {
 
 // AfterReadCallBody 读取CALL消息的body之后触发该事件
 func (that *eventPlugin) AfterReadCallBody(ctx drpc.ReadCtx) *drpc.Status {
-	eventBus := ctx.Endpoint().EventBus()
-	if eventBus.HasListeners(OnReceiveEvent) {
-		err := eventBus.Publish(newOnReceive(ctx))
+	if that.bus.HasListeners(OnReceiveEvent) {
+		err := that.bus.Publish(newOnReceive(ctx))
 		if err != nil {
 			internal.Warning(err)
 		}

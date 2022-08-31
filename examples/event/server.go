@@ -3,30 +3,32 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/grand"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/event"
 	"github.com/osgochina/dmicro/eventbus"
 )
 
 func main() {
+	bus := eventbus.New(grand.S(8))
 	endpoint := drpc.NewEndpoint(drpc.EndpointConfig{
 		ListenIP:    "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: false,
 		CountTime:   false,
-	}, event.NewEventPlugin())
+	}, event.NewEventPlugin(bus))
 	endpoint.RouteCall(new(Math))
-	_ = endpoint.EventBus().Listen(event.OnAcceptEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {
+	_ = bus.Listen(event.OnAcceptEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {
 		onAccept := e.(*event.OnAccept)
 		fmt.Println(onAccept.Session.RemoteAddr())
 		return nil
 	}))
-	_ = endpoint.EventBus().Listen(event.OnReceiveEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {
+	_ = bus.Listen(event.OnReceiveEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {
 		onReceive := e.(*event.OnReceive)
 		fmt.Println(onReceive.ReadCtx.Input().String())
 		return nil
 	}))
-	_ = endpoint.EventBus().Listen(event.OnCloseEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {
+	_ = bus.Listen(event.OnCloseEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {
 		onClose := e.(*event.OnClose)
 		fmt.Println(onClose.Session.RemoteAddr())
 		return nil
