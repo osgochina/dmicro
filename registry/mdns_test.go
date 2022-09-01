@@ -286,7 +286,7 @@ func TestWatcher(t *testing.T) {
 			if res.Service.Name != service.Name {
 				continue
 			}
-			if res.Action != "create" {
+			if res.Action != Create {
 				t.Fatalf("Expected create event got %s for %s", res.Action, res.Service.Name)
 			}
 			testFn(service, res.Service)
@@ -306,7 +306,7 @@ func TestWatcher(t *testing.T) {
 			if res.Service.Name != service.Name {
 				continue
 			}
-			if res.Action != "delete" {
+			if res.Action != Delete {
 				continue
 			}
 

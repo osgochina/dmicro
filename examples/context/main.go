@@ -10,7 +10,7 @@ type TestCall struct {
 	drpc.CallCtx
 }
 
-// 注册方法名为"/test_call/test"
+// Test 注册方法名为"/test_call/test"
 func (that *TestCall) Test(arg *string) (string, *drpc.Status) {
 	that.Input()  // 当前请求的消息
 	that.Output() // 当前请求的响应消息
@@ -22,7 +22,7 @@ type TestPush struct {
 	drpc.PushCtx
 }
 
-// 注册方法名为"/test_push/test"
+// Test 注册方法名为"/test_push/test"
 func (that *TestPush) Test(arg *string) *drpc.Status {
 	that.Swap() // 当前session的交换空间
 	return nil

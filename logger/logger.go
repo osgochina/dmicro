@@ -74,7 +74,7 @@ func Printf(format string, v ...interface{}) {
 	log.callHandler(glog.LEVEL_NONE, format, v...)
 }
 
-// See Print.
+// Println See Print.
 func Println(v ...interface{}) {
 	log.gLog.Println(v...)
 	log.callHandler(glog.LEVEL_NONE, "", v...)

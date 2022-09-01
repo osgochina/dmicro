@@ -57,11 +57,11 @@ func (that *registrySelector) Select(service string, opts ...SelectOption) (Next
 }
 
 // Mark 设置针对节点的成功或错误
-func (that *registrySelector) Mark(service string, node *registry.Node, err error) {
+func (that *registrySelector) Mark(_ string, _ *registry.Node, _ error) {
 }
 
 // Reset 重置服务的状态
-func (that *registrySelector) Reset(service string) {
+func (that *registrySelector) Reset(_ string) {
 }
 
 // Close 关闭选择器
