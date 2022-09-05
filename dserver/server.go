@@ -17,6 +17,7 @@ import (
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
+	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
 	"runtime"
@@ -37,24 +38,26 @@ const ProcessModelMulti ProcessModel = 1
 
 // DServer 服务对象
 type DServer struct {
-	name           string // 应用名
-	manager        *process.Manager
-	serviceList    *gmap.TreeMap    //启动的服务列表
-	started        *gtime.Time      //服务启动时间
-	shutting       bool             // 服务正在关闭
-	beforeStopFunc StopFunc         //服务关闭之前执行该方法
-	pidFile        string           //pid文件的路径
-	sandboxNames   *garray.StrArray // 启动服务的名称
-	config         *gcfg.Config     ///服务的配置信息
-	inheritAddr    []InheritAddr    // 多进程模式，开启平滑重启逻辑模式下需要监听的列表
-	procModel      ProcessModel     // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
-	graceful       *graceful
-	masterBool     bool //是否是主进程
-	startFunction  StartFunc
-	grumbleApp     *grumble.App
-	openCtl        bool          // 是否开启ctl功能，默认是开启，
-	ctrlEndpoint   drpc.Endpoint // 作为服务提供管理接口
-	ctrlSession    drpc.Session  // 作为客户端，链接到服务
+	name                 string // 应用名
+	manager              *process.Manager
+	serviceList          *gmap.TreeMap    //启动的服务列表
+	started              *gtime.Time      //服务启动时间
+	shutting             bool             // 服务正在关闭
+	beforeStopFunc       StopFunc         //服务关闭之前执行该方法
+	pidFile              string           //pid文件的路径
+	sandboxNames         *garray.StrArray // 启动服务的名称
+	config               *gcfg.Config     ///服务的配置信息
+	inheritAddr          []InheritAddr    // 多进程模式，开启平滑重启逻辑模式下需要监听的列表
+	procModel            ProcessModel     // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
+	graceful             *graceful
+	masterBool           bool //是否是主进程
+	startFunction        StartFunc
+	grumbleApp           *grumble.App
+	cobraCmd             *cobra.Command // cobra根命令
+	cobraRootCmdCallback func(rootCmd *cobra.Command)
+	openCtl              bool          // 是否开启ctl功能，默认是开启，
+	ctrlEndpoint         drpc.Endpoint // 作为服务提供管理接口
+	ctrlSession          drpc.Session  // 作为客户端，链接到服务
 }
 
 // StartFunc 启动回调方法
@@ -74,12 +77,6 @@ func newDServer(name string) *DServer {
 		openCtl:      true,
 	}
 	svr.graceful = newGraceful(svr)
-	// 初始化grumbleApp
-	svr.grumbleApp = grumble.New(&grumble.Config{
-		Name: svr.name,
-	})
-	// 初始化命令行逻辑
-	svr.initGrumble()
 	return svr
 }
 
@@ -105,7 +102,7 @@ func (that *DServer) ProcessModel(model ProcessModel) {
 }
 
 // 启动服务
-func (that *DServer) run(c *grumble.Context) {
+func (that *DServer) run(cmd *cobra.Command) {
 	//判断是否是守护进程运行
 	if e := that.demonize(that.config); e != nil {
 		logger.Fatalf("error:%v", e)
@@ -127,9 +124,9 @@ func (that *DServer) run(c *grumble.Context) {
 	}
 	// 如果开启了多进程模式，并且当前进程在主进程中
 	if that.procModel == ProcessModelMulti && that.isMaster() {
-		that.runProcessModelMulti(c)
+		that.runProcessModelMulti(cmd)
 	} else {
-		that.runProcessModelSingle(c)
+		that.runProcessModelSingle(cmd)
 	}
 	// 当前进程模式是单进程模式，或者进程模式是多进程模式中的主进程，需要写入pid文件，其他进程不能写入
 	if that.procModel == ProcessModelSingle || (that.procModel == ProcessModelMulti && that.isMaster()) {
@@ -139,10 +136,12 @@ func (that *DServer) run(c *grumble.Context) {
 
 	//答疑服务信息
 	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
+	//监听重启信号
+	that.graceful.graceSignal()
 }
 
 // 多进程模式下启动service进程
-func (that *DServer) runProcessModelMulti(c *grumble.Context) {
+func (that *DServer) runProcessModelMulti(cmd *cobra.Command) {
 	// 多进程模式下，master进程预先监听地址
 	err := that.inheritListenerList()
 	if err != nil {
@@ -152,23 +151,23 @@ func (that *DServer) runProcessModelMulti(c *grumble.Context) {
 	// 启动service进程
 	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
 		dService := v.(*DService)
-		dService.start(c)
+		dService.start(cmd)
 		return true
 	})
 }
 
 // 单进程模式下启动sandbox
-func (that *DServer) runProcessModelSingle(c *grumble.Context) {
+func (that *DServer) runProcessModelSingle(cmd *cobra.Command) {
 	// 业务进程启动sandbox
 	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
 		dService := v.(*DService)
-		dService.start(c)
+		dService.start(cmd)
 		return true
 	})
 }
 
 // 启动job服务
-func (that *DServer) runJob(c *grumble.Context) {
+func (that *DServer) runJob(cmd *cobra.Command) {
 	//记录启动时间
 	that.started = gtime.Now()
 	//执行业务入口函数
@@ -176,7 +175,7 @@ func (that *DServer) runJob(c *grumble.Context) {
 	// 业务进程启动sandbox
 	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
 		dService := v.(*DService)
-		dService.startJob(c)
+		dService.startJob(cmd)
 		dService.stopJob()
 		return true
 	})
@@ -184,41 +183,19 @@ func (that *DServer) runJob(c *grumble.Context) {
 
 // Setup 启动服务，并执行传入的启动方法
 func (that *DServer) setup(startFunction StartFunc) {
-	// 开启ctl命令
-	if that.openCtl {
-		// ctl命令
-		if len(os.Args) > 1 && os.Args[1] == "ctl" {
-			os.Args = append(os.Args[0:1], os.Args[2:]...)
-			_ = logger.SetLevelStr("ERROR")
-			_, err := that.getCtrlSession()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(0)
-			}
-			that.initCtrlGrumble()
-			err = that.grumbleApp.Run()
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-				os.Exit(1)
-			}
-			return
-		}
+	if that.openCtl && len(os.Args) > 1 && os.Args[1] == "ctl" {
+		// 开启ctl命令
+		that.ctl()
+		return
 	}
-	// 如果启动进程的时候未传入任何参数，则默认使用start
-	if len(os.Args) == 1 {
-		os.Args = append(os.Args, "start")
+	// 初始化命令行功能
+	that.initCobra()
+	if that.cobraRootCmdCallback != nil {
+		that.cobraRootCmdCallback(that.cobraCmd)
 	}
 	// 启动用户启动方法
 	that.startFunction = startFunction
-
-	//解析命令行参数，并路由参数执行逻辑
-	err := that.grumbleApp.RunCommand(os.Args[1:])
-	if err != nil {
-		that.Help()
-		os.Exit(0)
-	}
-	//监听重启信号
-	that.graceful.graceSignal()
+	_ = that.cobraCmd.Execute()
 }
 
 // AddSandBox 添加sandbox到服务中
@@ -435,8 +412,4 @@ func (that *DServer) SetInheritListener(address []InheritAddr) {
 	if that.isMaster() {
 		that.inheritAddr = address
 	}
-}
-
-func (that *DServer) Grumble() *grumble.App {
-	return that.grumbleApp
 }

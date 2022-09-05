@@ -3,6 +3,7 @@ package dserver
 import (
 	"fmt"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/spf13/cobra"
 	"os"
 )
 
@@ -20,11 +21,6 @@ func Setup(startFunction StartFunc) {
 	defaultServer.setup(startFunction)
 }
 
-//// GrumbleApp 增加自定义命令
-//func GrumbleApp() *grumble.App {
-//	return defaultServer.grumbleApp
-//}
-
 // CloseCtl 关闭ctl管理功能
 func CloseCtl() {
 	defaultServer.openCtl = false
@@ -35,7 +31,7 @@ func Shutdown() {
 	defaultServer.Shutdown()
 }
 
-// SetHelpContent 自定义帮助信息
-func SetHelpContent(content string) {
-	helpContent = content
+// Cobra 注册命令
+func Cobra(f func(rootCmd *cobra.Command)) {
+	defaultServer.cobraRootCmdCallback = f
 }

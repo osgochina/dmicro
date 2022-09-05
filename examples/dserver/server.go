@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	//dserver.CloseCtl()
+	dserver.CloseCtl()
 	dserver.SetName("DMicro")
 	dserver.Setup(func(svr *dserver.DServer) {
 		svr.ProcessModel(dserver.ProcessModelMulti)
