@@ -1,4 +1,4 @@
-package metric
+package prometheus
 
 type GaugeInterface interface {
 	Add(delta float64)

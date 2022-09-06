@@ -1,4 +1,4 @@
-package metric
+package prometheus
 
 type HistogramInterface interface {
 	Put(sample float64)

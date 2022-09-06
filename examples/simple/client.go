@@ -14,7 +14,7 @@ func main() {
 
 	cli.RoutePush(new(Push))
 
-	sess, stat := cli.Dial("127.0.0.1:9091")
+	sess, stat := cli.Dial("127.0.0.1:8199")
 	if !stat.OK() {
 		logger.Fatalf("%v", stat)
 	}
@@ -25,9 +25,9 @@ func main() {
 			&result,
 			message.WithSetMeta("author", "liuzhiming"),
 		).Status()
-		if !stat.OK() {
-			logger.Fatalf("%v", stat)
-		}
+		//if !stat.OK() {
+		//	logger.Fatalf("%v", stat)
+		//}
 		logger.Printf("result: %d", result)
 		logger.Printf("Wait 10 seconds to receive the push...")
 		time.Sleep(time.Second * 1)
