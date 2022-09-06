@@ -29,7 +29,6 @@ func main() {
 		//	logger.Fatalf("%v", stat)
 		//}
 		logger.Printf("result: %d", result)
-		logger.Printf("Wait 10 seconds to receive the push...")
 		time.Sleep(time.Second * 1)
 	}
 }

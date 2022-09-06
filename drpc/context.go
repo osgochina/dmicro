@@ -70,6 +70,9 @@ type inputCtx interface {
 
 	// ResetServiceMethod 重置该消息将要访问的服务名
 	ResetServiceMethod(string)
+
+	// StartTime 请求的开始时间
+	StartTime() int64
 }
 
 // ReadCtx 读取消息使用的上下文
@@ -708,6 +711,11 @@ func (that *handlerCtx) handleCall() {
 //计算该请求处理消耗时间
 func (that *handlerCtx) recordCost() {
 	that.cost = time.Duration(that.sess.timeNow() - that.start)
+}
+
+// StartTime 请求处理的开始时间
+func (that *handlerCtx) StartTime() int64 {
+	return that.start
 }
 
 // 写入reply回复

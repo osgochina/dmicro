@@ -6,7 +6,7 @@ type Options struct {
 	Host        string
 	Port        int
 	Path        string
-	serviceName string
+	ServiceName string
 	plugin      drpc.Plugin
 }
 
@@ -30,6 +30,6 @@ func OptPath(path string) Option {
 
 func OptServiceName(name string) Option {
 	return func(options *Options) {
-		options.serviceName = name
+		options.ServiceName = name
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/metric"
 	"github.com/osgochina/dmicro/metric/prometheus"
 	"github.com/osgochina/dmicro/server"
+	"time"
 )
 
 func main() {
@@ -31,6 +32,7 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	for _, a := range *arg {
 		r += a
 	}
+	time.Sleep(time.Duration(grand.Intn(100)) * time.Millisecond)
 	// response
-	return r, drpc.NewStatus(int32(grand.Intn(100)), "ok")
+	return r, drpc.NewStatus(int32(grand.Intn(10)), "ok")
 }
