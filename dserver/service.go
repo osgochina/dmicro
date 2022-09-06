@@ -3,7 +3,6 @@ package dserver
 import (
 	"context"
 	"fmt"
-	"github.com/desertbit/grumble"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
@@ -11,6 +10,7 @@ import (
 	"github.com/gogf/gf/util/gutil"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
+	"github.com/spf13/cobra"
 	"os"
 	"reflect"
 	"time"
@@ -66,7 +66,7 @@ func (that *DService) addSandBox(s ISandbox) error {
 }
 
 // 启动该service
-func (that *DService) start(c *grumble.Context) {
+func (that *DService) start(cmd *cobra.Command) {
 	if that.server.procModel == ProcessModelMulti && that.server.isMaster() {
 		if that.sList.Size() == 0 {
 			return
@@ -99,7 +99,7 @@ func (that *DService) start(c *grumble.Context) {
 		if len(that.server.config.GetString("ENV_NAME")) > 0 {
 			args = append(args, fmt.Sprintf("--env=%s", that.server.config.GetString("ENV_NAME")))
 		}
-		confFile := c.Flags.String("config")
+		confFile := cmd.Flag("config").Value.String()
 		if len(confFile) > 0 {
 			args = append(args, fmt.Sprintf("--config=%s", confFile))
 		}
@@ -170,7 +170,7 @@ func (that *DService) stop() {
 }
 
 // 启动job
-func (that *DService) startJob(c *grumble.Context) {
+func (that *DService) startJob(cmd *cobra.Command) {
 	for name, sandbox := range that.sList.Map() {
 		s := sandbox.(*sandboxContainer)
 		if s.kind != jobKindSandbox {

@@ -11,12 +11,31 @@ import (
 	"github.com/modood/table"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
+	"github.com/osgochina/dmicro/logger"
 	"os"
 	"strings"
 	"time"
 )
 
 var ctrlCChan = make(chan struct{})
+
+// 启动ctl命令
+func (that *DServer) ctl() {
+	// ctl命令
+	os.Args = append(os.Args[0:1], os.Args[2:]...)
+	_ = logger.SetLevelStr("ERROR")
+	_, err := that.getCtrlSession()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(0)
+	}
+	that.initCtrlGrumble()
+	err = that.grumbleApp.Run()
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
 
 // ctl进程命令行
 func (that *DServer) initCtrlGrumble() {
