@@ -1,11 +1,14 @@
 # 版本更新记录
 
-## v1.1.0 (2022-09-7)
-1. 修复dServer在macos下报错的问题。
-2. 增加`memory registry` 服务注册组件。
-3. 优化`RPC Client` 接口。
-4. 优化`RPC Server` 接口。
-5. 完善文档，增加更多的使用示例。
+## v1.1.0 (2022-09-07)
+1. 替换 `dserver` 组件的命令行解析工具为 `Cobra`组件。
+2. `dserver` 组件中的 `ctrl` 命令替换为 `ctl`
+3. `dserver` 组件中的 `rpc server option`参数变成 `ServerName`
+4. 取消`endpoint`与`eventbus`强关联。
+5. 新增 `Metrics` 指标组件,支持统计运行指标。
+6. 修复 `rpc client` 与 `rpc server` 中 `close` 报错的问题.
+7. 移除 `EndpiontConfig`中的`CountTime`参数，默认开启请求耗时统计。
+8. 完善 `Rpc Server`,`Rpc Client`,`Metrics`组件的使用文档。
 
 ## v1.0.1 (2022-08-13)
 1. 修复dServer在macos下报错的问题。

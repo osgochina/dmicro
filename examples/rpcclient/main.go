@@ -10,6 +10,8 @@ import (
 
 func main() {
 	c := client.NewRpcClient("test_one",
+		client.OptPrintDetail(true),
+		client.OptLocalIP("127.0.0.1"),
 		client.OptMetrics(prometheus.NewPromMetrics(
 			metrics.OptHost("0.0.0.0"),
 			metrics.OptPort(9102),

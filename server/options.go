@@ -132,7 +132,7 @@ func OptTlsConfig(config *tls.Config) Option {
 	}
 }
 
-// OptProtoFunc 设置协议方法
+// OptProtoFunc 设置协议
 func OptProtoFunc(pf proto.ProtoFunc) Option {
 	return func(o *Options) {
 		o.ProtoFunc = pf
@@ -188,7 +188,7 @@ func OptListenAddress(addr string) Option {
 	}
 }
 
-// OptMetrics 设置统计数据接口
+// OptMetrics 设置统计数据对象
 func OptMetrics(m metrics.Metrics) Option {
 	return func(o *Options) {
 		o.Metrics = m
