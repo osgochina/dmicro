@@ -244,7 +244,7 @@ DMicro_drpc »
 - [x] `Supervisor` 进程管理
 - [ ] `Code gen` 代码生成
 - [ ] `Tracing` 链路追踪
-- [x] `Metrics` 统计告警
+- [x] `Metrics` 指标统计
 - [ ] `Broker` 限流熔断
 - [ ] `OpenAPI` 文档自动生成
 
