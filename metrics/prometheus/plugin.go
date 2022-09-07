@@ -8,7 +8,7 @@ import (
 
 var serverNamespace = "rpc_server"
 
-var metricReplyCodeTotal = NewCounterVec(&CounterVecOpts{
+var metricsReplyCodeTotal = NewCounterVec(&CounterVecOpts{
 	Namespace: serverNamespace,
 	Subsystem: "call",
 	Name:      "code_total",
@@ -16,7 +16,7 @@ var metricReplyCodeTotal = NewCounterVec(&CounterVecOpts{
 	Labels:    []string{"name", "path", "code"},
 })
 
-var metricReplyDur = NewHistogramVec(&HistogramVecOpts{
+var metricsReplyDur = NewHistogramVec(&HistogramVecOpts{
 	Namespace: serverNamespace,
 	Subsystem: "call",
 	Name:      "duration_ms",
@@ -26,40 +26,40 @@ var metricReplyDur = NewHistogramVec(&HistogramVecOpts{
 })
 
 type prometheusPlugin struct {
-	metric *PromMetric
+	metrics *PromMetrics
 }
 
 var _ drpc.BeforeWriteReplyPlugin = new(prometheusPlugin)
 var _ drpc.AfterCloseEndpointPlugin = new(prometheusPlugin)
 
 // NewPrometheusPlugin 创建插件
-func NewPrometheusPlugin(metric *PromMetric) *prometheusPlugin {
+func NewPrometheusPlugin(metrics *PromMetrics) *prometheusPlugin {
 	return &prometheusPlugin{
-		metric: metric,
+		metrics: metrics,
 	}
 }
 
 // Name 插件名称
 func (that *prometheusPlugin) Name() string {
-	return "metric_prometheus"
+	return "metrics_prometheus"
 }
 
 // BeforeWriteReply 回复消息之前调用，在写入客户端之前
 func (that *prometheusPlugin) BeforeWriteReply(ctx drpc.WriteCtx) *drpc.Status {
-	if !that.metric.Enabled() {
+	if !that.metrics.Enabled() {
 		return nil
 	}
 	readCtx := ctx.(drpc.ReadCtx)
 	path := readCtx.ServiceMethod()
 	code := gconv.String(ctx.Status().Code())
-	metricReplyCodeTotal.Inc(that.metric.Options().ServiceName, path, code)
-	metricReplyDur.Observe(int64(readCtx.CostTime()/time.Millisecond), that.metric.Options().ServiceName, path)
+	metricsReplyCodeTotal.Inc(that.metrics.Options().ServiceName, path, code)
+	metricsReplyDur.Observe(int64(readCtx.CostTime()/time.Millisecond), that.metrics.Options().ServiceName, path)
 	return nil
 }
 
-// AfterCloseEndpoint endpoint关闭，取消metric的注册
+// AfterCloseEndpoint endpoint关闭，取消metrics的注册
 func (that *prometheusPlugin) AfterCloseEndpoint(endpoint drpc.Endpoint, err error) error {
-	metricReplyCodeTotal.Close()
-	metricReplyDur.Close()
+	metricsReplyCodeTotal.Close()
+	metricsReplyDur.Close()
 	return nil
 }

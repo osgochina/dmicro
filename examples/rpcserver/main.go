@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/gogf/gf/util/grand"
 	"github.com/osgochina/dmicro/drpc"
-	"github.com/osgochina/dmicro/metric"
-	"github.com/osgochina/dmicro/metric/prometheus"
+	"github.com/osgochina/dmicro/metrics"
+	"github.com/osgochina/dmicro/metrics/prometheus"
 	"github.com/osgochina/dmicro/server"
 	"time"
 )
@@ -13,8 +13,8 @@ func main() {
 	s := server.NewRpcServer("test_one",
 		server.OptEnableHeartbeat(true),
 		server.OptListenAddress("127.0.0.1:8199"),
-		server.OptMetric(prometheus.NewPromMetric(
-			metric.OptHost("0.0.0.0"),
+		server.OptMetrics(prometheus.NewPromMetrics(
+			metrics.OptHost("0.0.0.0"),
 		)),
 	)
 	s.RouteCall(new(Math))

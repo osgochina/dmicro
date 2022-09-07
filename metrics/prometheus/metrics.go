@@ -5,7 +5,7 @@ import (
 	"github.com/gogf/gf/container/gtype"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/osgochina/dmicro/metric"
+	"github.com/osgochina/dmicro/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"sync"
@@ -24,30 +24,30 @@ var (
 	enabled = gtype.NewBool(false)
 )
 
-type PromMetric struct {
-	options metric.Options
+type PromMetrics struct {
+	options metrics.Options
 }
 
-var _ metric.Metrics = new(PromMetric)
+var _ metrics.Metrics = new(PromMetrics)
 
-func NewPromMetric(opts ...metric.Option) *PromMetric {
-	p := &PromMetric{
-		options: metric.Options{},
+func NewPromMetrics(opts ...metrics.Option) *PromMetrics {
+	p := &PromMetrics{
+		options: metrics.Options{},
 	}
 	p.options.Plugins = []drpc.Plugin{NewPrometheusPlugin(p)}
 	p.configure(opts...)
 	return p
 }
 
-func (that *PromMetric) Init(option ...metric.Option) {
+func (that *PromMetrics) Init(option ...metrics.Option) {
 	that.configure(option...)
 }
 
-func (that *PromMetric) Options() metric.Options {
+func (that *PromMetrics) Options() metrics.Options {
 	return that.options
 }
 
-func (that *PromMetric) configure(opts ...metric.Option) {
+func (that *PromMetrics) configure(opts ...metrics.Option) {
 	for _, o := range opts {
 		o(&that.options)
 	}
@@ -62,11 +62,11 @@ func (that *PromMetric) configure(opts ...metric.Option) {
 	}
 }
 
-func (that *PromMetric) Enabled() bool {
+func (that *PromMetrics) Enabled() bool {
 	return enabled.Val()
 }
 
-func (that *PromMetric) Start() {
+func (that *PromMetrics) Start() {
 	once.Do(func() {
 		enabled.Cas(false, true)
 		go func() {
@@ -80,6 +80,6 @@ func (that *PromMetric) Start() {
 	})
 }
 
-func (that *PromMetric) String() string {
-	return "prometheus_metric"
+func (that *PromMetrics) String() string {
+	return "prometheus_metrics"
 }

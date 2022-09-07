@@ -7,7 +7,7 @@ import (
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/osgochina/dmicro/metric"
+	"github.com/osgochina/dmicro/metrics"
 	"github.com/osgochina/dmicro/registry"
 	"net"
 	"time"
@@ -31,7 +31,7 @@ type Options struct {
 	Registry          registry.Registry
 	GlobalPlugin      []drpc.Plugin
 	EnableHeartbeat   bool
-	metric            metric.Metrics // 统计信息
+	metrics           metrics.Metrics // 统计信息
 }
 
 type Option func(*Options)
@@ -188,9 +188,9 @@ func OptListenAddress(addr string) Option {
 	}
 }
 
-// OptMetric 设置统计数据接口
-func OptMetric(m metric.Metrics) Option {
+// OptMetrics 设置统计数据接口
+func OptMetrics(m metrics.Metrics) Option {
 	return func(o *Options) {
-		o.metric = m
+		o.metrics = m
 	}
 }

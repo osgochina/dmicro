@@ -5,7 +5,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/osgochina/dmicro/metric"
+	"github.com/osgochina/dmicro/metrics"
 	"github.com/osgochina/dmicro/registry"
 	"net"
 	"sync"
@@ -48,10 +48,10 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 		// mdns组件需要初始化服务名称和版本
 		_ = reg.Init(registry.ServiceName(opts.ServiceName), registry.ServiceVersion(opts.ServiceVersion))
 	}
-	// 如果存在metric组件，则获取该组件的rpc插件
-	if opts.metric != nil {
-		opts.metric.Init(metric.OptServiceName(serviceName))
-		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.metric.Options().Plugins...)
+	// 如果存在metrics组件，则获取该组件的rpc插件
+	if opts.metrics != nil {
+		opts.metrics.Init(metrics.OptServiceName(serviceName))
+		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.metrics.Options().Plugins...)
 	}
 	opts.GlobalPlugin = append(opts.GlobalPlugin, registry.NewRegistryPlugin(reg))
 	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalPlugin...)
@@ -160,9 +160,9 @@ func (that *RpcServer) ListenAndServe(protoFunc ...proto.ProtoFunc) error {
 	} else if that.opts.ProtoFunc != nil {
 		protoFs = []proto.ProtoFunc{that.opts.ProtoFunc}
 	}
-	// 如果存在metric组件，则启动它
-	if that.opts.metric != nil {
-		that.opts.metric.Start()
+	// 如果存在metrics组件，则启动它
+	if that.opts.metrics != nil {
+		that.opts.metrics.Start()
 	}
 	return that.endpoint.ListenAndServe(protoFs...)
 }
