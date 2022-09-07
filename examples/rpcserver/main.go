@@ -10,15 +10,18 @@ import (
 )
 
 func main() {
-	s := server.NewRpcServer("test_one",
+	svr := server.NewRpcServer("test_one",
 		server.OptEnableHeartbeat(true),
 		server.OptListenAddress("127.0.0.1:8199"),
 		server.OptMetrics(prometheus.NewPromMetrics(
 			metrics.OptHost("0.0.0.0"),
+			metrics.OptPort(9101),
+			metrics.OptPath("/metrics"),
+			metrics.OptServiceName("test_one"),
 		)),
 	)
-	s.RouteCall(new(Math))
-	s.ListenAndServe()
+	svr.RouteCall(new(Math))
+	svr.ListenAndServe()
 }
 
 // Math rpc请求的最终处理器，必须集成drpc.CallCtx

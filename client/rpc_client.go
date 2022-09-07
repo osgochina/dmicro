@@ -50,7 +50,10 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 	}
 	// 如果存在metrics组件，则获取该组件的rpc插件
 	if opts.Metrics != nil {
-		opts.Metrics.Init(metrics.OptServiceName(serviceName))
+		// 未设置 service name 才需要初始化
+		if len(opts.Metrics.Options().ServiceName) == 0 {
+			opts.Metrics.Init(metrics.OptServiceName(serviceName))
+		}
 		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.Metrics.Options().Plugins...)
 		opts.Metrics.Start()
 	}

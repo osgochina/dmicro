@@ -56,6 +56,7 @@
   * [Registry(服务注册中心)](component/registry.md)
   * [Selector(服务发现)](component/selector.md)
   * [EventBus(事件总线)](component/eventBus.md)
+  * [Metrics(指标)](component/metrics.md)
 
 * 性能测试
   * [性能测试](benchmark.md)
