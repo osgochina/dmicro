@@ -22,7 +22,6 @@ Daemon = false
     DefaultContextAge = 30
     SlowCometDuration = 30
     PrintDetail = true
-    CountTime = true
     DialTimeout = 30
     RedialTimes = 1
     RedialInterval = 30

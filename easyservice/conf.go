@@ -21,7 +21,6 @@ type BoxConf struct {
 	SessionMaxTimeout  time.Duration `json:"session_max_timeout" comment:"会话生命周期"`
 	ResponseMaxTimeout time.Duration `json:"response_max_timeout" comment:"单次处理响应最长超时时间"`
 	SlowTimeout        time.Duration `json:"slow_timeout" comment:"慢请求时间"`
-	CountTime          bool          `json:"count_time" comment:"是否统计消耗时间"`
 	RequestMaxTimeout  time.Duration `json:"request_max_timeout" comment:"请求最长超时时间"`
 	RedialTimes        int           `json:"redial_times" comment:"在链接中断时候，试图链接服务端的最大重试次数。仅限客户端角色使用"`
 	RedialInterval     time.Duration `json:"redial_interval" comment:"仅限客户端角色使用 试图链接服务端时候，重试的时间间隔"`
@@ -43,7 +42,6 @@ func NewBoxConf(name string, config *gcfg.Config, parsers ...*gcmd.Parser) *BoxC
 	cfg.ResponseMaxTimeout = config.GetDuration(fmt.Sprintf("%s.ResponseMaxTimeout", name), 0)
 	cfg.RequestMaxTimeout = config.GetDuration(fmt.Sprintf("%s.RequestMaxTimeout", name), 0)
 	cfg.SlowTimeout = config.GetDuration(fmt.Sprintf("%s.SlowTimeout", name), 0)
-	cfg.CountTime = config.GetBool(fmt.Sprintf("%s.CountTime", name), false)
 	cfg.RedialTimes = config.GetInt(fmt.Sprintf("%s.RedialTimes", name), 0)
 	cfg.RedialInterval = config.GetDuration(fmt.Sprintf("%s.RedialTimes", name), 0)
 
@@ -102,7 +100,6 @@ func (that *BoxConf) EndpointConfig() drpc.EndpointConfig {
 		DefaultSessionAge: that.SessionMaxTimeout,
 		DefaultContextAge: that.ResponseMaxTimeout,
 		SlowCometDuration: that.SlowTimeout,
-		CountTime:         that.CountTime,
 	}
 	if len(that.ListenAddress) > 0 {
 		host, port, err := net.SplitHostPort(that.ListenAddress)

@@ -23,7 +23,6 @@ type EndpointConfig struct {
     DefaultContextAge time.Duration
     SlowCometDuration time.Duration
     PrintDetail bool
-    CountTime bool
     DialTimeout time.Duration
     RedialTimes int
     RedialInterval time.Duration

@@ -21,7 +21,6 @@ func (that *DefaultDRpcSandBox) Setup() error {
 	fmt.Println("DefaultDRpcSandBox Setup")
 	cfg := that.Config.EndpointConfig(that.Name())
 	cfg.ListenPort = 9091
-	cfg.CountTime = true
 	cfg.PrintDetail = true
 	that.endpoint = drpc.NewEndpoint(cfg)
 	that.endpoint.RouteCall(new(Math))

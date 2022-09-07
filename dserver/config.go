@@ -22,7 +22,6 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 		DefaultContextAge: 0,                              // 永久有效
 		SlowCometDuration: 0,                              // 不记录
 		PrintDetail:       false,                          // 是否打印日志详情
-		CountTime:         false,                          // 是否统计请求消耗时间
 
 		ListenIP:   "0.0.0.0", //作为服务端角色时，要监听的服务器本地IP
 		ListenPort: 0,         //作为服务端角色时，需要监听的本地端口号
@@ -51,7 +50,6 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 		cfg.DefaultContextAge = time.Duration(cj.GetInt("DefaultContextAge", 0)) * time.Second
 		cfg.SlowCometDuration = time.Duration(cj.GetInt("SlowCometDuration", 0)) * time.Second
 		cfg.PrintDetail = cj.GetBool("PrintDetail", false)
-		cfg.CountTime = cj.GetBool("CountTime", false)
 
 		cfg.DialTimeout = time.Duration(cj.GetInt("DialTimeout", 0)) * time.Second
 		cfg.RedialInterval = time.Duration(cj.GetInt("RedialInterval", 0)) * time.Second
@@ -79,7 +77,6 @@ func (that *Config) RpcServerOption(serverName string) []server.Option {
 	opts = append(opts, server.OptContextAge(time.Duration(cfg.GetInt("DefaultContextAge", 0))*time.Second))
 	opts = append(opts, server.OptSlowCometDuration(time.Duration(cfg.GetInt("SlowCometDuration", 0))*time.Second))
 	opts = append(opts, server.OptPrintDetail(cfg.GetBool("PrintDetail", false)))
-	opts = append(opts, server.OptCountTime(cfg.GetBool("CountTime", false)))
 
 	return opts
 }
