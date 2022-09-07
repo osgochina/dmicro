@@ -28,7 +28,6 @@ type Options struct {
 	SlowCometDuration time.Duration
 	BodyCodec         string
 	PrintDetail       bool
-	CountTime         bool
 	Registry          registry.Registry
 	GlobalPlugin      []drpc.Plugin
 	EnableHeartbeat   bool
@@ -48,7 +47,6 @@ func newOptions(options ...Option) Options {
 		ContextAge:        defaultContextAge,
 		SlowCometDuration: defaultSlowCometDuration,
 		PrintDetail:       false,
-		CountTime:         false,
 		EnableHeartbeat:   false,
 		ProtoFunc:         drpc.DefaultProtoFunc(),
 	}
@@ -68,7 +66,6 @@ func (that Options) EndpointConfig() drpc.EndpointConfig {
 		DefaultContextAge: that.ContextAge,
 		SlowCometDuration: that.SlowCometDuration,
 		PrintDetail:       that.PrintDetail,
-		CountTime:         that.CountTime,
 	}
 	switch that.Network {
 	case "tcp", "tcp4", "tcp6", "kcp", "udp", "udp4", "udp6", "quic":
@@ -174,13 +171,6 @@ func OptBodyCodec(c string) Option {
 func OptPrintDetail(c bool) Option {
 	return func(o *Options) {
 		o.PrintDetail = c
-	}
-}
-
-// OptCountTime 是否统计请求时间
-func OptCountTime(c bool) Option {
-	return func(o *Options) {
-		o.CountTime = c
 	}
 }
 

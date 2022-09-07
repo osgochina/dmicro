@@ -51,8 +51,7 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 	// 如果存在metric组件，则获取该组件的rpc插件
 	if opts.metric != nil {
 		opts.metric.Init(metric.OptServiceName(serviceName))
-		opts.CountTime = true
-		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.metric.Plugin()...)
+		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.metric.Options().Plugins...)
 	}
 	opts.GlobalPlugin = append(opts.GlobalPlugin, registry.NewRegistryPlugin(reg))
 	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalPlugin...)

@@ -7,6 +7,7 @@ import (
 type CounterVec interface {
 	Inc(labels ...string)
 	Add(v float64, labels ...string)
+	Close() bool
 }
 
 type CounterVecOpts VectorOpts
@@ -39,4 +40,8 @@ func (that *counterVec) Inc(labels ...string) {
 
 func (that *counterVec) Add(v float64, labels ...string) {
 	that.counter.WithLabelValues(labels...).Add(v)
+}
+
+func (that *counterVec) Close() bool {
+	return prometheus.Unregister(that.counter)
 }

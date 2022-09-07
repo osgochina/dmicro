@@ -28,7 +28,6 @@ type Options struct {
 	SlowCometDuration time.Duration
 	BodyCodec         string
 	PrintDetail       bool
-	CountTime         bool
 	HeartbeatTime     time.Duration
 	Registry          registry.Registry
 	Selector          selector.Selector
@@ -51,7 +50,6 @@ func NewOptions(options ...Option) Options {
 		SlowCometDuration: defaultSlowCometDuration,
 		RetryTimes:        defaultRetryTimes,
 		PrintDetail:       false,
-		CountTime:         false,
 		HeartbeatTime:     time.Duration(0),
 		ProtoFunc:         drpc.DefaultProtoFunc(),
 	}
@@ -72,7 +70,6 @@ func (that *Options) EndpointConfig() drpc.EndpointConfig {
 		DefaultContextAge: that.ContextAge,
 		SlowCometDuration: that.SlowCometDuration,
 		PrintDetail:       that.PrintDetail,
-		CountTime:         that.CountTime,
 		DialTimeout:       that.DialTimeout,
 	}
 	return c
@@ -187,13 +184,6 @@ func OptBodyCodec(c string) Option {
 func OptPrintDetail(c bool) Option {
 	return func(o *Options) {
 		o.PrintDetail = c
-	}
-}
-
-// OptCountTime 是否统计请求时间
-func OptCountTime(c bool) Option {
-	return func(o *Options) {
-		o.CountTime = c
 	}
 }
 

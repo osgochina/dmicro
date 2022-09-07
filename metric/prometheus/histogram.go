@@ -13,6 +13,7 @@ type HistogramVecOpts struct {
 
 type HistogramVec interface {
 	Observe(v int64, labels ...string)
+	Close() bool
 }
 
 type histogramVec struct {
@@ -41,4 +42,8 @@ func NewHistogramVec(opt *HistogramVecOpts) HistogramVec {
 
 func (that *histogramVec) Observe(v int64, labels ...string) {
 	that.histogram.WithLabelValues(labels...).Observe(float64(v))
+}
+
+func (that *histogramVec) Close() bool {
+	return prometheus.Unregister(that.histogram)
 }

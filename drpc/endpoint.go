@@ -109,7 +109,6 @@ type endpoint struct {
 	network           string
 	defaultBodyCodec  byte
 	printDetail       bool
-	countTime         bool
 
 	//只有作为server角色时候才有该对象
 	listerAddr net.Addr
@@ -143,7 +142,6 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 		network:           cfg.Network,
 		listerAddr:        cfg.listenAddr,
 		printDetail:       cfg.PrintDetail,
-		countTime:         cfg.CountTime,
 		listeners:         make(map[net.Listener]struct{}),
 		dialer: &Dialer{
 			network:        cfg.Network,
@@ -160,14 +158,8 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 		e.defaultBodyCodec = c.ID()
 	}
 	//是否统计时间
-	if e.countTime {
-		e.timeNow = func() int64 {
-			return time.Now().UnixNano()
-		}
-	} else {
-		e.timeNow = func() int64 {
-			return 0
-		}
+	e.timeNow = func() int64 {
+		return time.Now().UnixNano()
 	}
 
 	//触发事件

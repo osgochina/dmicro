@@ -47,7 +47,8 @@ func (that *session) printRunLog(realIP string, costTime time.Duration, input, o
 		costTimeStr string
 		printFunc   = internal.Debugf
 	)
-	if that.endpoint.countTime {
+	// 如果定义了慢处理时间
+	if that.endpoint.slowCometDuration > 0 {
 		if costTime >= that.endpoint.slowCometDuration {
 			costTimeStr = costTime.String() + "(slow)"
 		} else {

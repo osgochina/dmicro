@@ -45,8 +45,6 @@ type EndpointConfig struct {
 
 	//是否打印会话中请求的 body或 metadata
 	PrintDetail bool `json:"print_detail" comment:"是否打印请求的详细信息，body和metadata"`
-	// 是否统计消耗时间
-	CountTime bool `json:"count_time" comment:"是否统计请求消耗时间"`
 
 	// 作为客户端角色时，请求服务端的超时时间
 	DialTimeout time.Duration `json:"dial_timeout" comment:"作为客户端角色时，请求服务端的超时时间"`

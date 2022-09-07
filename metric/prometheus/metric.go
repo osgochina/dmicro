@@ -11,6 +11,14 @@ import (
 	"sync"
 )
 
+type VectorOpts struct {
+	Namespace string
+	Subsystem string
+	Name      string
+	Help      string
+	Labels    []string
+}
+
 var (
 	once    sync.Once
 	enabled = gtype.NewBool(false)
@@ -18,7 +26,6 @@ var (
 
 type PromMetric struct {
 	options metric.Options
-	plugin  drpc.Plugin
 }
 
 var _ metric.Metrics = new(PromMetric)
@@ -27,7 +34,7 @@ func NewPromMetric(opts ...metric.Option) *PromMetric {
 	p := &PromMetric{
 		options: metric.Options{},
 	}
-	p.plugin = NewPrometheusPlugin(p)
+	p.options.Plugins = []drpc.Plugin{NewPrometheusPlugin(p)}
 	p.configure(opts...)
 	return p
 }
@@ -57,10 +64,6 @@ func (that *PromMetric) configure(opts ...metric.Option) {
 
 func (that *PromMetric) Enabled() bool {
 	return enabled.Val()
-}
-
-func (that *PromMetric) Plugin() []drpc.Plugin {
-	return []drpc.Plugin{that.plugin}
 }
 
 func (that *PromMetric) Start() {

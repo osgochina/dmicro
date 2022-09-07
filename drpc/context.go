@@ -71,8 +71,8 @@ type inputCtx interface {
 	// ResetServiceMethod 重置该消息将要访问的服务名
 	ResetServiceMethod(string)
 
-	// StartTime 请求的开始时间
-	StartTime() int64
+	// CostTime 请求的开始时间
+	CostTime() time.Duration
 }
 
 // ReadCtx 读取消息使用的上下文
@@ -183,7 +183,6 @@ type handlerCtx struct {
 	callCmd         *callCmd
 	swap            *gmap.Map
 	start           int64
-	cost            time.Duration
 	pluginContainer *PluginContainer
 	stat            *status.Status
 	context         context.Context
@@ -218,7 +217,6 @@ func (that *handlerCtx) clean() {
 	that.arg = emptyValue
 	that.swap = nil
 	that.callCmd = nil
-	that.cost = 0
 	that.pluginContainer = nil
 	that.stat = nil
 	that.context = nil
@@ -609,11 +607,9 @@ func (that *handlerCtx) handlePush() {
 		if p := recover(); p != nil {
 			internal.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
 		}
-		//计算该请求处理消耗时间
-		that.recordCost()
 		//打印处理log
 		if enablePrintRunLog() {
-			that.sess.printRunLog(that.RealIP(), that.cost, that.input, nil, typePushHandle)
+			that.sess.printRunLog(that.RealIP(), that.CostTime(), that.input, nil, typePushHandle)
 		}
 	}()
 	//消息状态正确，且有注册的处理函数
@@ -645,11 +641,9 @@ func (that *handlerCtx) handleCall() {
 				that.writeReply(that.stat)
 			}
 		}
-		//计算消耗时间
-		that.recordCost()
 		//打印处理日志
 		if enablePrintRunLog() {
-			that.sess.printRunLog(that.RealIP(), that.cost, that.input, that.output, typeCallHandle)
+			that.sess.printRunLog(that.RealIP(), that.CostTime(), that.input, that.output, typeCallHandle)
 		}
 	}()
 
@@ -708,14 +702,14 @@ func (that *handlerCtx) handleCall() {
 	that.pluginContainer.afterWriteReply(that)
 }
 
-//计算该请求处理消耗时间
-func (that *handlerCtx) recordCost() {
-	that.cost = time.Duration(that.sess.timeNow() - that.start)
-}
+////计算该请求处理消耗时间
+//func (that *handlerCtx) recordCost() {
+//	that.cost = that.CostTime()
+//}
 
-// StartTime 请求处理的开始时间
-func (that *handlerCtx) StartTime() int64 {
-	return that.start
+// CostTime 请求处理的开始时间
+func (that *handlerCtx) CostTime() time.Duration {
+	return time.Duration(that.sess.timeNow() - that.start)
 }
 
 // 写入reply回复

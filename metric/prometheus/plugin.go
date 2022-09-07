@@ -1,7 +1,6 @@
 package prometheus
 
 import (
-	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"time"
@@ -9,7 +8,7 @@ import (
 
 var serverNamespace = "rpc_server"
 
-var metricServerReplyCodeTotal = NewCounterVec(&CounterVecOpts{
+var metricReplyCodeTotal = NewCounterVec(&CounterVecOpts{
 	Namespace: serverNamespace,
 	Subsystem: "call",
 	Name:      "code_total",
@@ -17,7 +16,7 @@ var metricServerReplyCodeTotal = NewCounterVec(&CounterVecOpts{
 	Labels:    []string{"name", "path", "code"},
 })
 
-var metricServerReplyDur = NewHistogramVec(&HistogramVecOpts{
+var metricReplyDur = NewHistogramVec(&HistogramVecOpts{
 	Namespace: serverNamespace,
 	Subsystem: "call",
 	Name:      "duration_ms",
@@ -31,13 +30,16 @@ type prometheusPlugin struct {
 }
 
 var _ drpc.BeforeWriteReplyPlugin = new(prometheusPlugin)
+var _ drpc.AfterCloseEndpointPlugin = new(prometheusPlugin)
 
+// NewPrometheusPlugin 创建插件
 func NewPrometheusPlugin(metric *PromMetric) *prometheusPlugin {
 	return &prometheusPlugin{
 		metric: metric,
 	}
 }
 
+// Name 插件名称
 func (that *prometheusPlugin) Name() string {
 	return "metric_prometheus"
 }
@@ -50,7 +52,14 @@ func (that *prometheusPlugin) BeforeWriteReply(ctx drpc.WriteCtx) *drpc.Status {
 	readCtx := ctx.(drpc.ReadCtx)
 	path := readCtx.ServiceMethod()
 	code := gconv.String(ctx.Status().Code())
-	metricServerReplyCodeTotal.Inc(that.metric.Options().ServiceName, path, code)
-	metricServerReplyDur.Observe((gtime.Now().UnixNano()-readCtx.StartTime())/int64(time.Millisecond), that.metric.Options().ServiceName, path)
+	metricReplyCodeTotal.Inc(that.metric.Options().ServiceName, path, code)
+	metricReplyDur.Observe(int64(readCtx.CostTime()/time.Millisecond), that.metric.Options().ServiceName, path)
+	return nil
+}
+
+// AfterCloseEndpoint endpoint关闭，取消metric的注册
+func (that *prometheusPlugin) AfterCloseEndpoint(endpoint drpc.Endpoint, err error) error {
+	metricReplyCodeTotal.Close()
+	metricReplyDur.Close()
 	return nil
 }
