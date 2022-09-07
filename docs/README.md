@@ -242,11 +242,12 @@ DMicro_drpc »
 - [x] `Selector` 服务发现
 - [x] `Eventbus` 事件总线
 - [x] `Supervisor` 进程管理
-- [ ] `Code gen` 代码生成
-- [ ] `Tracing` 链路追踪
 - [x] `Metrics` 指标统计
-- [ ] `Broker` 限流熔断
+- [ ] `Code gen` 代码生成
 - [ ] `OpenAPI` 文档自动生成
+- [ ] `Tracing` 链路追踪
+- [ ] `Broker` 限流熔断
+
 
 ## 获取帮助
 

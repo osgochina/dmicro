@@ -51,7 +51,6 @@ type prometheusPlugin struct {
 }
 
 var _ drpc.BeforeWriteReplyPlugin = new(prometheusPlugin)
-var _ drpc.AfterCloseEndpointPlugin = new(prometheusPlugin)
 var _ drpc.AfterReadReplyBodyPlugin = new(prometheusPlugin)
 
 // NewPrometheusPlugin 创建插件
@@ -88,12 +87,5 @@ func (that *prometheusPlugin) AfterReadReplyBody(ctx drpc.ReadCtx) *drpc.Status 
 	code := gconv.String(ctx.Status().Code())
 	metricsCallCodeTotal.Inc(that.metrics.Options().ServiceName, path, code)
 	metricsCallDur.Observe(int64(ctx.CostTime()/time.Millisecond), that.metrics.Options().ServiceName, path)
-	return nil
-}
-
-// AfterCloseEndpoint endpoint关闭，取消metrics的注册
-func (that *prometheusPlugin) AfterCloseEndpoint(endpoint drpc.Endpoint, err error) error {
-	metricsReplyCodeTotal.Close()
-	metricsReplyDur.Close()
 	return nil
 }
