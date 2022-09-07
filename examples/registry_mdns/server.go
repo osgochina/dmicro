@@ -17,7 +17,6 @@ func main() {
 	}
 	svr := server.NewRpcServer(serviceName,
 		server.OptListenAddress("127.0.0.1:9091"),
-		server.OptCountTime(true),
 		server.OptPrintDetail(true),
 		server.OptServiceVersion(serviceVersion),
 		server.OptRegistry(reg),

@@ -18,7 +18,5 @@ func main() {
 			},
 		})
 	})
-	dserver.Setup(func(svr *dserver.DServer) {
-
-	})
+	dserver.Setup()
 }

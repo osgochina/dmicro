@@ -15,7 +15,6 @@ func main() {
 		ListenIP:    "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: false,
-		CountTime:   false,
 	}, event.NewEventPlugin(bus))
 	endpoint.RouteCall(new(Math))
 	_ = bus.Listen(event.OnAcceptEvent, eventbus.ListenerFunc(func(e eventbus.IEvent) error {

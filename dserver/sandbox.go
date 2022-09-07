@@ -10,7 +10,6 @@ import (
 type kindSandbox string
 
 const (
-	jobKindSandbox     kindSandbox = "job"     // 一次性的任务
 	serviceKindSandbox kindSandbox = "service" // 持续提供服务
 )
 
@@ -30,11 +29,6 @@ type BaseSandbox struct {
 
 // ServiceSandbox 服务
 type ServiceSandbox struct {
-	BaseSandbox
-}
-
-// JobSandbox 一次性任务
-type JobSandbox struct {
 	BaseSandbox
 }
 

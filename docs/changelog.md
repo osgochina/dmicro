@@ -1,5 +1,12 @@
 # 版本更新记录
 
+## v1.1.0 (2022-09-7)
+1. 修复dServer在macos下报错的问题。
+2. 增加`memory registry` 服务注册组件。
+3. 优化`RPC Client` 接口。
+4. 优化`RPC Server` 接口。
+5. 完善文档，增加更多的使用示例。
+
 ## v1.0.1 (2022-08-13)
 1. 修复dServer在macos下报错的问题。
 2. 增加`memory registry` 服务注册组件。

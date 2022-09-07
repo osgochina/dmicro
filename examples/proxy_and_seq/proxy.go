@@ -30,7 +30,7 @@ DIAL:
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
-	return proxy.NewPlugin(func(*proxy.Label) proxy.Forwarder {
+	return proxy.NewProxyPlugin(func(*proxy.Label) proxy.Forwarder {
 		return sess
 	})
 }

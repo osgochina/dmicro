@@ -10,7 +10,6 @@ import (
 func main() {
 
 	srv := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:  true,
 		ListenPort: 9090,
 	})
 	srv.RouteCall(new(math))

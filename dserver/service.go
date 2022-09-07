@@ -169,48 +169,6 @@ func (that *DService) stop() {
 	return
 }
 
-// 启动job
-func (that *DService) startJob(cmd *cobra.Command) {
-	for name, sandbox := range that.sList.Map() {
-		s := sandbox.(*sandboxContainer)
-		if s.kind != jobKindSandbox {
-			that.removeSandbox(gconv.String(name))
-			continue
-		}
-		// 如果命令行传入了要启动的服务名，则需要匹配启动对应的sandbox
-		if that.server.sandboxNames.Len() > 0 && !that.server.sandboxNames.ContainsI(s.sandbox.Name()) {
-			that.removeSandbox(gconv.String(name))
-			continue
-		}
-		s.started = gtime.Now()
-		s.state = process.Running
-		logger.Printf("开始启动Job %s.", s.sandbox.Name())
-		e := s.sandbox.Setup()
-		if e != nil && s.state != process.Stopping {
-			s.state = process.Stopped
-			logger.Warningf("Sandbox Setup Return: %v", e)
-		}
-	}
-}
-
-// 关闭该server
-func (that *DService) stopJob() {
-	for _, sandbox := range that.sList.Map() {
-		s := sandbox.(*sandboxContainer)
-		if s.state == process.Running {
-			s.state = process.Stopping
-			if e := s.sandbox.Shutdown(); e != nil {
-				logger.Errorf("Job %s .结束出错，error: %v", s.sandbox.Name(), e)
-			} else {
-				logger.Printf("Job %s 已结束.", s.sandbox.Name())
-			}
-			s.state = process.Stopped
-			s.stopTime = gtime.Now()
-		}
-	}
-	return
-}
-
 // 启动指定的sandbox
 func (that *DService) startSandbox(name string) error {
 	s, found := that.sList.Search(name)
@@ -317,10 +275,6 @@ func (that *DService) makeSandBox(s ISandbox) (ISandbox, kindSandbox, error) {
 	_, ok = cTypeElem.FieldByName("ServiceSandbox")
 	if ok {
 		return s, serviceKindSandbox, nil
-	}
-	_, ok = cTypeElem.FieldByName("JobSandbox")
-	if ok {
-		return s, jobKindSandbox, nil
 	}
 	return s, serviceKindSandbox, nil
 }

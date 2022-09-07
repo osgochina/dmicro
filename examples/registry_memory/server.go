@@ -16,7 +16,6 @@ func main() {
 		registry.ServiceVersion("1.0.0"),
 	)
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: true,

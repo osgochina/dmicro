@@ -17,8 +17,8 @@ func SetName(name string) {
 }
 
 // Setup 启动服务
-func Setup(startFunction StartFunc) {
-	defaultServer.setup(startFunction)
+func Setup(startFunction ...StartFunc) {
+	defaultServer.setup(startFunction...)
 }
 
 // CloseCtl 关闭ctl管理功能

@@ -113,9 +113,10 @@ func (that *DServer) run(cmd *cobra.Command) {
 	// 初始化平滑重启的钩子函数
 	that.initGraceful()
 
-	//执行业务入口函数
-	that.startFunction(that)
-
+	if that.startFunction != nil {
+		//执行业务入口函数
+		that.startFunction(that)
+	}
 	//设置优雅退出时候需要做的工作
 	that.graceful.setShutdown(15*time.Second, that.firstStop, that.beforeExiting)
 
@@ -166,23 +167,8 @@ func (that *DServer) runProcessModelSingle(cmd *cobra.Command) {
 	})
 }
 
-// 启动job服务
-func (that *DServer) runJob(cmd *cobra.Command) {
-	//记录启动时间
-	that.started = gtime.Now()
-	//执行业务入口函数
-	that.startFunction(that)
-	// 业务进程启动sandbox
-	that.serviceList.Iterator(func(_ interface{}, v interface{}) bool {
-		dService := v.(*DService)
-		dService.startJob(cmd)
-		dService.stopJob()
-		return true
-	})
-}
-
 // Setup 启动服务，并执行传入的启动方法
-func (that *DServer) setup(startFunction StartFunc) {
+func (that *DServer) setup(startFunction ...StartFunc) {
 	if that.openCtl && len(os.Args) > 1 && os.Args[1] == "ctl" {
 		// 开启ctl命令
 		that.ctl()
@@ -193,8 +179,10 @@ func (that *DServer) setup(startFunction StartFunc) {
 	if that.cobraRootCmdCallback != nil {
 		that.cobraRootCmdCallback(that.cobraCmd)
 	}
-	// 启动用户启动方法
-	that.startFunction = startFunction
+	if len(startFunction) > 0 {
+		// 启动用户启动方法
+		that.startFunction = startFunction[0]
+	}
 	_ = that.cobraCmd.Execute()
 }
 

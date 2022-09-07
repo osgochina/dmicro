@@ -13,7 +13,6 @@ import (
 func main() {
 	go graceful.GraceSignal()
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: true,

@@ -17,7 +17,6 @@ func main() {
 	// server peer
 	srv := drpc.NewEndpoint(drpc.EndpointConfig{
 		Network:     "quic",
-		CountTime:   true,
 		ListenPort:  9090,
 		PrintDetail: true,
 	})

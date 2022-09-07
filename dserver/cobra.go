@@ -122,34 +122,4 @@ func (that *DServer) initCobra() {
 	}
 	quitCmd.Flags().StringP("pid", "", "", "Set the address of the pid file, the default is /tmp/[server].pid")
 	that.cobraCmd.AddCommand(quitCmd)
-
-	jobCmd := &cobra.Command{
-		Use:   "job",
-		Short: "Execute job service",
-		Long:  "Execute job service",
-		Example: `
-  /path/to/server job --env=dev --debug=true
-  /path/to/server job user admin --env=dev --debug=true --config=config.product.toml
-`,
-		Run: func(cmd *cobra.Command, args []string) {
-			// 获取要启动的sandbox名称
-			that.initSandboxNames(args)
-			//解析配置文件
-			that.parserConfig(cmd.Flag("config").Value.String())
-			// 解析运行环境
-			that.parserEnv(cmd.Flag("env").Value.String())
-			// 解析debug参数
-			that.parserDebug(cmd.Flag("debug").Value.String() == "true")
-			//初始化日志配置
-			if e := that.initLogSetting(that.config); e != nil {
-				cmd.PrintErrf("error:%v", e)
-				return
-			}
-			// 启动
-			that.runJob(cmd)
-		},
-	}
-	jobCmd.Flags().StringP("config", "c", "", "Specifies the path to the configuration file to load")
-	jobCmd.Flags().StringP("env", "e", "product", "Environment variable, indicating the current startup environment, there are three kinds of [dev, test, product], the default is product.")
-	that.cobraCmd.AddCommand(jobCmd)
 }

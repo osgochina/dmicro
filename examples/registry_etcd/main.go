@@ -25,7 +25,6 @@ func main() {
 			registry.ServiceVersion("0.2"),
 		)
 		svr2 := drpc.NewEndpoint(drpc.EndpointConfig{
-			CountTime:   true,
 			LocalIP:     "127.0.0.1",
 			ListenPort:  9092,
 			PrintDetail: true,
@@ -50,7 +49,6 @@ func getOrigServer(serviceName, serviceVersion string) drpc.Endpoint {
 		etcd.RegisterTTL(20*time.Second),
 	)
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: true,
@@ -74,7 +72,6 @@ func getRpcServer(serviceName, serviceVersion string) *server.RpcServer {
 		server.OptServiceVersion(serviceVersion),
 		server.OptRegistry(reg),
 		server.OptListenAddress("127.0.0.1:9091"),
-		server.OptCountTime(true),
 		server.OptPrintDetail(true),
 	)
 	svr.RouteCall(new(Math))

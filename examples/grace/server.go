@@ -37,7 +37,6 @@ func main() {
 	gSvr.Start()
 
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9091,
 		PrintDetail: true,
@@ -47,7 +46,6 @@ func main() {
 	go svr.ListenAndServe()
 
 	svr1 := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9092,
 		PrintDetail: true,
@@ -56,7 +54,6 @@ func main() {
 	svr1.RouteCall(new(Grace))
 	go svr1.ListenAndServe()
 	svr2 := drpc.NewEndpoint(drpc.EndpointConfig{
-		CountTime:   true,
 		LocalIP:     "127.0.0.1",
 		ListenPort:  9093,
 		PrintDetail: true,
