@@ -34,5 +34,5 @@ func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	}
 	time.Sleep(time.Duration(grand.Intn(100)) * time.Millisecond)
 	// response
-	return r, drpc.NewStatus(int32(grand.Intn(10)), "ok")
+	return r, nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/metrics"
 	"github.com/osgochina/dmicro/registry"
 	"github.com/osgochina/dmicro/selector"
 	"sync"
@@ -46,6 +47,12 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 	if opts.HeartbeatTime > time.Duration(0) {
 		heartbeatPing = heartbeat.NewPing(int(opts.HeartbeatTime/time.Second), false)
 		opts.GlobalPlugin = append(opts.GlobalPlugin, heartbeatPing)
+	}
+	// 如果存在metrics组件，则获取该组件的rpc插件
+	if opts.Metrics != nil {
+		opts.Metrics.Init(metrics.OptServiceName(serviceName))
+		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.Metrics.Options().Plugins...)
+		opts.Metrics.Start()
 	}
 	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalPlugin...)
 	// 优先使用已生成的证书对象
@@ -190,6 +197,9 @@ func (that *RpcClient) Close() {
 		close(that.closeCh)
 		_ = that.endpoint.Close()
 		_ = that.opts.Selector.Close()
+		if that.opts.Metrics != nil {
+			that.opts.Metrics.Shutdown()
+		}
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/metrics"
 	"github.com/osgochina/dmicro/registry"
 	"github.com/osgochina/dmicro/registry/memory"
 	"github.com/osgochina/dmicro/selector"
@@ -33,6 +34,7 @@ type Options struct {
 	Selector          selector.Selector
 	RetryTimes        int
 	GlobalPlugin      []drpc.Plugin
+	Metrics           metrics.Metrics // 统计信息
 }
 
 type Option func(*Options)
@@ -229,5 +231,12 @@ func OptCustomService(service *registry.Service) Option {
 				logger.Fatal(err)
 			}
 		}
+	}
+}
+
+// OptMetrics 设置统计数据接口
+func OptMetrics(m metrics.Metrics) Option {
+	return func(o *Options) {
+		o.Metrics = m
 	}
 }

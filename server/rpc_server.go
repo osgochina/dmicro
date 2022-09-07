@@ -49,9 +49,10 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 		_ = reg.Init(registry.ServiceName(opts.ServiceName), registry.ServiceVersion(opts.ServiceVersion))
 	}
 	// 如果存在metrics组件，则获取该组件的rpc插件
-	if opts.metrics != nil {
-		opts.metrics.Init(metrics.OptServiceName(serviceName))
-		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.metrics.Options().Plugins...)
+	if opts.Metrics != nil {
+		opts.Metrics.Init(metrics.OptServiceName(serviceName))
+		opts.GlobalPlugin = append(opts.GlobalPlugin, opts.Metrics.Options().Plugins...)
+		opts.Metrics.Start()
 	}
 	opts.GlobalPlugin = append(opts.GlobalPlugin, registry.NewRegistryPlugin(reg))
 	endpoint := drpc.NewEndpoint(opts.EndpointConfig(), opts.GlobalPlugin...)
@@ -138,6 +139,9 @@ func (that *RpcServer) Close() {
 	default:
 		close(that.closeCh)
 		_ = that.endpoint.Close()
+		if that.opts.Metrics != nil {
+			that.opts.Metrics.Shutdown()
+		}
 	}
 }
 
@@ -159,10 +163,6 @@ func (that *RpcServer) ListenAndServe(protoFunc ...proto.ProtoFunc) error {
 		protoFs = protoFunc
 	} else if that.opts.ProtoFunc != nil {
 		protoFs = []proto.ProtoFunc{that.opts.ProtoFunc}
-	}
-	// 如果存在metrics组件，则启动它
-	if that.opts.metrics != nil {
-		that.opts.metrics.Start()
 	}
 	return that.endpoint.ListenAndServe(protoFs...)
 }

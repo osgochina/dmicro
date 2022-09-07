@@ -7,5 +7,6 @@ type Metrics interface {
 	Options() Options
 	Enabled() bool
 	Start()
+	Shutdown()
 	String() string
 }

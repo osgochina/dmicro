@@ -31,7 +31,7 @@ type Options struct {
 	Registry          registry.Registry
 	GlobalPlugin      []drpc.Plugin
 	EnableHeartbeat   bool
-	metrics           metrics.Metrics // 统计信息
+	Metrics           metrics.Metrics // 统计信息
 }
 
 type Option func(*Options)
@@ -191,6 +191,6 @@ func OptListenAddress(addr string) Option {
 // OptMetrics 设置统计数据接口
 func OptMetrics(m metrics.Metrics) Option {
 	return func(o *Options) {
-		o.metrics = m
+		o.Metrics = m
 	}
 }

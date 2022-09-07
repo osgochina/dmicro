@@ -80,6 +80,11 @@ func (that *PromMetrics) Start() {
 	})
 }
 
+// Shutdown prometheus 组件不需要停止
+func (that *PromMetrics) Shutdown() {
+
+}
+
 func (that *PromMetrics) String() string {
 	return "prometheus_metrics"
 }
