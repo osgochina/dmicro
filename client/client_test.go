@@ -33,7 +33,6 @@ func getServer(serverName string, addr string) {
 	once.Do(func() {
 		svr := server.NewRpcServer(serverName,
 			server.OptListenAddress(addr),
-			server.OptCountTime(true),
 			server.OptPrintDetail(true),
 			server.OptEnableHeartbeat(true),
 			server.OptGlobalPlugin(ignorecase.NewIgnoreCase()),
