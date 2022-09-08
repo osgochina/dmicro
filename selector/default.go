@@ -6,10 +6,30 @@ import (
 	"time"
 )
 
-// 注册表选择器
+// 服务选择器
 type registrySelector struct {
 	so Options
 	rc cache.Cache
+}
+
+// NewSelector 创建选择器
+func NewSelector(opts ...Option) Selector {
+	sOpt := Options{
+		Strategy: Random,
+	}
+
+	for _, opt := range opts {
+		opt(&sOpt)
+	}
+
+	if sOpt.Registry == nil {
+		sOpt.Registry = registry.NewRegistry()
+	}
+	s := &registrySelector{
+		so: sOpt,
+	}
+	s.rc = s.newCache()
+	return s
 }
 
 // Init 初始化
@@ -72,10 +92,10 @@ func (that *registrySelector) Close() error {
 
 // 选择器名称
 func (that *registrySelector) String() string {
-	return "registry"
+	return "selector"
 }
 
-// 创建注册表信息缓存
+// 创建服务注册信息缓存
 func (that *registrySelector) newCache() cache.Cache {
 	opts := make([]cache.Option, 0, 1)
 	if that.so.Context != nil {
@@ -84,24 +104,4 @@ func (that *registrySelector) newCache() cache.Cache {
 		}
 	}
 	return cache.New(that.so.Registry, opts...)
-}
-
-// NewSelector 创建选择器
-func NewSelector(opts ...Option) Selector {
-	sOpt := Options{
-		Strategy: Random,
-	}
-
-	for _, opt := range opts {
-		opt(&sOpt)
-	}
-
-	if sOpt.Registry == nil {
-		sOpt.Registry = registry.NewRegistry()
-	}
-	s := &registrySelector{
-		so: sOpt,
-	}
-	s.rc = s.newCache()
-	return s
 }

@@ -46,7 +46,7 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 	if reg == nil {
 		reg = registry.DefaultRegistry
 		// mdns组件需要初始化服务名称和版本
-		_ = reg.Init(registry.ServiceName(opts.ServiceName), registry.ServiceVersion(opts.ServiceVersion))
+		_ = reg.Init(registry.OptServiceName(opts.ServiceName), registry.OptServiceVersion(opts.ServiceVersion))
 	}
 	// 如果存在metrics组件，则获取该组件的rpc插件
 	if opts.Metrics != nil {

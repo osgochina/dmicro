@@ -12,7 +12,6 @@ func main() {
 	svr := &registry.Service{
 		Nodes: []*registry.Node{
 			{
-				//Id:      "foo-1.0.0-123",
 				Address: "127.0.0.1:9091",
 			},
 		},

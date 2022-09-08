@@ -255,14 +255,14 @@ func (that *RpcClient) next(serviceName string) (selector.Next, *drpc.Status) {
 // 如果没有设置selector,则初始化
 func (that *RpcClient) defaultSelector(serviceName string) {
 	that.opts.Registry = registry.DefaultRegistry
-	err := that.opts.Registry.Init(registry.ServiceName(serviceName))
+	err := that.opts.Registry.Init(registry.OptServiceName(serviceName))
 	if err != nil {
 		logger.Error(err)
 	}
 	// 初始化默认selector
 	if that.opts.Selector == nil {
-		that.opts.Selector = selector.NewSelector(selector.Registry(that.opts.Registry))
+		that.opts.Selector = selector.NewSelector(selector.OptRegistry(that.opts.Registry))
 	} else {
-		_ = that.opts.Selector.Init(selector.Registry(that.opts.Registry))
+		_ = that.opts.Selector.Init(selector.OptRegistry(that.opts.Registry))
 	}
 }

@@ -97,9 +97,9 @@ func OptRegistry(r registry.Registry) Option {
 		o.Registry = r
 		// 初始化默认selector
 		if o.Selector == nil {
-			o.Selector = selector.NewSelector(selector.Registry(r))
+			o.Selector = selector.NewSelector(selector.OptRegistry(r))
 		} else {
-			_ = o.Selector.Init(selector.Registry(r))
+			_ = o.Selector.Init(selector.OptRegistry(r))
 		}
 	}
 }
@@ -224,9 +224,9 @@ func OptCustomService(service *registry.Service) Option {
 		}
 		// 初始化默认selector
 		if o.Selector == nil {
-			o.Selector = selector.NewSelector(selector.Registry(o.Registry))
+			o.Selector = selector.NewSelector(selector.OptRegistry(o.Registry))
 		} else {
-			err = o.Selector.Init(selector.Registry(o.Registry))
+			err = o.Selector.Init(selector.OptRegistry(o.Registry))
 			if err != nil {
 				logger.Fatal(err)
 			}

@@ -11,7 +11,7 @@ func main() {
 	serviceName := "testregistry"
 	serviceVersion := "1.0.0"
 	reg := registry.DefaultRegistry
-	err := reg.Init(registry.ServiceName(serviceName), registry.ServiceVersion(serviceVersion))
+	err := reg.Init(registry.OptServiceName(serviceName), registry.OptServiceVersion(serviceVersion))
 	if err != nil {
 		logger.Fatal(err)
 	}

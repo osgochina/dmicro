@@ -12,8 +12,8 @@ import (
 
 func main() {
 	reg := memory.NewRegistry(
-		registry.ServiceName("testregistry"),
-		registry.ServiceVersion("1.0.0"),
+		registry.OptServiceName("testregistry"),
+		registry.OptServiceVersion("1.0.0"),
 	)
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
 		LocalIP:     "127.0.0.1",

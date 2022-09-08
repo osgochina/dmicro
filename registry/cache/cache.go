@@ -127,7 +127,7 @@ func (that *cache) run(service string) {
 		time.Sleep(time.Duration(j) * time.Millisecond)
 
 		// 监听服务
-		w, err := that.Registry.Watch(registry.WatchService(service))
+		w, err := that.Registry.Watch(registry.OptWatchService(service))
 		// 监听出错
 		if err != nil {
 			// 如果是监听服务结束了，则直接退出结束该协程

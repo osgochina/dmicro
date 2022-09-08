@@ -18,11 +18,11 @@ func main() {
 	go func() {
 		time.Sleep(10 * time.Second)
 		_ = svr.Close()
-		reg1 := etcd.NewRegistry(registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
-			registry.LeasesInterval(10*time.Second),
+		reg1 := etcd.NewRegistry(registry.OptAddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
+			registry.OptLeasesInterval(10*time.Second),
 			etcd.RegisterTTL(20*time.Second),
-			registry.ServiceName("testregistry"),
-			registry.ServiceVersion("0.2"),
+			registry.OptServiceName("testregistry"),
+			registry.OptServiceVersion("0.2"),
 		)
 		svr2 := drpc.NewEndpoint(drpc.EndpointConfig{
 			LocalIP:     "127.0.0.1",
@@ -42,10 +42,10 @@ func main() {
 func getOrigServer(serviceName, serviceVersion string) drpc.Endpoint {
 	etcd.SetPrefix("/vprix/registry/dev/")
 	reg := etcd.NewRegistry(
-		registry.ServiceName(serviceName),
-		registry.ServiceVersion(serviceVersion),
-		registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
-		registry.LeasesInterval(10*time.Second),
+		registry.OptServiceName(serviceName),
+		registry.OptServiceVersion(serviceVersion),
+		registry.OptAddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
+		registry.OptLeasesInterval(10*time.Second),
 		etcd.RegisterTTL(20*time.Second),
 	)
 	svr := drpc.NewEndpoint(drpc.EndpointConfig{
@@ -62,10 +62,10 @@ func getOrigServer(serviceName, serviceVersion string) drpc.Endpoint {
 
 func getRpcServer(serviceName, serviceVersion string) *server.RpcServer {
 	reg := etcd.NewRegistry(
-		registry.ServiceName(serviceName),
-		registry.ServiceVersion(serviceVersion),
-		registry.AddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
-		registry.LeasesInterval(10*time.Second),
+		registry.OptServiceName(serviceName),
+		registry.OptServiceVersion(serviceVersion),
+		registry.OptAddrList("127.0.0.1:12379", "127.0.0.1:22379", "127.0.0.1:32379"),
+		registry.OptLeasesInterval(10*time.Second),
 		etcd.RegisterTTL(20*time.Second),
 	)
 	svr := server.NewRpcServer(serviceName,

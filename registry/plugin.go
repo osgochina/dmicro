@@ -108,7 +108,7 @@ func (that *PluginRegistry) Register() error {
 			}
 		}
 
-		rOpts := []RegisterOption{RegisterTTL(ttl)}
+		rOpts := []RegisterOption{OptRegisterTTL(ttl)}
 		var regErr error
 
 		for i := 0; i < 3; i++ {

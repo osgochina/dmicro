@@ -40,36 +40,36 @@ type ListOptions struct {
 	Context context.Context
 }
 
-// AddrList 设置地址列表
-func AddrList(addrList ...string) Option {
+// OptAddrList 设置地址列表
+func OptAddrList(addrList ...string) Option {
 	return func(o *Options) {
 		o.AddrList = addrList
 	}
 }
 
-// Timeout 设置超时时间
-func Timeout(t time.Duration) Option {
+// OptTimeout 设置超时时间
+func OptTimeout(t time.Duration) Option {
 	return func(o *Options) {
 		o.Timeout = t
 	}
 }
 
-// Secure 是否加密
-func Secure(b bool) Option {
+// OptSecure 是否加密
+func OptSecure(b bool) Option {
 	return func(o *Options) {
 		o.Secure = b
 	}
 }
 
-// TLSConfig 设置tls证书信息
-func TLSConfig(t *tls.Config) Option {
+// OptTLSConfig 设置tls证书信息
+func OptTLSConfig(t *tls.Config) Option {
 	return func(o *Options) {
 		o.TLSConfig = t
 	}
 }
 
-// ServiceName 设置服务名称
-func ServiceName(name string) Option {
+// OptServiceName 设置服务名称
+func OptServiceName(name string) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -78,8 +78,8 @@ func ServiceName(name string) Option {
 	}
 }
 
-// ServiceVersion 设置服务版本
-func ServiceVersion(version string) Option {
+// OptServiceVersion 设置服务版本
+func OptServiceVersion(version string) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -90,8 +90,8 @@ func ServiceVersion(version string) Option {
 
 type leasesInterval struct{}
 
-// LeasesInterval 租约续期时间
-func LeasesInterval(t time.Duration) Option {
+// OptLeasesInterval 租约续期时间
+func OptLeasesInterval(t time.Duration) Option {
 	return func(o *Options) {
 		if o.Context == nil {
 			o.Context = context.Background()
@@ -100,47 +100,47 @@ func LeasesInterval(t time.Duration) Option {
 	}
 }
 
-// RegisterTTL 设置服务的生存时间
-func RegisterTTL(t time.Duration) RegisterOption {
+// OptRegisterTTL 设置服务的生存时间
+func OptRegisterTTL(t time.Duration) RegisterOption {
 	return func(o *RegisterOptions) {
 		o.TTL = t
 	}
 }
 
-// RegisterContext 设置注册服务的上下文
-func RegisterContext(ctx context.Context) RegisterOption {
+// OptRegisterContext 设置注册服务的上下文
+func OptRegisterContext(ctx context.Context) RegisterOption {
 	return func(o *RegisterOptions) {
 		o.Context = ctx
 	}
 }
 
-// WatchService 监视器监听指定的服务
-func WatchService(name string) WatchOption {
+// OptWatchService 监视器监听指定的服务
+func OptWatchService(name string) WatchOption {
 	return func(o *WatchOptions) {
 		o.Service = name
 	}
 }
 
-// WatchContext 监视器的上下文
-func WatchContext(ctx context.Context) WatchOption {
+// OptWatchContext 监视器的上下文
+func OptWatchContext(ctx context.Context) WatchOption {
 	return func(o *WatchOptions) {
 		o.Context = ctx
 	}
 }
 
-func DeregisterContext(ctx context.Context) DeregisterOption {
+func OptDeregisterContext(ctx context.Context) DeregisterOption {
 	return func(o *DeregisterOptions) {
 		o.Context = ctx
 	}
 }
 
-func GetContext(ctx context.Context) GetOption {
+func OptGetContext(ctx context.Context) GetOption {
 	return func(o *GetOptions) {
 		o.Context = ctx
 	}
 }
 
-func ListContext(ctx context.Context) ListOption {
+func OptListContext(ctx context.Context) ListOption {
 	return func(o *ListOptions) {
 		o.Context = ctx
 	}

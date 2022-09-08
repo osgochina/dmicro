@@ -46,7 +46,7 @@ func NewRegistry(opts ...registry.Option) registry.Registry {
 	// 如果有注册表地址环境变量
 	address := os.Getenv("DMICRO_REGISTRY_ADDRESS")
 	if len(address) > 0 {
-		opts = append(opts, registry.AddrList(address))
+		opts = append(opts, registry.OptAddrList(address))
 	}
 	// 执行配置解析
 	_ = e.configure(opts...)

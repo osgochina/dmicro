@@ -4,17 +4,20 @@ import (
 	"github.com/osgochina/dmicro/client"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/logger"
+	"github.com/osgochina/dmicro/registry"
+	"github.com/osgochina/dmicro/selector"
 	"time"
 )
 
 func main() {
 	serviceName := "testregistry"
-	//err := registry.DefaultRegistry.Init(registry.ServiceName(serviceName))
-	//if err != nil {
-	//	logger.Fatal(err)
-	//}
-	//cli := client.NewRpcClient(serviceName, client.OptRegistry(registry.DefaultRegistry))
-	cli := client.NewRpcClient(serviceName)
+	cli := client.NewRpcClient(serviceName,
+		client.OptSelector(
+			selector.NewSelector(
+				selector.OptRegistry(registry.DefaultRegistry),
+			),
+		),
+	)
 	for {
 		var result int
 		stat := cli.Call("/math/add",

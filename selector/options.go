@@ -31,29 +31,29 @@ type Option func(*Options)
 // SelectOption 调用select 方法的时候传入的配置
 type SelectOption func(*SelectOptions)
 
-// Registry 设置selector的注册表对象
-func Registry(r registry.Registry) Option {
+// OptRegistry 设置selector的注册表对象
+func OptRegistry(r registry.Registry) Option {
 	return func(o *Options) {
 		o.Registry = r
 	}
 }
 
-// SetStrategy 设置节点策略引擎
-func SetStrategy(fn Strategy) Option {
+// OptStrategy 设置节点策略引擎
+func OptStrategy(fn Strategy) Option {
 	return func(o *Options) {
 		o.Strategy = fn
 	}
 }
 
-// WithFilter 添加节点过滤规则
-func WithFilter(fn ...Filter) SelectOption {
+// OptWithFilter 添加节点过滤规则
+func OptWithFilter(fn ...Filter) SelectOption {
 	return func(o *SelectOptions) {
 		o.Filters = append(o.Filters, fn...)
 	}
 }
 
-// WithStrategy 在调用select方法时候传入节点策略引擎
-func WithStrategy(fn Strategy) SelectOption {
+// OptWithStrategy 在调用select方法时候传入节点策略引擎
+func OptWithStrategy(fn Strategy) SelectOption {
 	return func(o *SelectOptions) {
 		o.Strategy = fn
 	}
