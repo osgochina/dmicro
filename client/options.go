@@ -30,10 +30,10 @@ type Options struct {
 	BodyCodec         string
 	PrintDetail       bool
 	HeartbeatTime     time.Duration
-	Registry          registry.Registry
-	Selector          selector.Selector
 	RetryTimes        int
 	GlobalPlugin      []drpc.Plugin
+	Registry          registry.Registry
+	Selector          selector.Selector
 	Metrics           metrics.Metrics // 统计信息
 }
 

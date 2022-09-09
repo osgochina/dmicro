@@ -4,16 +4,16 @@
   * [快速开始](overview.md)
   * [常见问题](questions.md)
   * [版本更新记录](changelog.md)
-
+  * [开发计划](plan.md)
+* RPC
+  * [RPC 服务端(RPC Server)](rpcserver/server.md)
+  * [RPC 客户端(RPC Client)](rpcclient/client.md)
+  
 * DServer服务管理
   * [理解DServer](dserver/readme.md)
   * [快速开始](dserver/quickstart.md)
   * [平滑重启](dserver/graceful.md)
   * [控制命令CTL](dserver/ctl.md)
-
-* RPC
-  * [RPC 服务端(RPC Server)](rpcserver/server.md)
-  * [RPC 客户端(RPC Client)](rpcclient/client.md)
   
 * DRPC框架
   * [整体架构](drpc/diagram.md)
@@ -44,6 +44,12 @@
   * [平滑重启 - Graceful](drpc/graceful.md)
   * [WebSocket支持](drpc/websocket.md)
   * [并发请求客户端](drpc/multiclient.md)
+  
+* 组件库
+  * [Registry(服务注册中心)](component/registry.md)
+  * [Selector(服务发现)](component/selector.md)
+  * [EventBus(事件总线)](component/eventBus.md)
+  * [Metrics(指标)](component/metrics.md)
 
 * EasyService简单服务
   * [创建服务](easyservice/start.md)
@@ -51,12 +57,6 @@
   * [服务沙盒](easyservice/sandbox.md)
   * [平滑重启](easyservice/graceful.md)
   * [使用编译脚本](easyservice/build.md)
-  
-* 组件库
-  * [Registry(服务注册中心)](component/registry.md)
-  * [Selector(服务发现)](component/selector.md)
-  * [EventBus(事件总线)](component/eventBus.md)
-  * [Metrics(指标)](component/metrics.md)
 
 * 性能测试
   * [性能测试](benchmark.md)
