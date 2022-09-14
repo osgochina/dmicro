@@ -33,6 +33,7 @@
 * 配合`Registry`组件，实现服务注册。
   * `Registry`组件抽象出合理的接口，方便接入多个服务注册中心，目前已实现`etcd`,`mdns`。
 * 配合`Selector`组件实现`服务发现`功能。
+* 使用`metrics`组件实现指标统计功能。
 
 `DServer`应用管理组件帮助大家封装好了应用的全生命周期管理。
 
@@ -242,11 +243,12 @@ DMicro_drpc »
 - [x] `Selector` 服务发现
 - [x] `Eventbus` 事件总线
 - [x] `Supervisor` 进程管理
+- [x] `Metrics` 指标统计
+- [ ] `OpenAPI` 文档自动生成
 - [ ] `Code gen` 代码生成
 - [ ] `Tracing` 链路追踪
-- [x] `Metrics` 指标统计
 - [ ] `Broker` 限流熔断
-- [ ] `OpenAPI` 文档自动生成
+
 
 ## 感谢
 
