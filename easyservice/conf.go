@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+//Deprecated
 type BoxConf struct {
 	id                 int           //服务沙盒的id"
 	SandBoxName        string        `json:"sandbox_name"   comment:"服务沙盒的名字"`
@@ -27,6 +28,7 @@ type BoxConf struct {
 }
 
 // NewBoxConf 创建BoxConf对象
+//Deprecated
 func NewBoxConf(name string, config *gcfg.Config, parsers ...*gcmd.Parser) *BoxConf {
 	cfg := &BoxConf{}
 
@@ -61,6 +63,7 @@ func NewBoxConf(name string, config *gcfg.Config, parsers ...*gcmd.Parser) *BoxC
 }
 
 // DefaultBoxConf 创建运行配置
+//Deprecated
 func DefaultBoxConf(parser *gcmd.Parser, config *gcfg.Config) *BoxConf {
 	cfg := NewBoxConf("default.sandbox", config, parser)
 	return cfg
@@ -93,6 +96,7 @@ func (that *BoxConf) GetId() int {
 }
 
 // EndpointConfig 返回rpc服务要用的配置文件
+//Deprecated
 func (that *BoxConf) EndpointConfig() drpc.EndpointConfig {
 	var c = drpc.EndpointConfig{
 		PrintDetail:       that.PrintDetail,

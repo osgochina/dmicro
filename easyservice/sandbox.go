@@ -11,6 +11,7 @@ const defaultSandBoxId = 1
 var sandBoxIdSeq = gtype.NewInt(defaultSandBoxId)
 
 // ISandBox 服务沙盒的接口
+//Deprecated
 type ISandBox interface {
 	ID() int               // 沙盒id
 	Name() string          // 沙盒名字

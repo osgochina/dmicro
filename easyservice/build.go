@@ -7,6 +7,7 @@ import (
 	"github.com/osgochina/dmicro"
 )
 
+//Deprecated
 var (
 	BuildVersion     = "No Version Info"
 	BuildGoVersion   = "No Version Info"
@@ -23,6 +24,7 @@ var (
 )
 
 //Version 显示版本信息
+//Deprecated
 func (that *EasyService) Version() {
 	fmt.Print(Logo)
 	fmt.Printf("Version:         %s\n", BuildVersion)

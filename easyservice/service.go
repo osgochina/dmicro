@@ -57,6 +57,7 @@ func (that *EasyService) BeforeStop(f StopFunc) {
 }
 
 // Setup 启动服务，并执行传入的启动方法
+//Deprecated
 func (that *EasyService) Setup(startFunction StartFunc) {
 	//解析命令行
 	parser, err := gcmd.Parse(defaultOptions)
