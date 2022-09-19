@@ -35,3 +35,15 @@ func Shutdown() {
 func Cobra(f func(rootCmd *cobra.Command)) {
 	defaultServer.cobraRootCmdCallback = f
 }
+
+// GetSandbox 通过sandbox name 获取已注册的sandbox
+func GetSandbox(sandboxName string) ISandbox {
+	for _, v := range defaultServer.serviceList.Map() {
+		dService := v.(*DService)
+		s, found := dService.SearchSandBox(sandboxName)
+		if found {
+			return s.(ISandbox)
+		}
+	}
+	return nil
+}
