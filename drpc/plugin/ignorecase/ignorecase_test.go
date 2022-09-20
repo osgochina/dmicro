@@ -28,7 +28,7 @@ func TestIgnoreCase(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		// Server
-		srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090, Network: "tcp"}, ignorecase.NewIgnoreCase())
+		srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9087, Network: "tcp"}, ignorecase.NewIgnoreCase())
 		srv.RouteCall(new(Home))
 		go srv.ListenAndServe()
 		time.Sleep(1e9)
@@ -36,7 +36,7 @@ func TestIgnoreCase(t *testing.T) {
 		// Client
 		cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "tcp"}, ignorecase.NewIgnoreCase())
 		cli.RoutePush(new(Push))
-		sess, stat := cli.Dial(":9090")
+		sess, stat := cli.Dial(":9087")
 		if !stat.OK() {
 			t.Fatal(stat)
 		}

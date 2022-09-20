@@ -122,7 +122,7 @@ func TestMemoryRegistryTTL(t *testing.T) {
 		m := NewRegistry()
 		for _, v := range testData {
 			for _, service := range v {
-				err := m.Register(service, registry.RegisterTTL(time.Millisecond))
+				err := m.Register(service, registry.OptRegisterTTL(time.Millisecond))
 				t.Assert(err, nil)
 			}
 		}
@@ -146,7 +146,7 @@ func TestMemoryRegistryTTLConcurrent(t *testing.T) {
 		// 先注册服务
 		for _, v := range testData {
 			for _, service := range v {
-				err := m.Register(service, registry.RegisterTTL(waitTime/2))
+				err := m.Register(service, registry.OptRegisterTTL(waitTime/2))
 				t.Assert(err, nil)
 			}
 		}

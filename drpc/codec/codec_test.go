@@ -47,7 +47,7 @@ func TestReg(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		ret, err := codec.Get(codec.IdJson)
+		ret, err := codec.Get(codec.JsonId)
 		t.Assert(err, nil)
 		t.AssertNE(ret, nil)
 
@@ -59,7 +59,7 @@ func TestGet(t *testing.T) {
 
 func TestGetByName(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		ret, err := codec.GetByName(codec.NameJson)
+		ret, err := codec.GetByName(codec.JsonName)
 		t.Assert(err, nil)
 		t.AssertNE(ret, nil)
 
@@ -74,7 +74,7 @@ func TestMarshal(t *testing.T) {
 		v := g.Map{
 			"abc": "efg",
 		}
-		res, err := codec.Marshal(codec.IdJson, v)
+		res, err := codec.Marshal(codec.JsonId, v)
 		t.Assert(err, nil)
 		t.Assert(res, gconv.Bytes("{\"abc\":\"efg\"}"))
 	})
@@ -83,7 +83,7 @@ func TestMarshal(t *testing.T) {
 func TestUnmarshal(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := g.Map{}
-		err := codec.Unmarshal(codec.IdJson, gconv.Bytes("{\"abc\":\"efg\"}"), &v)
+		err := codec.Unmarshal(codec.JsonId, gconv.Bytes("{\"abc\":\"efg\"}"), &v)
 		t.Assert(err, nil)
 		t.Assert(v["abc"], "efg")
 	})

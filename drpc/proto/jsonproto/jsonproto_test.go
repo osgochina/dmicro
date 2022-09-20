@@ -29,10 +29,10 @@ func (h *Home) RetString(arg *map[string]string) (string, *drpc.Status) {
 }
 
 func TestJSONProto(t *testing.T) {
-	tfilter.Reg('g', "gizp-5", 5)
+	tfilter.RegGzip(5)
 
 	// Server
-	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})
+	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9092})
 	srv.RouteCall(new(Home))
 	go srv.ListenAndServe(jsonproto.NewJSONProtoFunc())
 	time.Sleep(1e9)
@@ -40,7 +40,7 @@ func TestJSONProto(t *testing.T) {
 	// Client
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{})
 	cli.RoutePush(new(Push))
-	sess, stat := cli.Dial(":9090", jsonproto.NewJSONProtoFunc())
+	sess, stat := cli.Dial(":9092", jsonproto.NewJSONProtoFunc())
 	if !stat.OK() {
 		t.Fatal(stat)
 	}
@@ -51,7 +51,7 @@ func TestJSONProto(t *testing.T) {
 		},
 		&result,
 		message.WithSetMeta("endpoint_id", "110"),
-		message.WithXFerPipe('g'),
+		message.WithTFilterPipe(tfilter.GzipId),
 	).Status()
 	if !stat.OK() {
 		t.Error(stat)

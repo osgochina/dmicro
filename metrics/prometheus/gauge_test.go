@@ -25,7 +25,7 @@ func TestGaugeVec_Inc(t *testing.T) {
 		gVec := NewGaugeVec(&GaugeVecOpts{
 			Namespace: "rpc_server",
 			Subsystem: "call",
-			Name:      "duration",
+			Name:      "duration_inc",
 			Help:      "rpc server call duration(ms).",
 			Labels:    []string{"path"},
 		})
@@ -42,7 +42,7 @@ func TestGaugeVec_Add(t *testing.T) {
 		gVec := NewGaugeVec(&GaugeVecOpts{
 			Namespace: "rpc_server",
 			Subsystem: "call",
-			Name:      "duration",
+			Name:      "duration_add",
 			Help:      "rpc server call duration(ms).",
 			Labels:    []string{"path"},
 		})
@@ -59,7 +59,7 @@ func TestGaugeVec_Set(t *testing.T) {
 		gVec := NewGaugeVec(&GaugeVecOpts{
 			Namespace: "rpc_server",
 			Subsystem: "call",
-			Name:      "duration",
+			Name:      "duration_set",
 			Help:      "rpc server call duration(ms).",
 			Labels:    []string{"path"},
 		})

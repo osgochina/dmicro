@@ -38,18 +38,18 @@ func (that *Push) Test(arg *pb_test.Push) *drpc.Status {
 }
 
 func TestPbProto(t *testing.T) {
-	tfilter.Reg('g', "gizp-5", 5)
+	tfilter.RegGzip(5)
 
 	// server
-	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090, DefaultBodyCodec: codec.NameProtobuf})
+	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9094, DefaultBodyCodec: codec.ProtobufName})
 	srv.RouteCall(new(Home))
 	go srv.ListenAndServe(pbproto.NewPbProtoFunc())
 	time.Sleep(1e9)
 	// client
-	cli := drpc.NewEndpoint(drpc.EndpointConfig{DefaultBodyCodec: codec.NameProtobuf})
+	cli := drpc.NewEndpoint(drpc.EndpointConfig{DefaultBodyCodec: codec.ProtobufName})
 	cli.RoutePush(new(Push))
 
-	sess, stat := cli.Dial(":9090", pbproto.NewPbProtoFunc())
+	sess, stat := cli.Dial(":9094", pbproto.NewPbProtoFunc())
 	if !stat.OK() {
 		t.Fatal(stat)
 	}
@@ -61,7 +61,7 @@ func TestPbProto(t *testing.T) {
 		},
 		&result,
 		drpc.WithSetMeta("peer_id", "110"),
-		drpc.WithXFerPipe('g'),
+		drpc.WithTFilterPipe(tfilter.GzipId),
 	).Status()
 	if !stat.OK() {
 		t.Error(stat)

@@ -11,7 +11,7 @@ import (
 func TestHeartbeatCALl(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		svr := drpc.NewEndpoint(drpc.EndpointConfig{
-			ListenPort:  9090,
+			ListenPort:  9082,
 			PrintDetail: true,
 		}, heartbeat.NewPong())
 		go svr.ListenAndServe()
@@ -19,7 +19,7 @@ func TestHeartbeatCALl(t *testing.T) {
 		time.Sleep(time.Second)
 
 		cli := drpc.NewEndpoint(drpc.EndpointConfig{PrintDetail: true}, heartbeat.NewPing(3, true))
-		cli.Dial(":9090")
+		cli.Dial(":9082")
 		time.Sleep(time.Second * 20)
 
 	})
@@ -28,7 +28,7 @@ func TestHeartbeatCALl(t *testing.T) {
 func TestHeartbeatCALl2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		svr := drpc.NewEndpoint(drpc.EndpointConfig{
-			ListenPort:  9090,
+			ListenPort:  9083,
 			PrintDetail: true,
 		}, heartbeat.NewPong())
 		go svr.ListenAndServe()
@@ -36,7 +36,7 @@ func TestHeartbeatCALl2(t *testing.T) {
 		time.Sleep(time.Second)
 
 		cli := drpc.NewEndpoint(drpc.EndpointConfig{PrintDetail: true}, heartbeat.NewPing(3, true))
-		sess, _ := cli.Dial(":9090")
+		sess, _ := cli.Dial(":9083")
 		for i := 0; i < 8; i++ {
 			sess.Call("/", nil, nil).Status()
 			time.Sleep(time.Second)
@@ -48,7 +48,7 @@ func TestHeartbeatCALl2(t *testing.T) {
 func TestHeartbeatPush1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srv := drpc.NewEndpoint(
-			drpc.EndpointConfig{ListenPort: 9090, PrintDetail: true},
+			drpc.EndpointConfig{ListenPort: 9084, PrintDetail: true},
 			heartbeat.NewPing(3, false),
 		)
 		go srv.ListenAndServe()
@@ -58,7 +58,7 @@ func TestHeartbeatPush1(t *testing.T) {
 			drpc.EndpointConfig{PrintDetail: true},
 			heartbeat.NewPong(),
 		)
-		cli.Dial(":9090")
+		cli.Dial(":9084")
 		time.Sleep(time.Second * 10)
 	})
 
@@ -67,7 +67,7 @@ func TestHeartbeatPush1(t *testing.T) {
 func TestHeartbeatPush2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srv := drpc.NewEndpoint(
-			drpc.EndpointConfig{ListenPort: 9090, PrintDetail: true},
+			drpc.EndpointConfig{ListenPort: 9085, PrintDetail: true},
 			heartbeat.NewPing(3, false),
 		)
 		go srv.ListenAndServe()
@@ -77,7 +77,7 @@ func TestHeartbeatPush2(t *testing.T) {
 			drpc.EndpointConfig{PrintDetail: true},
 			heartbeat.NewPong(),
 		)
-		sess, _ := cli.Dial(":9090")
+		sess, _ := cli.Dial(":9085")
 		for i := 0; i < 8; i++ {
 			sess.Push("/", nil)
 			time.Sleep(time.Second)

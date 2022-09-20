@@ -62,9 +62,9 @@ func TestDefaultBodyCodec(t *testing.T) {
 		//为了调用check方法而已
 		_ = endpointConfig.LocalAddr()
 		t.Assert(endpointConfig.DefaultBodyCodec, new(codec.JSONCodec).Name())
-		err := drpc.SetDefaultBodyCodec(codec.IdXml)
+		err := drpc.SetDefaultBodyCodec(codec.XmlName)
 		t.Assert(err, nil)
-		t.Assert(drpc.DefaultBodyCodec().ID(), codec.IdXml)
+		t.Assert(drpc.DefaultBodyCodec().ID(), codec.XmlId)
 		endpointConfigV2 := &drpc.EndpointConfig{}
 		//为了调用check方法而已
 		_ = endpointConfigV2.LocalAddr()

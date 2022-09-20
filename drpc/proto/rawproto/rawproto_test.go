@@ -10,10 +10,10 @@ import (
 )
 
 func TestRawProto(t *testing.T) {
-	tfilter.Reg('g', "gizp-5", 5)
+	tfilter.RegGzip(5)
 
 	// server
-	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})
+	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9095})
 	srv.RouteCall(new(Home))
 	go srv.ListenAndServe()
 	time.Sleep(1e9)
@@ -21,7 +21,7 @@ func TestRawProto(t *testing.T) {
 	// client
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{})
 	cli.RoutePush(new(Push))
-	sess, stat := cli.Dial(":9090")
+	sess, stat := cli.Dial(":9095")
 	if !stat.OK() {
 		t.Fatal(stat)
 	}
@@ -32,7 +32,7 @@ func TestRawProto(t *testing.T) {
 		},
 		&result,
 		drpc.WithSetMeta("endpoint_id", "110"),
-		drpc.WithXFerPipe('g'),
+		drpc.WithTFilterPipe(tfilter.GzipId),
 	).Status()
 	if !stat.OK() {
 		t.Error(stat)

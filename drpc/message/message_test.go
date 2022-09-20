@@ -18,11 +18,11 @@ func TestMessageSizeLimit(t *testing.T) {
 
 func TestMessageString(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tfilter.Reg('g', "gzip", 5)
+		tfilter.RegGzip(5)
 		var m = GetMessage()
 		defer PutMessage(m)
 		m.SetSeq(21)
-		err := m.PipeTFilter().Append('g')
+		err := m.PipeTFilter().Append(tfilter.GzipId)
 		t.Assert(err, nil)
 		m.SetMType(3)
 		err = m.SetSize(300)

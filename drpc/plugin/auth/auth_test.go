@@ -13,14 +13,14 @@ import (
 func TestAuth(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srv := drpc.NewEndpoint(
-			drpc.EndpointConfig{ListenPort: 9090, CountTime: true},
+			drpc.EndpointConfig{ListenPort: 9080},
 			authChecker,
 		)
 		srv.RouteCall(new(Home))
 		go srv.ListenAndServe()
 		time.Sleep(1e9)
-		cli := drpc.NewEndpoint(drpc.EndpointConfig{CountTime: true}, authBearer)
-		sess, stat := cli.Dial("127.0.0.1:9090")
+		cli := drpc.NewEndpoint(drpc.EndpointConfig{}, authBearer)
+		sess, stat := cli.Dial("127.0.0.1:9080")
 		if !stat.OK() {
 			t.Fatal(stat)
 		}
@@ -43,7 +43,7 @@ func TestAuth(t *testing.T) {
 func TestAuthBearer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srv := drpc.NewEndpoint(
-			drpc.EndpointConfig{ListenPort: 9090, CountTime: true},
+			drpc.EndpointConfig{ListenPort: 9081},
 			authChecker,
 		)
 		srv.RouteCall(new(Home))
@@ -55,8 +55,8 @@ func TestAuthBearer(t *testing.T) {
 
 func TestAuthChecker(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		cli := drpc.NewEndpoint(drpc.EndpointConfig{CountTime: true}, authBearer)
-		sess, stat := cli.Dial("127.0.0.1:9090")
+		cli := drpc.NewEndpoint(drpc.EndpointConfig{}, authBearer)
+		sess, stat := cli.Dial("127.0.0.1:9080")
 		if !stat.OK() {
 			t.Fatal(stat)
 		}

@@ -26,7 +26,7 @@ func TestCounterVec_Inc(t *testing.T) {
 		cVec := NewCounterVec(&CounterVecOpts{
 			Namespace: "rpc_server",
 			Subsystem: "call",
-			Name:      "total",
+			Name:      "total_inc",
 			Help:      "rpc client call code total",
 			Labels:    []string{"path", "code"},
 		})
@@ -43,7 +43,7 @@ func TestCounterVec_Add(t *testing.T) {
 		cVec := NewCounterVec(&CounterVecOpts{
 			Namespace: "rpc_server",
 			Subsystem: "call",
-			Name:      "total",
+			Name:      "total_add",
 			Help:      "rpc client call code total",
 			Labels:    []string{"path", "code"},
 		})

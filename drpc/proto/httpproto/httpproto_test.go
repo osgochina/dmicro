@@ -31,14 +31,14 @@ func (h *Home) TestError(arg *map[string]string) (map[string]interface{}, *drpc.
 
 func TestHTTProto(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		svr := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})
+		svr := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9091})
 		svr.RouteCall(new(Home))
 		go svr.ListenAndServe(httpproto.NewHTTProtoFunc(true))
 
 		time.Sleep(1e9)
 
 		cli := drpc.NewEndpoint(drpc.EndpointConfig{})
-		sess, stat := cli.Dial(":9090", httpproto.NewHTTProtoFunc())
+		sess, stat := cli.Dial(":9091", httpproto.NewHTTProtoFunc())
 
 		if !stat.OK() {
 			t.Fatal(stat)

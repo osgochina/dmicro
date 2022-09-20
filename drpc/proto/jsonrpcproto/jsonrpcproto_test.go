@@ -27,7 +27,7 @@ func TestJSONRPCProto(t *testing.T) {
 	//gzip.Reg('g', "gizp-5", 5)
 
 	// Server
-	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9090})
+	srv := drpc.NewEndpoint(drpc.EndpointConfig{ListenPort: 9093})
 	srv.RouteCall(new(Home))
 	go srv.ListenAndServe(jsonrpcproto.NewJSONRPCProtoFunc())
 	time.Sleep(1e9)
@@ -35,7 +35,7 @@ func TestJSONRPCProto(t *testing.T) {
 	// Client
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{})
 	cli.RoutePush(new(Push))
-	sess, stat := cli.Dial(":9090", jsonrpcproto.NewJSONRPCProtoFunc())
+	sess, stat := cli.Dial(":9093", jsonrpcproto.NewJSONRPCProtoFunc())
 	if !stat.OK() {
 		t.Fatal(stat)
 	}
