@@ -5,6 +5,7 @@ import (
 	"github.com/desertbit/grumble"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcfg"
@@ -242,6 +243,9 @@ func (that *DServer) StartTime() *gtime.Time {
 // Debug开关会无视以上设置，强制把日志级别设置为ALL，并且打开标准输出。
 func (that *DServer) initLogSetting(config *gcfg.Config) error {
 	loggerCfg := config.GetJson("logger")
+	if loggerCfg == nil {
+		loggerCfg = gjson.New(nil)
+	}
 	env := config.GetString("ENV_NAME")
 	level := loggerCfg.GetString("Level")
 	logger.SetDebug(false)

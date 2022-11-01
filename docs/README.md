@@ -10,7 +10,7 @@
 [![view examples](https://img.shields.io/badge/learn%20by-examples-00BCD4.svg?style=flat-square)](https://github.com/osgochina/dmicro/tree/main/examples)
 [![OSCS Status](https://www.oscs1024.com/platform/badge/osgochina/dmicro.git.svg?size=small)](https://www.murphysec.com/dr/JycJlZcX36soO749SO)
 
-</div>
+span
 
 ## 概述
 
@@ -19,18 +19,19 @@
 其中`DRPC`组件是rpc框架，使用`endpoint`作为统一对象，为`RPC Server`，`RPC Clinet`提供统一的API封装。
 
 `DRPC`组件特性：
+
 * 易于理解，科学合理的多层抽象。
-    * `endpoint`,`session`,`handle`,`message`,`protoco`,`codec`,`transfer filter`,`plugin`.
+  * `endpoint`,`session`,`handle`,`message`,`protoco`,`codec`,`transfer filter`,`plugin`.
 * 支持常见的消息通讯协议`json`，`prototbuf`,`http`,`jsronrpc`,良好的抽象层让自定义消息协议变得简单快捷。
 * 支持多种网络协议`tcp`,`unix`,`kcp`,`quic`,`websocket`等。。。
 * 全生命周期的插件埋点(多达27个埋点),让插件系统能实现的功能丰富多彩。
-    * 内置 `auth`,`heartbeat`，`ignorecase`,`proxy`,`securebody`等插件
+  * 内置 `auth`,`heartbeat`，`ignorecase`,`proxy`,`securebody`等插件
 * 依托丰富的插件埋点，抽象出易于使用的`Event`事件系统，让你的开发如虎添翼。
 * 高性能的网络传输层，让性能不再是瓶颈。
 * 客户端自动重拨。
 * 配合`DServer`组件，实现优雅的平滑重启，让你的服务时刻在线。
 * 配合`Registry`组件，实现服务注册。
-    * `Registry`组件抽象出合理的接口，方便接入多个服务注册中心，目前已实现`etcd`,`mdns`。
+  * `Registry`组件抽象出合理的接口，方便接入多个服务注册中心，目前已实现`etcd`,`mdns`。
 * 配合`Selector`组件实现`服务发现`功能。
 * 使用`metrics`组件实现指标统计功能。
 
@@ -44,8 +45,7 @@
 * 好用的命令行管理功能，让你能实时的管理正在运行的应用。
 * 完善的进程管理组件`supervisor`,支持对进程的全生命周期管理。
 
-[详细文档]( https://osgochina.gitee.io/dmicro)
-
+[详细文档](https://osgochina.gitee.io/dmicro)
 
 ## 安装
 
@@ -54,6 +54,7 @@ go get -u -v github.com/osgochina/dmicro
 ```
 
 推荐使用 `go.mod`:
+
 ```
 require github.com/osgochina/dmicro latest
 ```
@@ -65,6 +66,7 @@ import "github.com/osgochina/dmicro"
 ```
 
 ## 限制
+
 ```shell
 golang版本 >= 1.16
 ```
@@ -73,6 +75,7 @@ golang版本 >= 1.16
 
 如何快速的通过简单的代码创建一个真正的rpc服务。
 以下就是示例代码：
+
 ```go
 // rbc_server.go
 package main
@@ -140,6 +143,7 @@ func main() {
 ```
 
 - 编译
+
 ```shell
 $ go build rbc_server.go
 ```
@@ -149,7 +153,6 @@ $ go build rbc_server.go
 ```shell
 $ ./rbc_server start
 ```
-
 
 ## 创建普通`rpc`客户端
 
@@ -170,7 +173,7 @@ func main() {
 
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{PrintDetail: true, RedialTimes: -1, RedialInterval: time.Second})
 	defer cli.Close()
-	
+
 
 	sess, stat := cli.Dial("127.0.0.1:9091")
 	if !stat.OK() {
@@ -188,6 +191,7 @@ func main() {
     logger.Printf("result: %d", result)
 }
 ```
+
 通过以上的代码事例，大家基本可以了解`drpc`框架是怎么使用。
 
 ## `ctl`命令
@@ -215,6 +219,7 @@ Install Path:    D:\code\GolandProjects\dmicro\examples\simple_dserver\rbc_serve
 DMicro_drpc »
 
 ```
+
 - 运行`help`命令，获取命令说明
 
 ```shell
@@ -239,26 +244,26 @@ DMicro_drpc »
 ```
 
 ## TODO
-- [x] `Registry` 服务注册
-- [x] `Selector` 服务发现
-- [x] `Eventbus` 事件总线
-- [x] `Supervisor` 进程管理
-- [x] `Metrics` 指标统计
-- [ ] `Code gen` 代码生成
-- [ ] `OpenAPI` 文档自动生成
-- [ ] `Tracing` 链路追踪
-- [ ] `Broker` 限流熔断
 
+- [X]  `Registry` 服务注册
+- [X]  `Selector` 服务发现
+- [X]  `Eventbus` 事件总线
+- [X]  `Supervisor` 进程管理
+- [X]  `Metrics` 指标统计
+- [ ]  `Code gen` 代码生成
+- [ ]  `OpenAPI` 文档自动生成
+- [ ]  `Tracing` 链路追踪
+- [ ]  `Broker` 限流熔断
 
 ## 获取帮助
 
 * 你可以阅读[`DMicro`文档](https://osgochina.gitee.io/dmicro/)，
 * 微信交流群: 扫码或者微信添加`osgochina`备注`DMicro`加群。
 
-| 添加好友后拉群 |
-|---------|
-| <img height="200" src="./weixin.jpg" width="200"/>   |
 
+| 添加好友后拉群                                     |
+| -------------------------------------------------- |
+| <img height="200" src="./weixin.jpg" width="200"/> |
 
 ## 感谢
 

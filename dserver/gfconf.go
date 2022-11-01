@@ -38,11 +38,13 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 			confPath := gfile.Abs(confFile)
 			if gfile.Exists(confPath) {
 				gcfg.SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
+				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
 				return gcfg.Instance()
 			}
 			confPath = fmt.Sprintf("%s%s%s", gfile.MainPkgPath(), gfile.Separator, gfile.Basename(confPath))
 			if gfile.Exists(confPath) {
 				gcfg.SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
+				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
 				return gcfg.Instance()
 			}
 		} else {
@@ -52,9 +54,10 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 				logger.Errorf("配置文件 %s 不存在", confFile)
 			} else {
 				gcfg.SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
+				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
 			}
+			return gcfg.Instance()
 		}
-		return gcfg.Instance()
 	}
 	//如果环境变量有设置，则使用gf框架自带的配置文件获取流程
 	if customFile := gcmd.GetOptWithEnv(commandEnvKeyForFile).String(); customFile != "" {

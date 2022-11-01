@@ -64,7 +64,7 @@ func (that *Config) RpcServerOption(serverName string) []server.Option {
 
 	var opts []server.Option
 	cfg := that.Config.GetJson(serverName)
-	if cfg.IsNil() {
+	if cfg == nil || cfg.IsNil() {
 		return opts
 	}
 

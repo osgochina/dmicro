@@ -106,4 +106,6 @@ func main() {
 ## 使用组件
 
 ### 使用 `Registry` 组件，请参考文档  [Registry](/component/registry.md)
+
 ### 使用 `Metrics` 组件，请参考文档  [Metrics](/component/metrics.md)
+
