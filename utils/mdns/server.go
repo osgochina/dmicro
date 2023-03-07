@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/miekg/dns"
 	"github.com/osgochina/dmicro/logger"
-	"github.com/prometheus/common/log"
 	"golang.org/x/net/ipv4"
 	"golang.org/x/net/ipv6"
 	"math/rand"
@@ -202,7 +201,7 @@ func (that *Server) recv(c *net.UDPConn) {
 		}
 		// 解析服务收到的包
 		if err := that.parsePacket(buf[:n], from); err != nil {
-			log.Errorf("[ERR] mdns: Failed to handle query: %v", err)
+			logger.Errorf(context.TODO(), "[ERR] mdns: Failed to handle query: %v", err)
 		}
 	}
 }
@@ -212,7 +211,7 @@ func (that *Server) parsePacket(packet []byte, from net.Addr) error {
 	// 如果收到的包不是dns包，则报错
 	var msg dns.Msg
 	if err := msg.Unpack(packet); err != nil {
-		log.Errorf("[ERR] mdns: Failed to unpack packet: %v", err)
+		logger.Errorf(context.TODO(), "[ERR] mdns: Failed to unpack packet: %v", err)
 		return err
 	}
 	// TODO: This is a bit of a hack

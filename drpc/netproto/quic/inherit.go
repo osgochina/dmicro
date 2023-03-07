@@ -3,8 +3,8 @@ package quic
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/lucas-clemente/quic-go"
 	"github.com/osgochina/dmicro/utils"
+	"github.com/quic-go/quic-go"
 	"net"
 	"os"
 	"sync"
@@ -20,8 +20,8 @@ func InheritedListen(network, laddr string, tlsConf *tls.Config, config *quic.Co
 }
 
 // SetInherited 添加files列表到环境变量，让子进程继承，
-//1. 只有在reboot使用
-//2. 不支持windows系统
+// 1. 只有在reboot使用
+// 2. 不支持windows系统
 func SetInherited() error {
 	return globalInheritQUIC.setInherited()
 }
@@ -53,8 +53,8 @@ type inheritQUIC struct {
 }
 
 // 添加files列表到环境变量，让子进程继承，
-//1. 只有在reboot使用
-//2. 不支持windows系统
+// 1. 只有在reboot使用
+// 2. 不支持windows系统
 func (that *inheritQUIC) setInherited() error {
 	listeners, err := that.activeListeners()
 	if err != nil {
@@ -118,7 +118,7 @@ func (that *inheritQUIC) inheritedListen(network string, udpAddr *net.UDPAddr, t
 }
 
 // 从父进程继承的句柄初始化
-//注意，这里使用了 sync.Once 逻辑，保证了仅能执行一次
+// 注意，这里使用了 sync.Once 逻辑，保证了仅能执行一次
 func (that *inheritQUIC) inherit() error {
 	var retErr error
 	that.inheritOnce.Do(func() {

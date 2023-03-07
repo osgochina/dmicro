@@ -3,7 +3,7 @@ package quic
 import (
 	"context"
 	"crypto/tls"
-	"github.com/lucas-clemente/quic-go"
+	"github.com/quic-go/quic-go"
 	"net"
 )
 
@@ -83,7 +83,7 @@ func ListenUDPAddr(network string, udpAddr *net.UDPAddr, tlsConf *tls.Config, co
 // config：quic的配置信息,可以为nil
 func Listen(conn net.PacketConn, tlsConf *tls.Config, config *quic.Config) (*Listener, error) {
 	if config == nil {
-		config = &quic.Config{KeepAlive: true}
+		config = &quic.Config{}
 	}
 	lis, err := quic.Listen(conn, tlsConf, config)
 	if err != nil {

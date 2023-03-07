@@ -1,13 +1,13 @@
 package quic
 
 import (
-	"github.com/lucas-clemente/quic-go"
+	"github.com/quic-go/quic-go"
 	"net"
 	"time"
 )
 
 type Conn struct {
-	sess   quic.Session
+	sess   quic.Connection
 	stream quic.Stream
 }
 

@@ -14,8 +14,8 @@ func main() {
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{Network: "kcp"})
 	defer cli.Close()
 	e := cli.SetTLSConfigFromFile(
-		fmt.Sprintf("%s/cert.pem", gfile.MainPkgPath()),
-		fmt.Sprintf("%s/key.pem", gfile.MainPkgPath()),
+		fmt.Sprintf("%s/../cert.pem", gfile.MainPkgPath()),
+		fmt.Sprintf("%s/../key.pem", gfile.MainPkgPath()),
 		true)
 	if e != nil {
 		logger.Fatalf(context.TODO(), "%v", e)

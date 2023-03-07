@@ -18,8 +18,8 @@ func main() {
 		PrintDetail: true,
 	})
 	e := srv.SetTLSConfigFromFile(
-		fmt.Sprintf("%s/cert.pem", gfile.MainPkgPath()),
-		fmt.Sprintf("%s/key.pem", gfile.MainPkgPath()))
+		fmt.Sprintf("%s/../cert.pem", gfile.MainPkgPath()),
+		fmt.Sprintf("%s/../key.pem", gfile.MainPkgPath()))
 	if e != nil {
 		logger.Fatalf(context.TODO(), "%v", e)
 	}
