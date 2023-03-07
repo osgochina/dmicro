@@ -105,7 +105,7 @@ type Grace struct {
 }
 
 func (m *Grace) Sleep(arg *int) (string, *drpc.Status) {
-	logger.Infof("sleep %d", *arg)
+	logger.Infof(context.TODO(),"sleep %d", *arg)
 	if *arg > 0 {
 		sleep := *arg
 		time.Sleep(time.Duration(sleep) * time.Second)
@@ -135,7 +135,7 @@ func main() {
 	// 必须要预先注册指定的端口，非注册的端口提供的服务无法平滑重启
 	err := graceful.SetInheritListener([]graceful.InheritAddr{{Network: "tcp", Host: "127.0.0.1", Port: "9091"}})
 	if err != nil {
-		logger.Error(err)
+		logger.Error(context.TODO(),err)
 		return
 	}
 	// 启动服务
@@ -159,7 +159,7 @@ type Grace struct {
 }
 
 func (m *Grace) Sleep(arg *int) (string, *drpc.Status) {
-	logger.Infof("sleep %d", *arg)
+	logger.Infof(context.TODO(),"sleep %d", *arg)
 	if *arg > 0 {
 		sleep := *arg
 		time.Sleep(time.Duration(sleep) * time.Second)
@@ -190,7 +190,7 @@ func main() {
 
 	sess, stat := cli.Dial("127.0.0.1:9091")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(),"%v", stat)
 	}
 	n := 1
 	for {
@@ -200,7 +200,7 @@ func main() {
 			&result,
 		).Status()
 		if !stat.OK() {
-			logger.Error(stat.Cause())
+			logger.Error(context.TODO(),stat.Cause())
 		}
 		fmt.Printf("%d.%s\n", n, result)
 		time.Sleep(1 * time.Second)

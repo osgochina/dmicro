@@ -113,7 +113,7 @@ func main() {
 	dserver.Setup(func(svr *dserver.DServer) {
 		err := svr.AddSandBox(new(DRpcSandBox))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(),err)
 		}
 	})
 }
@@ -132,11 +132,11 @@ func main() {
 		})
 		err := svr.AddSandBox(new(DRpcSandBox), svr.NewService("admin"))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(),err)
 		}
 		err = svr.AddSandBox(new(HttpSandBox), svr.NewService("user"))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(),err)
 		}
 	})
 }

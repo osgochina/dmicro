@@ -52,7 +52,7 @@ stat := sess.Call("/math/add",
     message.WithBodyCodec(codec.PlainName),
 ).Status()
 if !stat.OK() {
-    logger.Fatalf("%v", stat)
+    logger.Fatalf(context.TODO(),"%v", stat)
 }
 ```
 如以上代码，为此次请求设置单独的编码解码器。

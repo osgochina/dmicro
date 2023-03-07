@@ -72,14 +72,14 @@ func newUnknownProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		logger.Warningf(context.TODO(),"%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyPlugin(func(label *proxy.Label) proxy.Forwarder {
-		logger.Infof("label RealIP:%s", label.RealIP)
-		logger.Infof("label SessionID:%s", label.SessionID)
-		logger.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		logger.Infof(context.TODO(),"label RealIP:%s", label.RealIP)
+		logger.Infof(context.TODO(),"label SessionID:%s", label.SessionID)
+		logger.Infof(context.TODO(),"label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }
@@ -91,14 +91,14 @@ func newUnknownCallProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		logger.Warningf(context.TODO(),"%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyCallPlugin(func(label *proxy.Label) proxy.CallForwarder {
-		logger.Infof("label RealIP:%s", label.RealIP)
-		logger.Infof("label SessionID:%s", label.SessionID)
-		logger.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		logger.Infof(context.TODO(),"label RealIP:%s", label.RealIP)
+		logger.Infof(context.TODO(),"label SessionID:%s", label.SessionID)
+		logger.Infof(context.TODO(),"label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }
@@ -110,14 +110,14 @@ func newUnknownPushProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		logger.Warningf(context.TODO(),"%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyPushPlugin(func(label *proxy.Label) proxy.PushForwarder {
-		logger.Infof("label RealIP:%s", label.RealIP)
-		logger.Infof("label SessionID:%s", label.SessionID)
-		logger.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		logger.Infof(context.TODO(),"label RealIP:%s", label.RealIP)
+		logger.Infof(context.TODO(),"label SessionID:%s", label.SessionID)
+		logger.Infof(context.TODO(),"label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }

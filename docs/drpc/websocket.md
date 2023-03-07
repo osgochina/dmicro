@@ -38,7 +38,7 @@ func main() {
 	cli := websocket.NewClient("/", drpc.EndpointConfig{})
 	sess, stat := cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(),stat)
 	}
 	var result int
 	stat = sess.Call("/p/divide", &Arg{
@@ -47,9 +47,9 @@ func main() {
 	}, &result,
 	).Status()
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(),stat)
 	}
-	logger.Println("10/2=%d", result)
+	logger.Println(context.TODO(),"10/2=%d", result)
 	time.Sleep(time.Second)
 }
 ```
@@ -92,7 +92,7 @@ func main() {
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{}, websocket.NewDialPlugin("/token"))
 	sess, stat := cli.Dial(":9094", jsonSubProto.NewJSONSubProtoFunc())
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(),stat)
 	}
 	var result int
 	stat = sess.Call("/p/divide", &Arg{
@@ -101,9 +101,9 @@ func main() {
 	}, &result,
 	).Status()
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(),stat)
 	}
-	logger.Println("10/2=%d", result)
+	logger.Println(context.TODO(),"10/2=%d", result)
 	time.Sleep(time.Millisecond * 200)
 }
 

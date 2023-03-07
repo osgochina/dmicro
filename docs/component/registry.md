@@ -21,7 +21,7 @@ func main() {
 	reg := registry.DefaultRegistry
 	err := reg.Init(registry.ServiceName(serviceName), registry.ServiceVersion(serviceVersion))
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	svr := server.NewRpcServer(serviceName,
 		server.OptListenAddress("127.0.0.1:9091"),

@@ -97,7 +97,7 @@ func main() {
     dserver.Setup(func(svr *dserver.DServer) {
         err := svr.AddSandBox(new(AdminSandBox), svr.NewService("admin"))
         if err != nil {
-            logger.Fatal(err)
+            logger.Fatal(context.TODO(),err)
         }
     })
 }

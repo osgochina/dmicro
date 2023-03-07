@@ -43,7 +43,7 @@ func main() {
     return nil
   }),eventbus.Normal)
   if err!=nil {
-    logger.Fatal(err)
+    logger.Fatal(context.TODO(),err)
   }
 
   err = eventbus.Listen("event1",eventbus.ListenerFunc(func(e eventbus.IEvent) error {
@@ -51,12 +51,12 @@ func main() {
     return nil
   }),eventbus.High)
   if err!=nil {
-    logger.Fatal(err)
+    logger.Fatal(context.TODO(),err)
   }
   // 执行事件的时候，会优先执行listen2，因为它的优先度高
   event1,err = eventbus.Fire("event1", map[interface{}]interface{}{"arg0":"val0","arg1":"val1"})
   if err!=nil {
-    logger.Fatal(err)
+    logger.Fatal(context.TODO(),err)
   }
   // 输出 val0
   fmt.Println(event1.Get("arg0"))
@@ -84,11 +84,11 @@ var anonymity = func(e eventbus.IEvent) error {
 func main() {
 	err := eventbus.Listen("event1",eventbus.ListenerFunc(anonymity),eventbus.Normal)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	_,err = eventbus.Fire("event1", nil)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 }
 
@@ -122,11 +122,11 @@ func main() {
 	var event1 eventbus.IEvent
 	err := eventbus.Listen("event1",&MyListener{},eventbus.Normal)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	event1,err = eventbus.Fire("event1", nil)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	// 输出 ok
 	fmt.Println(event1.Get("result"))
@@ -164,11 +164,11 @@ func (that *MyListenerMulti)Listen() []interface{} {
 func main() {
 	err := eventbus.Subscribe(&MyListenerMulti{},eventbus.High)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	errs := eventbus.PublishBatch("event1","event2")
 	if len(errs) > 0 {
-		logger.Fatal(errs)
+		logger.Fatal(context.TODO(),errs)
 	}
 }
 ```
@@ -217,17 +217,17 @@ func main() {
     // 通过结构体注册多个事件到同一个监听器
 	err := eventbus.Subscribe(&MyListenerCustom{},eventbus.High)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	customEvent:=&MyEvent{customData: "clownfish"}
 	customEvent.SetName("event2")
 	err = eventbus.AddEvent(customEvent)
 	if err!=nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(),err)
 	}
 	errs := eventbus.PublishBatch("event2","event1")
 	if len(errs) > 0 {
-		logger.Fatal(errs)
+		logger.Fatal(context.TODO(),errs)
 	}
 }
 ```

@@ -53,7 +53,7 @@ type Push struct {
 }
 
 func (that *Push) Test(arg *pb_test.Push) *drpc.Status {
-	logger.Infof("receive push(%s):\narg: %#v\n", that.IP(), arg.PeerId)
+	logger.Infof(context.TODO(),"receive push(%s):\narg: %#v\n", that.IP(), arg.PeerId)
 	return nil
 }
 

@@ -75,7 +75,7 @@ type Push struct {
 }
 
 func (p *Push) Test(arg *map[string]string) *drpc.Status {
-	logger.Infof("receive push(%s):\narg: %#v\n", p.IP(), arg)
+	logger.Infof(context.TODO(),"receive push(%s):\narg: %#v\n", p.IP(), arg)
 	return nil
 }
 

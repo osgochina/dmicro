@@ -41,7 +41,7 @@ stat = sess.Call(
     drpc.WithTFilterPipe(tfilter.AesId, tfilter.Md5Id, tfilter.GzipId),
 ).Status()
 if !stat.OK() {
-    logger.Warning(stat)
+    logger.Warning(context.TODO(),stat)
 }
 ```
 

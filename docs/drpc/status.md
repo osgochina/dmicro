@@ -85,7 +85,7 @@ stat = sess.Call("/math/add",
 ).Status()
 // 只需要判断stat是否为true，就能知道该次请求是否成功
 if !stat.OK() {
-    logger.Fatalf("%v", stat)
+    logger.Fatalf(context.TODO(),"%v", stat)
 }
 ```
 

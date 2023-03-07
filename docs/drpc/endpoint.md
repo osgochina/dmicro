@@ -169,7 +169,7 @@ endpoint.SetUnknownCall(ctx drpc.UnknownPushCtx) *drpc.Status{
 ```go
 sess, stat := cli.Dial("127.0.0.1:9091",jsonproto.NewJSONProtoFunc())
 if !stat.OK() {
-    logger.Fatalf("%v", stat)
+    logger.Fatalf(context.TODO(),"%v", stat)
 }
 ```
 

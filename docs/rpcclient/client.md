@@ -28,9 +28,9 @@ func main() {
 		message.WithSetMeta("author", "clownfish"),
 	).Status()
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(),"%v", stat)
 	}
-	logger.Printf("result: %d", result)
+	logger.Printf(context.TODO(),"result: %d", result)
 }
 
 ```

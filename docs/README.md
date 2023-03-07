@@ -82,6 +82,7 @@ package main
 
 import (
 	"fmt"
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/dserver"
 	"github.com/osgochina/dmicro/logger"
@@ -119,7 +120,7 @@ type Math struct {
 
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// test meta
-	logger.Infof("author: %s", m.PeekMeta("author"))
+	logger.Infof(context.TODO(), "author: %s", m.PeekMeta("author"))
 	// add
 	var r int
 	for _, a := range *arg {
@@ -135,7 +136,7 @@ func main() {
 	dserver.Setup(func(svr *dserver.DServer) {
 		err := svr.AddSandBox(new(DRpcSandBox))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 	})
 }
@@ -163,6 +164,7 @@ $ ./rbc_server start
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/logger"
@@ -177,7 +179,7 @@ func main() {
 
 	sess, stat := cli.Dial("127.0.0.1:9091")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
     var result int
     stat = sess.Call("/math/add",
@@ -186,9 +188,9 @@ func main() {
         message.WithSetMeta("author", "liuzhiming"),
     ).Status()
     if !stat.OK() {
-        logger.Fatalf("%v", stat)
+        logger.Fatalf(context.TODO(), "%v", stat)
     }
-    logger.Printf("result: %d", result)
+    logger.Printf(context.TODO(), "result: %d", result)
 }
 ```
 

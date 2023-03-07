@@ -86,7 +86,7 @@ type Home struct {
 }
 
 func (h *Home) Test(arg *map[string]string) (map[string]interface{}, *drpc.Status) {
-  logger.Infof("endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
+  logger.Infof(context.TODO(),"endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
   return map[string]interface{}{
     "arg": *arg,
   }, nil

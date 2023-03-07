@@ -39,7 +39,7 @@ func main() {
 	)
 	go func() {
 		for {
-			logger.Printf("%d", cli.Size())
+			logger.Printf(context.TODO(),"%d", cli.Size())
 			time.Sleep(time.Millisecond * 500)
 		}
 	}()
@@ -51,9 +51,9 @@ func main() {
 				B: 2,
 			}, &result).Status()
 			if !stat.OK() {
-				logger.Print(stat)
+				logger.Print(context.TODO(),stat)
 			} else {
-				logger.Printf("%d/2=%v", i, result)
+				logger.Printf(context.TODO(),"%d/2=%v", i, result)
 			}
 			time.Sleep(time.Millisecond * 500)
 		}
