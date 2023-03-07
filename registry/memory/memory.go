@@ -2,7 +2,7 @@ package memory
 
 import (
 	"context"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
 	"sync"
@@ -102,7 +102,7 @@ func (that *memRegistry) Register(s *registry.Service, opts ...registry.Register
 	r := serviceToRecord(s, options.TTL)
 	if _, ok := that.records[s.Name][s.Version]; !ok {
 		that.records[s.Name][s.Version] = r
-		logger.Debugf("Registry added new service: %s, version: %s", s.Name, s.Version)
+		logger.Debugf(context.TODO(), "Registry added new service: %s, version: %s", s.Name, s.Version)
 		// 发送事件
 		go that.event(&registry.Result{Action: registry.Update, Service: s})
 		return nil
@@ -131,14 +131,14 @@ func (that *memRegistry) Register(s *registry.Service, opts ...registry.Register
 	}
 	//如果有新的节点增加,需要发送事件
 	if addedNodes {
-		logger.Debugf("Registry added new node to service: %s, version: %s", s.Name, s.Version)
+		logger.Debugf(context.TODO(), "Registry added new node to service: %s, version: %s", s.Name, s.Version)
 		go that.event(&registry.Result{Action: registry.Update, Service: s})
 		return nil
 	}
 
 	// 刷新已存在的节点生存时间
 	for _, n := range s.Nodes {
-		logger.Debugf("Updated registration for service: %s, version: %s", s.Name, s.Version)
+		logger.Debugf(context.TODO(), "Updated registration for service: %s, version: %s", s.Name, s.Version)
 		that.records[s.Name][s.Version].Nodes[n.Id].TTL = options.TTL
 		that.records[s.Name][s.Version].Nodes[n.Id].LastSeen = time.Now()
 	}
@@ -162,18 +162,18 @@ func (that *memRegistry) Deregister(s *registry.Service, _ ...registry.Deregiste
 	// 找到要注销的节点,从records中删除
 	for _, n := range s.Nodes {
 		if _, ok := that.records[s.Name][s.Version].Nodes[n.Id]; ok {
-			logger.Debugf("Registry removed node from service: %s, version: %s", s.Name, s.Version)
+			logger.Debugf(context.TODO(), "Registry removed node from service: %s, version: %s", s.Name, s.Version)
 			delete(that.records[s.Name][s.Version].Nodes, n.Id)
 		}
 	}
 	//如果服务该版本的节点不存在则把该版本删除
 	if len(that.records[s.Name][s.Version].Nodes) == 0 {
-		logger.Debugf("Registry removed service: %s, version: %s", s.Name, s.Version)
+		logger.Debugf(context.TODO(), "Registry removed service: %s, version: %s", s.Name, s.Version)
 		delete(that.records[s.Name], s.Version)
 	}
 	//服务版本都不存在,则删除服务
 	if len(that.records[s.Name]) == 0 {
-		logger.Debugf("Registry removed service: %s", s.Name)
+		logger.Debugf(context.TODO(), "Registry removed service: %s", s.Name)
 		delete(that.records, s.Name)
 	}
 	//触发事件
@@ -254,7 +254,7 @@ func (that *memRegistry) ttlPrune() {
 					for id, n := range r.Nodes {
 						//节点的最后可用时间到现在已经太长了,超过了ttl
 						if n.TTL != 0 && time.Since(n.LastSeen) > n.TTL {
-							logger.Debugf("Registry TTL expired for node %s of service %s", n.Id, name)
+							logger.Debugf(context.TODO(), "Registry TTL expired for node %s of service %s", n.Id, name)
 							delete(that.records[name][version].Nodes, id)
 						}
 					}

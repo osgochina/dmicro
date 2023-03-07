@@ -1,8 +1,9 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/metrics"
@@ -72,9 +73,9 @@ func (that *PromMetrics) Start() {
 		go func() {
 			http.Handle(that.options.Path, promhttp.Handler())
 			addr := fmt.Sprintf("%s:%d", that.options.Host, that.options.Port)
-			logger.Infof("Starting prometheus agent at http://%s%s", addr, that.options.Path)
+			logger.Infof(context.TODO(), "Starting prometheus agent at http://%s%s", addr, that.options.Path)
 			if err := http.ListenAndServe(addr, nil); err != nil {
-				logger.Error(err)
+				logger.Error(context.TODO(), err)
 			}
 		}()
 	})

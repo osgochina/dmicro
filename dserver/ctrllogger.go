@@ -1,9 +1,10 @@
 package dserver
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 )
@@ -48,19 +49,19 @@ func (that *ctrlLoggerHandler) Log(level int, v ...interface{}) {
 	if that.checkLevel(level) {
 		switch level {
 		case glog.LEVEL_NOTI:
-			that.logger.Notice(v...)
+			that.logger.Notice(context.TODO(), v...)
 		case glog.LEVEL_DEBU:
-			that.logger.Debug(v...)
+			that.logger.Debug(context.TODO(), v...)
 		case glog.LEVEL_INFO:
-			that.logger.Info(v...)
+			that.logger.Info(context.TODO(), v...)
 		case glog.LEVEL_NONE:
-			that.logger.Print(v...)
+			that.logger.Print(context.TODO(), v...)
 		case glog.LEVEL_WARN:
-			that.logger.Warning(v...)
+			that.logger.Warning(context.TODO(), v...)
 		case glog.LEVEL_ERRO:
-			that.logger.Error(v...)
+			that.logger.Error(context.TODO(), v...)
 		case glog.LEVEL_CRIT:
-			that.logger.Critical(v...)
+			that.logger.Critical(context.TODO(), v...)
 		}
 	}
 }
@@ -70,19 +71,19 @@ func (that *ctrlLoggerHandler) LogF(level int, format string, v ...interface{}) 
 	if that.checkLevel(level) {
 		switch level {
 		case glog.LEVEL_NOTI:
-			that.logger.Noticef(format, v...)
+			that.logger.Noticef(context.TODO(), format, v...)
 		case glog.LEVEL_DEBU:
-			that.logger.Debugf(format, v...)
+			that.logger.Debugf(context.TODO(), format, v...)
 		case glog.LEVEL_INFO:
-			that.logger.Infof(format, v...)
+			that.logger.Infof(context.TODO(), format, v...)
 		case glog.LEVEL_NONE:
-			that.logger.Printf(format, v...)
+			that.logger.Printf(context.TODO(), format, v...)
 		case glog.LEVEL_WARN:
-			that.logger.Warningf(format, v...)
+			that.logger.Warningf(context.TODO(), format, v...)
 		case glog.LEVEL_ERRO:
-			that.logger.Errorf(format, v...)
+			that.logger.Errorf(context.TODO(), format, v...)
 		case glog.LEVEL_CRIT:
-			that.logger.Criticalf(format, v...)
+			that.logger.Criticalf(context.TODO(), format, v...)
 		}
 	}
 }

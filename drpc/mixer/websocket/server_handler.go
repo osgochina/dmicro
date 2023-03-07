@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket/jsonSubProto"
@@ -71,13 +72,13 @@ func (that *serverHandler) handler(conn *websocket.Conn) {
 	// 把websocket的底层tcp链接传给drpc框架，方便它读取数据
 	sess, err := that.endpoint.ServeConn(conn, that.protoFunc)
 	if err != nil {
-		internal.Errorf("serverHandler: %v", err)
+		internal.Errorf(context.TODO(), "serverHandler: %v", err)
 		return
 	}
 	// 执行钩子
 	if stat := that.afterAccept(sess, conn); !stat.OK() {
 		if err := sess.Close(); err != nil {
-			internal.Errorf("sess.Close(): %v", err)
+			internal.Errorf(context.TODO(), "sess.Close(): %v", err)
 		}
 		return
 	}
@@ -91,7 +92,7 @@ func (that *serverHandler) beforeHandshake(r *http.Request) (stat *drpc.Status) 
 	p := that.endpoint.PluginContainer()
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("[BeforeWebsocketHandshakePlugin:%s] addr:%s, panic:%v", pluginName, r.RemoteAddr, p)
+			internal.Errorf(context.TODO(), "[BeforeWebsocketHandshakePlugin:%s] addr:%s, panic:%v", pluginName, r.RemoteAddr, p)
 			stat = statInternalServerError.Copy(p)
 		}
 	}()
@@ -100,7 +101,7 @@ func (that *serverHandler) beforeHandshake(r *http.Request) (stat *drpc.Status) 
 		if _plugin, ok := plugin.(BeforeWebsocketHandshakePlugin); ok {
 			pluginName = plugin.Name()
 			if stat = _plugin.BeforeHandshake(r); !stat.OK() {
-				internal.Debugf("[BeforeWebsocketHandshakePlugin:%s] addr:%s, error:%s", pluginName, r.RemoteAddr, stat.String())
+				internal.Debugf(context.TODO(), "[BeforeWebsocketHandshakePlugin:%s] addr:%s, error:%s", pluginName, r.RemoteAddr, stat.String())
 				return stat
 			}
 		}
@@ -114,7 +115,7 @@ func (that *serverHandler) afterAccept(sess drpc.Session, conn *websocket.Conn) 
 	p := that.endpoint.PluginContainer()
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("[AfterWebsocketAcceptPlugin:%s] network:%s, addr:%s, panic:%v", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p)
+			internal.Errorf(context.TODO(), "[AfterWebsocketAcceptPlugin:%s] network:%s, addr:%s, panic:%v", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p)
 			stat = statInternalServerError.Copy(p)
 		}
 	}()
@@ -123,7 +124,7 @@ func (that *serverHandler) afterAccept(sess drpc.Session, conn *websocket.Conn) 
 		if _plugin, ok := plugin.(AfterWebsocketAcceptPlugin); ok {
 			pluginName = plugin.Name()
 			if stat = _plugin.AfterAccept(sess, conn); !stat.OK() {
-				internal.Debugf("[AfterWebsocketAcceptPlugin:%s] network:%s, addr:%s, error:%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), stat.String())
+				internal.Debugf(context.TODO(), "[AfterWebsocketAcceptPlugin:%s] network:%s, addr:%s, error:%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), stat.String())
 				return stat
 			}
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/dserver"
@@ -41,7 +42,7 @@ func main() {
 	dserver.Setup(func(svr *dserver.DServer) {
 		err := svr.AddSandBox(new(DRpcSandBox))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 	})
 }

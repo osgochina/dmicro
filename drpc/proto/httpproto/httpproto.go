@@ -2,10 +2,11 @@ package httpproto
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
@@ -162,7 +163,7 @@ func (that *httpProto) Pack(msg proto.Message) error {
 	_ = msg.SetSize(uint32(bb.Len()))
 
 	if that.printMessage {
-		internal.Printf("Send HTTP Message:\n%s", gconv.String(bb.B))
+		internal.Printf(context.TODO(), "Send HTTP Message:\n%s", gconv.String(bb.B))
 	}
 	_, err = that.rw.Write(bb.B)
 	return err
@@ -270,7 +271,7 @@ func (that *httpProto) Unpack(m proto.Message) error {
 			return err
 		}
 		if that.printMessage {
-			internal.Printf("Recv HTTP Message:\n%s\r\n%s",
+			internal.Printf(context.TODO(), "Recv HTTP Message:\n%s\r\n%s",
 				gconv.String(firstLine), gconv.String(msg))
 		}
 		size += len(firstLine)
@@ -305,7 +306,7 @@ func (that *httpProto) Unpack(m proto.Message) error {
 		return err
 	}
 	if that.printMessage {
-		internal.Printf("Recv HTTP Message:\n%s\r\n%s",
+		internal.Printf(context.TODO(), "Recv HTTP Message:\n%s\r\n%s",
 			gconv.String(firstLine), gconv.String(msg))
 	}
 	size += len(firstLine)

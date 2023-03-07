@@ -1,11 +1,12 @@
 package drpc
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/grpool"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/grpool"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
@@ -128,7 +129,7 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 
 	// 检查配置项是否正确
 	if err := cfg.check(); err != nil {
-		internal.Fatalf("%v", err)
+		internal.Fatalf(context.TODO(), "%v", err)
 	}
 
 	var e = &endpoint{
@@ -153,7 +154,7 @@ func NewEndpoint(cfg EndpointConfig, globalLeftPlugin ...Plugin) Endpoint {
 	}
 	//默认的消息体编码格式
 	if c, err := codec.GetByName(cfg.DefaultBodyCodec); err != nil {
-		internal.Fatalf("%v", err)
+		internal.Fatalf(context.TODO(), "%v", err)
 	} else {
 		e.defaultBodyCodec = c.ID()
 	}
@@ -323,7 +324,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 				_ = sess.closeLocked()
 				//防止状态没有修改成功，再次尝试修改状态
 				sess.tryChangeStatus(statusRedialFailed, statusRedialing)
-				internal.Warningf("redial fail,the maximum number of reconnections has been reached. (network:%s, addr:%s, id:%s,maxredial:%d)",
+				internal.Warningf(context.TODO(), "redial fail,the maximum number of reconnections has been reached. (network:%s, addr:%s, id:%s,maxredial:%d)",
 					that.network, addr, oldID, that.dialer.RedialTimes())
 				return false
 			}
@@ -358,7 +359,7 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 				_ = sess.closeLocked()
 				//防止状态没有修改成功，再次尝试修改状态
 				sess.tryChangeStatus(statusRedialFailed, statusRedialing)
-				internal.Warningf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
+				internal.Warningf(context.TODO(), "redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
 			}
 			//原始链接如果存在，则关闭
@@ -367,21 +368,21 @@ func (that *endpoint) Dial(addr string, protoFunc ...proto.ProtoFunc) (Session, 
 			}
 			//修改会话状态为就绪，并且执行会话消息读取监听
 			sess.changeStatus(statusOk)
-			err = grpool.Add(sess.startReadAndHandle)
+			err = grpool.Add(context.TODO(), sess.startReadAndHandle)
 			if err != nil {
-				internal.Warningf("redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
+				internal.Warningf(context.TODO(), "redial fail (network:%s, addr:%s, id:%s): %s", that.network, addr, oldID, err.Error())
 				return false
 			}
 			//把当前会话加入会话池
 			that.sessHub.set(sess)
-			internal.Printf("redial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+			internal.Printf(context.TODO(), "redial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 			return true
 		}
 	}
-	internal.Noticef("dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
+	internal.Noticef(context.TODO(), "dial ok (network:%s, addr:%s, id:%s)", that.network, addr, sess.ID())
 	//修改会话状态，并且启动响应监听
 	sess.changeStatus(statusOk)
-	err = grpool.Add(sess.startReadAndHandle)
+	err = grpool.Add(context.TODO(), sess.startReadAndHandle)
 	if err != nil {
 		return nil, statDialFailed.Copy(err)
 	}
@@ -415,9 +416,9 @@ func (that *endpoint) ServeConn(conn net.Conn, protoFunc ...proto.ProtoFunc) (Se
 		_ = sess.Close()
 		return nil, stat
 	}
-	internal.Noticef("serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+	internal.Noticef(context.TODO(), "serve ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 	sess.changeStatus(statusOk)
-	err := grpool.Add(sess.startReadAndHandle)
+	err := grpool.Add(context.TODO(), sess.startReadAndHandle)
 	if err != nil {
 		return nil, statUnknownError.Copy(err)
 	}
@@ -444,7 +445,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 	}
 
 	addr := lis.Addr().String()
-	internal.Printf("pid:%d,启动监听并提供服务：(network:%s, addr:%s)", os.Getpid(), network, addr)
+	internal.Printf(context.TODO(), "pid:%d,启动监听并提供服务：(network:%s, addr:%s)", os.Getpid(), network, addr)
 	that.pluginContainer.afterListen(lis.Addr())
 
 	var tempDelay time.Duration
@@ -471,7 +472,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 					tempDelay = max
 				}
 
-				internal.Warningf("accept error: %s; retrying in %v", err.Error(), tempDelay)
+				internal.Warningf(context.TODO(), "accept error: %s; retrying in %v", err.Error(), tempDelay)
 				time.Sleep(tempDelay)
 				continue
 			}
@@ -490,7 +491,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 					_ = c.SetReadDeadline(time.Now().Add(that.defaultContextAge))
 				}
 				if err = c.Handshake(); err != nil {
-					internal.Warningf("TLS handshake error from %s: %s", c.RemoteAddr(), err.Error())
+					internal.Warningf(context.TODO(), "TLS handshake error from %s: %s", c.RemoteAddr(), err.Error())
 					return
 				}
 			}
@@ -502,11 +503,11 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 				return
 			}
 
-			internal.Noticef("accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
+			internal.Noticef(context.TODO(), "accept ok (network:%s, addr:%s, id:%s)", network, sess.RemoteAddr().String(), sess.ID())
 			that.sessHub.set(sess)
 			sess.changeStatus(statusOk)
 			// 启动消息侦听
-			sess.startReadAndHandle()
+			sess.startReadAndHandle(context.TODO())
 		})
 	}
 
@@ -516,7 +517,7 @@ func (that *endpoint) serveListener(lis net.Listener, protoFunc ...proto.ProtoFu
 func (that *endpoint) ListenAndServe(protoFunc ...proto.ProtoFunc) error {
 	lis, err := NewInheritedListener(that.listerAddr, that.tlsConfig)
 	if err != nil {
-		internal.Fatalf("%v", err)
+		internal.Fatalf(context.TODO(), "%v", err)
 	}
 	return that.serveListener(lis, protoFunc...)
 }
@@ -545,7 +546,7 @@ func (that *endpoint) Close() (err error) {
 		dgpool.FILOAnywayGo(func() {
 			e := s.Close()
 			if e != nil {
-				internal.Error(e)
+				internal.Error(context.TODO(), e)
 			}
 			errCh <- e
 		})

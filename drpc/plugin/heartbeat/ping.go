@@ -1,6 +1,7 @@
 package heartbeat
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -83,7 +84,7 @@ func (that *heartPing) SetRate(rateSecond int) {
 	that.pingRate = time.Second * time.Duration(rateSecond)
 	that.pingRateSecond = strconv.Itoa(rateSecond)
 	that.mu.Unlock()
-	internal.Infof("set heartbeat rate: %ds", rateSecond)
+	internal.Infof(context.TODO(), "set heartbeat rate: %ds", rateSecond)
 }
 
 //获取心跳频率

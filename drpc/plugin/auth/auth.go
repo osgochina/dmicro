@@ -2,7 +2,7 @@ package auth
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
 	"net"

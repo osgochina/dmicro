@@ -1,10 +1,11 @@
 package securebody
 
 import (
+	"context"
 	"crypto/aes"
 	"fmt"
-	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/crypto/gmd5"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -16,11 +17,11 @@ import (
 func NewSecureBodyPlugin(cipherKey string, statCode ...int32) drpc.Plugin {
 	b := gconv.Bytes(cipherKey)
 	if _, err := aes.NewCipher(b); err != nil {
-		internal.Fatalf("secure: %v", err)
+		internal.Fatalf(context.TODO(), "secure: %v", err)
 	}
 	version, err := gmd5.EncryptBytes(b)
 	if err != nil {
-		internal.Fatalf("md5 error: %v", err)
+		internal.Fatalf(context.TODO(), "md5 error: %v", err)
 	}
 	var code = drpc.CodeConflict
 	if len(statCode) > 0 {

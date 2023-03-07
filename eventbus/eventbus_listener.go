@@ -2,7 +2,7 @@ package eventbus
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
 )
 
 // BaseListener 基础监听器

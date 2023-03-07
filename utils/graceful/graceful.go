@@ -2,15 +2,15 @@ package graceful
 
 import (
 	"crypto/tls"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/normal"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
@@ -45,7 +45,7 @@ func (that *graceful) SetModel(model GraceModel) {
 
 // isChild 判断当前进程是在子进程还是父进程
 func (that *graceful) isChild() bool {
-	isWorker := genv.GetVar(isChildKey, nil)
+	isWorker := genv.Get(isChildKey, nil)
 	if isWorker.IsNil() {
 		return false
 	}
@@ -57,7 +57,7 @@ func (that *graceful) isChild() bool {
 
 // GetInheritedFunc 获取继承的fd
 func (that *graceful) GetInheritedFunc() []int {
-	parentAddr := genv.GetVar(parentAddrKey, nil)
+	parentAddr := genv.Get(parentAddrKey, nil)
 	if parentAddr.IsNil() {
 		return nil
 	}
@@ -87,7 +87,7 @@ func (that *graceful) GetInheritedFunc() []int {
 
 // GetInheritedFuncQUIC 获取继承的fd
 func (that *graceful) GetInheritedFuncQUIC() []int {
-	parentAddr := genv.GetVar(parentAddrKey, nil)
+	parentAddr := genv.Get(parentAddrKey, nil)
 	if parentAddr.IsNil() {
 		return nil
 	}
@@ -116,7 +116,7 @@ func (that *graceful) GetInheritedFuncQUIC() []int {
 }
 
 func (that *graceful) GetInheritedFuncKCP() []int {
-	parentAddr := genv.GetVar(parentAddrKey, nil)
+	parentAddr := genv.Get(parentAddrKey, nil)
 	if parentAddr.IsNil() {
 		return nil
 	}

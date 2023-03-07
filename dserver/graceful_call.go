@@ -1,10 +1,10 @@
 package dserver
 
 import (
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"net"
@@ -58,7 +58,7 @@ func (that *graceful) AddInheritedKCP(procListener []*kcp.Listener, envs map[str
 
 // GetInheritedFunc 获取继承的fd
 func (that *graceful) GetInheritedFunc() []int {
-	parentAddr := genv.GetVar(parentAddrKey, nil)
+	parentAddr := genv.Get(parentAddrKey, nil)
 	if parentAddr.IsNil() {
 		return nil
 	}
@@ -88,7 +88,7 @@ func (that *graceful) GetInheritedFunc() []int {
 
 // GetInheritedFuncQUIC 获取继承的fd
 func (that *graceful) GetInheritedFuncQUIC() []int {
-	parentAddr := genv.GetVar(parentAddrKey, nil)
+	parentAddr := genv.Get(parentAddrKey, nil)
 	if parentAddr.IsNil() {
 		return nil
 	}
@@ -117,7 +117,7 @@ func (that *graceful) GetInheritedFuncQUIC() []int {
 }
 
 func (that *graceful) GetInheritedFuncKCP() []int {
-	parentAddr := genv.GetVar(parentAddrKey, nil)
+	parentAddr := genv.Get(parentAddrKey, nil)
 	if parentAddr.IsNil() {
 		return nil
 	}

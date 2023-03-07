@@ -2,8 +2,8 @@ module github.com/osgochina/dmicro
 
 require (
 	github.com/desertbit/grumble v1.1.3
-	github.com/fatih/color v1.12.0
-	github.com/gogf/gf v1.16.9
+	github.com/fatih/color v1.13.0
+	github.com/gogf/gf/v2 v2.3.2
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/lucas-clemente/quic-go v0.25.0
 	github.com/miekg/dns v1.1.46

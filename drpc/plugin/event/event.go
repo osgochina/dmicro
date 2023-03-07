@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/eventbus"
@@ -42,7 +43,7 @@ func (that *eventPlugin) AfterAccept(sess drpc.EarlySession) *drpc.Status {
 	if that.bus.HasListeners(OnAcceptEvent) {
 		err := that.bus.Publish(newOnAccept(sess))
 		if err != nil {
-			internal.Warning(err)
+			internal.Warning(context.TODO(), err)
 		}
 	}
 	return nil
@@ -53,7 +54,7 @@ func (that *eventPlugin) AfterDial(sess drpc.EarlySession, isRedial bool) *drpc.
 	if that.bus.HasListeners(OnConnectEvent) {
 		err := that.bus.Publish(newOnConnect(true, sess, isRedial, nil))
 		if err != nil {
-			internal.Warning(err)
+			internal.Warning(context.TODO(), err)
 		}
 	}
 	return nil
@@ -64,7 +65,7 @@ func (that *eventPlugin) AfterDialFail(sess drpc.EarlySession, err error, isRedi
 	if that.bus.HasListeners(OnConnectEvent) {
 		err = that.bus.Publish(newOnConnect(false, sess, isRedial, err))
 		if err != nil {
-			internal.Warning(err)
+			internal.Warning(context.TODO(), err)
 		}
 	}
 	return nil
@@ -75,7 +76,7 @@ func (that *eventPlugin) AfterDisconnect(sess drpc.BaseSession) *drpc.Status {
 	if that.bus.HasListeners(OnCloseEvent) {
 		err := that.bus.Publish(newOnClose(sess))
 		if err != nil {
-			internal.Warning(err)
+			internal.Warning(context.TODO(), err)
 		}
 	}
 	return nil
@@ -86,7 +87,7 @@ func (that *eventPlugin) AfterReadCallBody(ctx drpc.ReadCtx) *drpc.Status {
 	if that.bus.HasListeners(OnReceiveEvent) {
 		err := that.bus.Publish(newOnReceive(ctx))
 		if err != nil {
-			internal.Warning(err)
+			internal.Warning(context.TODO(), err)
 		}
 	}
 	return nil

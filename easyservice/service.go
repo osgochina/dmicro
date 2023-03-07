@@ -1,15 +1,17 @@
 package easyservice
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/graceful"
 	"os"
@@ -62,7 +64,7 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	//解析命令行
 	parser, err := gcmd.Parse(defaultOptions)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	//解析参数
 	if !that.parserArgs(parser) {
@@ -79,11 +81,11 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 	if that.config != nil {
 		//判断是否是守护进程运行
 		if e := that.demonize(that.config); e != nil {
-			logger.Fatalf("error:%v", e)
+			logger.Fatalf(context.TODO(), "error:%v", e)
 		}
 		//初始化日志配置
 		if e := that.initLogSetting(that.config); e != nil {
-			logger.Fatalf("error:%v", e)
+			logger.Fatalf(context.TODO(), "error:%v", e)
 		}
 	}
 
@@ -101,14 +103,14 @@ func (that *EasyService) Setup(startFunction StartFunc) {
 		go func() {
 			e := sandbox.Setup()
 			if e != nil {
-				logger.Warning(e)
+				logger.Warning(context.TODO(), e)
 			}
 		}()
 		return true
 	})
 
 	//等待服务结束
-	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
+	logger.Printf(context.TODO(), "%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 
 	//监听重启信号
 	graceful.GraceSignal()
@@ -154,9 +156,10 @@ func (that *EasyService) SandboxNames() *garray.StrArray {
 // 生产环境: 日志级别为 PRODUCT，会打印 WARN,ERRO,CRIT三个级别的日志，标准输出为关闭
 // Debug开关会无视以上设置，强制把日志级别设置为ALL，并且打开标准输出。
 func (that *EasyService) initLogSetting(config *gcfg.Config) error {
-	loggerCfg := config.GetJson("logger")
-	env := config.GetString("ENV_NAME")
-	level := loggerCfg.GetString("Level")
+	loggerCfg := config.MustGet(context.TODO(), "logger")
+	env := config.MustGet(context.TODO(), "ENV_NAME").String()
+	loggerCfgJson := gjson.New(loggerCfg)
+	level := loggerCfgJson.Get("Level").String()
 	logger.SetDebug(false)
 	logger.SetStdoutPrint(false)
 	//如果配置文件中的日志配置不存在，则判断环境变量，通过不同的环境变量，给与不同的日志级别
@@ -176,7 +179,7 @@ func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 		setConfig["stdout"] = true
 		logger.SetDebug(true)
 	}
-	logPath := loggerCfg.GetString("Path")
+	logPath := loggerCfgJson.Get("Path").String()
 	if len(logPath) > 0 {
 		setConfig["path"] = logPath
 	} else {
@@ -184,7 +187,7 @@ func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 	}
 
 	// 如果开启debug模式，则无视其他设置
-	if config.GetBool("Debug", false) {
+	if config.MustGet(context.TODO(), "Debug", false).Bool() {
 		setConfig["level"] = "ALL"
 		setConfig["stdout"] = true
 		logger.SetDebug(true)
@@ -196,7 +199,7 @@ func (that *EasyService) initLogSetting(config *gcfg.Config) error {
 func (that *EasyService) demonize(config *gcfg.Config) error {
 
 	//判断是否需要后台运行
-	daemon := config.GetBool("Daemon", false)
+	daemon := config.MustGet(context.TODO(), "Daemon", false).Bool()
 	if !daemon {
 		return nil
 	}
@@ -206,7 +209,7 @@ func (that *EasyService) demonize(config *gcfg.Config) error {
 	}
 	// 将命令行参数中执行文件路径转换成可用路径
 	filePath := gfile.SelfPath()
-	logger.Infof("Starting %s: ", filePath)
+	logger.Infof(context.TODO(), "Starting %s: ", filePath)
 	arg0, e := exec.LookPath(filePath)
 	if e != nil {
 		return e
@@ -243,16 +246,16 @@ func (that *EasyService) putPidFile() {
 
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
-		logger.Fatalf("os.OpenFile: %v", e)
+		logger.Fatalf(context.TODO(), "os.OpenFile: %v", e)
 	}
 	defer func() {
 		_ = f.Close()
 	}()
 	if e := os.Truncate(that.pidFile, 0); e != nil {
-		logger.Fatalf("os.Truncate: %v.", e)
+		logger.Fatalf(context.TODO(), "os.Truncate: %v.", e)
 	}
 	if _, e := fmt.Fprintf(f, "%d", pid); e != nil {
-		logger.Fatalf("Unable to write pid %d to file: %s.", os.Getpid(), e)
+		logger.Fatalf(context.TODO(), "Unable to write pid %d to file: %s.", os.Getpid(), e)
 	}
 }
 
@@ -269,15 +272,15 @@ func (that *EasyService) firstSweep() error {
 
 	if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
 		if e := gfile.Remove(that.pidFile); e != nil {
-			logger.Errorf("os.Remove: %v", e)
+			logger.Errorf(context.TODO(), "os.Remove: %v", e)
 		}
-		logger.Printf("删除pid文件[%s]成功", that.pidFile)
+		logger.Printf(context.TODO(), "删除pid文件[%s]成功", that.pidFile)
 	}
 
 	//结束服务前调用该方法,如果结束回调方法返回false，则中断结束
 	if that.beforeStopFunc != nil && !that.beforeStopFunc(that) {
 		err := gerror.New("执行完服务停止前的回调方法，该方法强制中断了服务结束流程！")
-		logger.Warning(err)
+		logger.Warning(context.TODO(), err)
 		that.shutting = false
 		return err
 	}
@@ -291,9 +294,9 @@ func (that *EasyService) beforeExiting() error {
 	that.sList.Iterator(func(_ int, v interface{}) bool {
 		service := v.(ISandBox)
 		if e := service.Shutdown(); e != nil {
-			logger.Errorf("服务 %s .结束出错，error: %v", service.Name(), e)
+			logger.Errorf(context.TODO(), "服务 %s .结束出错，error: %v", service.Name(), e)
 		} else {
-			logger.Printf("%s 服务 已结束.", service.Name())
+			logger.Printf(context.TODO(), "%s 服务 已结束.", service.Name())
 		}
 		return true
 	})

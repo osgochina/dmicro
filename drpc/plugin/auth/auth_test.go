@@ -1,7 +1,8 @@
 package auth_test
 
 import (
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
@@ -85,7 +86,7 @@ var authBearer = auth.NewBearerPlugin(
 		if !stat.OK() {
 			return stat
 		}
-		internal.Infof("auth info: %s, result: %s", clientAuthInfo, ret)
+		internal.Infof(context.TODO(), "auth info: %s, result: %s", clientAuthInfo, ret)
 		return nil
 	},
 	drpc.WithBodyCodec(codec.PlainName),
@@ -98,7 +99,7 @@ var authChecker = auth.NewCheckerPlugin(
 		if !stat.OK() {
 			return
 		}
-		internal.Infof("auth info: %v", authInfo)
+		internal.Infof(context.TODO(), "auth info: %v", authInfo)
 		if clientAuthInfo != authInfo {
 			return nil, drpc.NewStatus(403, "auth fail", "auth fail detail")
 		}

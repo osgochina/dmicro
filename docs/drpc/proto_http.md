@@ -70,8 +70,8 @@ package httpproto_test
 import (
   "bytes"
   "encoding/json"
-  "github.com/gogf/gf/test/gtest"
-  "github.com/gogf/gf/util/gconv"
+  "github.com/gogf/gf/v2/test/gtest"
+  "github.com/gogf/gf/v2/util/gconv"
   "github.com/osgochina/dmicro/drpc"
   "github.com/osgochina/dmicro/drpc/proto/httpproto"
   "github.com/osgochina/dmicro/logger"

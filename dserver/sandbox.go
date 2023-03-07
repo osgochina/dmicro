@@ -2,7 +2,7 @@ package dserver
 
 import (
 	"context"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/osgochina/dmicro/supervisor/process"
 )
 

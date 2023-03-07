@@ -2,7 +2,7 @@ package dgpool_test
 
 import (
 	"context"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/utils/dgpool"
 	"sync"
 	"testing"

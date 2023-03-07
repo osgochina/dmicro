@@ -3,7 +3,7 @@ package codec
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"net/url"
 	"reflect"
 	"strconv"

@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package graceful
@@ -5,12 +6,12 @@ package graceful
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
@@ -50,7 +51,7 @@ func SetInheritListener(address []InheritAddr) error {
 				return err
 			}
 			defaultGraceful.setMWListenAddr(addr)
-			logger.Printf("Master Worker模式，主进程监听(network: %s,host: %s,port: %s)", addr.Network, addr.Host, addr.Port)
+			logger.Printf(context.TODO(), "Master Worker模式，主进程监听(network: %s,host: %s,port: %s)", addr.Network, addr.Host, addr.Port)
 		}
 		cmd, err := defaultGraceful.startProcess()
 		if err != nil {
@@ -97,17 +98,17 @@ func (that *graceful) MWWait() {
 		select {
 		case mwCmd, ok := <-that.mwChildCmd:
 			if !ok {
-				logger.Fatalf("Master-Worker模式主进程出错")
+				logger.Fatalf(context.TODO(), "Master-Worker模式主进程出错")
 				return
 			}
 			that.mwPid = mwCmd.Process.Pid
-			logger.Printf("Master-Worker模式启动子进程成功，父进程:%d,子进程:%d", os.Getpid(), that.mwPid)
+			logger.Printf(context.TODO(), "Master-Worker模式启动子进程成功，父进程:%d,子进程:%d", os.Getpid(), that.mwPid)
 			err = mwCmd.Wait()
 			if err != nil {
-				logger.Warningf("子进程:%d 非正常退出，退出原因:%v", that.mwPid, err)
+				logger.Warningf(context.TODO(), "子进程:%d 非正常退出，退出原因:%v", that.mwPid, err)
 				go that.abnormalReload()
 			} else {
-				logger.Printf("子进程:%d 正常退出", that.mwPid)
+				logger.Printf(context.TODO(), "子进程:%d 正常退出", that.mwPid)
 			}
 		}
 	}
@@ -115,10 +116,10 @@ func (that *graceful) MWWait() {
 
 // 子进程异常推出的情况下，拉取子进程
 func (that *graceful) abnormalReload() {
-	logger.Warning("MasterWorker模式下子进程异常退出，重新拉起子进程")
+	logger.Warning(context.TODO(), "MasterWorker模式下子进程异常退出，重新拉起子进程")
 	cmd, err := that.startProcess()
 	if err != nil {
-		logger.Errorf("MasterWorker模式下子进程异常退出，重新拉起子进程失败,err:%v", err)
+		logger.Errorf(context.TODO(), "MasterWorker模式下子进程异常退出，重新拉起子进程失败,err:%v", err)
 		return
 	}
 	that.processStatus.Set(statusActionNone)
@@ -197,7 +198,7 @@ func (that *graceful) graceSignalGracefulChangeProcess() {
 	pid := os.Getpid()
 	for {
 		sig := <-that.signal
-		logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
+		logger.Printf(context.TODO(), `进程:%d,收到信号: %s`, pid, sig.String())
 		switch sig {
 		// 强制关闭服务
 		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGABRT:
@@ -234,7 +235,7 @@ func (that *graceful) graceSignalGracefulMW() {
 		)
 		for {
 			sig := <-that.signal
-			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
+			logger.Printf(context.TODO(), `进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
 			// 强制关闭服务
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGABRT:
@@ -264,7 +265,7 @@ func (that *graceful) graceSignalGracefulMW() {
 		)
 		for {
 			sig := <-that.signal
-			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
+			logger.Printf(context.TODO(), `进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
 			// 关闭服务
 			case syscall.SIGINT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM:
@@ -295,14 +296,14 @@ func (that *graceful) Reboot(timeout ...time.Duration) {
 		return
 	}
 	pid := os.Getpid()
-	logger.Printf("进程:%d,平滑重启中...", pid)
+	logger.Printf(context.TODO(), "进程:%d,平滑重启中...", pid)
 	that.contextExec(timeout, "reboot", func(_ context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 
 		go func() {
 			defer close(endCh)
 			if err := that.firstSweep(); err != nil {
-				logger.Warningf("进程:%d,平滑重启中 - 执行前置方法失败,error: %s", pid, err.Error())
+				logger.Warningf(context.TODO(), "进程:%d,平滑重启中 - 执行前置方法失败,error: %s", pid, err.Error())
 				os.Exit(-1)
 			}
 
@@ -310,13 +311,13 @@ func (that *graceful) Reboot(timeout ...time.Duration) {
 			_, err := that.startProcess()
 			// 启动新的进程失败，则表示该进程有问题，直接错误退出
 			if err != nil {
-				logger.Warningf("进程:%d,平滑重启中 - 启动新的进程失败,error: %s", pid, err.Error())
+				logger.Warningf(context.TODO(), "进程:%d,平滑重启中 - 启动新的进程失败,error: %s", pid, err.Error())
 				os.Exit(-1)
 			}
 		}()
 		return endCh
 	})
-	logger.Printf("进程:%d,进程已进行平滑重启,等待子进程的信号...", pid)
+	logger.Printf(context.TODO(), "进程:%d,进程已进行平滑重启,等待子进程的信号...", pid)
 }
 
 // master worker模式重启，就是对子进程发送退出信号
@@ -325,10 +326,10 @@ func (that *graceful) rebootMasterWorker() {
 
 	cmd, err := that.startProcess()
 	if err != nil {
-		logger.Errorf("MasterWorker模式下重启子进程失败,err:%v", err)
+		logger.Errorf(context.TODO(), "MasterWorker模式下重启子进程失败,err:%v", err)
 		return
 	}
-	logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
+	logger.Printf(context.TODO(), "主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
 	_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 	that.processStatus.Set(statusActionNone)
 	that.mwChildCmd <- cmd
@@ -338,7 +339,7 @@ func (that *graceful) rebootMasterWorker() {
 func (that *graceful) shutdownMaster() {
 	defer os.Exit(0)
 	pid := that.mwPid
-	logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
+	logger.Printf(context.TODO(), `主进程:%d 向子进程: %d 发送信号SIGTERM`, os.Getpid(), pid)
 	_ = signals.KillPid(pid, signals.ToSignal("SIGTERM"), false)
 }
 
@@ -346,7 +347,7 @@ func (that *graceful) shutdownMaster() {
 func (that *graceful) quitMaster() {
 	defer os.Exit(0)
 	pid := that.mwPid
-	logger.Printf(`主进程:%d 向子进程: %d 发送信号SIGQUIT`, os.Getpid(), pid)
+	logger.Printf(context.TODO(), `主进程:%d 向子进程: %d 发送信号SIGQUIT`, os.Getpid(), pid)
 	_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 }
 

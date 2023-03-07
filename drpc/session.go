@@ -3,9 +3,9 @@ package drpc
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/grpool"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/grpool"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -297,7 +297,7 @@ func (that *session) SetID(newID string) {
 	hub := that.endpoint.sessHub
 	hub.set(that)
 	hub.delete(oldID)
-	internal.Infof("session changes id: %s -> %s", oldID, newID)
+	internal.Infof(context.TODO(), "session changes id: %s -> %s", oldID, newID)
 }
 
 // ControlFD 处理底层fd
@@ -468,7 +468,7 @@ func (that *session) doSend(output message.Message) *status.Status {
 		if err == io.EOF || err == socket.ErrProactivelyCloseSocket {
 			return statConnClosed
 		}
-		internal.Debugf("write error: %s", err.Error())
+		internal.Debugf(context.TODO(), "write error: %s", err.Error())
 		return statWriteFailed.Copy(err)
 	}
 }
@@ -598,7 +598,7 @@ func (that *session) Push(serviceMethod string, args interface{}, setting ...mes
 		//把上下文对象放回池子
 		that.endpoint.putHandleCtx(ctx, true)
 		if p := recover(); p != nil {
-			internal.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			internal.Errorf(context.TODO(), "panic:%v\n%s", p, status.PanicStackTrace())
 		}
 	}()
 
@@ -653,7 +653,7 @@ func (that *session) AsyncCall(serviceMethod string, args interface{}, result in
 		callCmdChan = make(chan CallCmd, 10)
 	} else {
 		if cap(callCmdChan) == 0 {
-			internal.Panicf("*session.AsyncCall(): callCmdChan channel is unbuffered")
+			internal.Panicf(context.TODO(), "*session.AsyncCall(): callCmdChan channel is unbuffered")
 		}
 	}
 	output := message.NewMessage()
@@ -696,7 +696,7 @@ func (that *session) AsyncCall(serviceMethod string, args interface{}, result in
 	that.callCmdMap.Set(seq, cmd)
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			internal.Errorf(context.TODO(), "panic:%v\n%s", p, status.PanicStackTrace())
 		}
 	}()
 	//write call消息写入之前执行插件
@@ -769,7 +769,7 @@ func (that *session) write(msg message.Message) (net.Conn, *Status) {
 	if err == io.EOF || err == socket.ErrProactivelyCloseSocket {
 		return usedConn, statConnClosed
 	}
-	internal.Debugf("write error: %s", err.Error())
+	internal.Debugf(context.TODO(), "write error: %s", err.Error())
 ERR:
 	return usedConn, statWriteFailed.Copy(err)
 }
@@ -819,7 +819,7 @@ func (that *session) closeLocked() error {
 }
 
 //读取消息，并根据消息内容，执行对应的操作
-func (that *session) startReadAndHandle() {
+func (that *session) startReadAndHandle(c context.Context) {
 	var withContext message.MsgSetting
 	//如果设置了会话的生命期，则针对该上下文设置生命周期
 	if readTimeout := that.SessionAge(); readTimeout > 0 {
@@ -866,7 +866,7 @@ func (that *session) startReadAndHandle() {
 		// 给优雅处理器添加一次记录,优雅的结束会话之前，需要等待改协程处理完毕
 		that.graceCtxWaitGroup.Add(1)
 
-		if err = grpool.Add(func() {
+		if err = grpool.Add(c, func(ctx2 context.Context) {
 			defer that.endpoint.putHandleCtx(ctx, true)
 			ctx.handle()
 		}); err != nil {
@@ -898,7 +898,7 @@ func (that *session) readDisconnected(oldConn net.Conn, err error) {
 		if errStr := err.Error(); errStr != "EOF" {
 			reason = errStr
 			//记录会话关闭原因
-			internal.Warningf("disconnect when reading: %T %s", err, errStr)
+			internal.Warningf(context.TODO(), "disconnect when reading: %T %s", err, errStr)
 		}
 	}
 	//优化的等待所有处理程序结束

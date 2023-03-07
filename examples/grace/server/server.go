@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gtime"
+	"context"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/graceful"
@@ -21,7 +22,7 @@ func main() {
 		{Network: "http", Host: "127.0.0.1", Port: "8082", ServerName: "test"},
 	})
 	if err != nil {
-		logger.Error(err)
+		logger.Error(context.TODO(), err)
 		return
 	}
 	go graceful.GraceSignal()
@@ -60,7 +61,7 @@ func main() {
 	})
 
 	svr2.RouteCall(new(Grace))
-	logger.Warning(svr2.ListenAndServe())
+	logger.Warning(context.TODO(), svr2.ListenAndServe())
 }
 
 type Grace struct {
@@ -68,7 +69,7 @@ type Grace struct {
 }
 
 func (m *Grace) Sleep(arg *int) (string, *drpc.Status) {
-	logger.Infof("sleep %d", *arg)
+	logger.Infof(context.TODO(), "sleep %d", *arg)
 	if *arg > 0 {
 		sleep := *arg
 		time.Sleep(time.Duration(sleep) * time.Second)

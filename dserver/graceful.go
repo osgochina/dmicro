@@ -1,15 +1,16 @@
 package dserver
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/normal"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
@@ -98,7 +99,7 @@ func newGraceful(server *DServer) *graceful {
 		inheritedProcListener: garray.NewArray(true),
 		firstSweep:            func() error { return nil },
 		beforeExiting:         func() error { return nil },
-		childBool:             genv.GetVar(isChildKey, false).Bool(),
+		childBool:             genv.Get(isChildKey, false).Bool(),
 	}
 }
 
@@ -111,10 +112,10 @@ func (that *graceful) onStart() {
 	pPid := syscall.Getppid()
 	if pPid != 1 {
 		if err := signals.KillPid(pPid, signals.ToSignal("SIGTERM"), false); err != nil {
-			logger.Errorf("子进程重启后向父进程发送信号失败，error: %s", err.Error())
+			logger.Errorf(context.TODO(), "子进程重启后向父进程发送信号失败，error: %s", err.Error())
 			return
 		}
-		logger.Printf("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
+		logger.Printf(context.TODO(), "平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
 	}
 }
 
@@ -201,7 +202,7 @@ func (that *DServer) inheritListenerList() error {
 			return err
 		}
 		that.graceful.setListenAddrMap(addr)
-		logger.Printf("多进程模式，主进程监听(network: %s,host: %s,port: %d)", addr.Network, addr.Host, addr.Port)
+		logger.Printf(context.TODO(), "多进程模式，主进程监听(network: %s,host: %s,port: %d)", addr.Network, addr.Host, addr.Port)
 	}
 	return nil
 }

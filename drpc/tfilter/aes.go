@@ -1,6 +1,6 @@
 package tfilter
 
-import "github.com/gogf/gf/crypto/gaes"
+import "github.com/gogf/gf/v2/crypto/gaes"
 
 const (
 	AesId   = 'a'

@@ -21,7 +21,7 @@ jsonproto是实现JSON套接字通信协议。
 package jsonproto_test
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto/jsonproto"

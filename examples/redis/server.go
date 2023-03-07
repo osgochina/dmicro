@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec/redis_codec"
 	"github.com/osgochina/dmicro/drpc/plugin/redis"

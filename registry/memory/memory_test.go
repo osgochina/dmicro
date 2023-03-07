@@ -2,7 +2,7 @@ package memory
 
 import (
 	"fmt"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/registry"
 	"testing"
 	"time"

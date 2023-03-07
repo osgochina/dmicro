@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/dserver"
@@ -39,7 +40,7 @@ type Math struct {
 
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// test meta
-	logger.Infof("author: %s", m.PeekMeta("author"))
+	logger.Infof(context.TODO(), "author: %s", m.PeekMeta("author"))
 	// add
 	var r int
 	for _, a := range *arg {
@@ -55,7 +56,7 @@ func main() {
 	dserver.Setup(func(svr *dserver.DServer) {
 		err := svr.AddSandBox(new(DRpcSandBox))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 	})
 }

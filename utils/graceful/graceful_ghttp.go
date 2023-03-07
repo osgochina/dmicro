@@ -1,7 +1,8 @@
 package graceful
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/logger"
 	"net"
 )
@@ -24,7 +25,7 @@ func (that *graceful) getGHttpListenerFdMap() map[string]listenerFdMap {
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
-			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			logger.Warningf(context.TODO(), "inheritedProcListener 不是 net.Listener类型")
 			return true
 		}
 		if that.mwListenAddr == nil {
@@ -38,7 +39,7 @@ func (that *graceful) getGHttpListenerFdMap() map[string]listenerFdMap {
 		}
 		f, e := lis.(filer).File()
 		if e != nil {
-			logger.Error(e)
+			logger.Error(context.TODO(), e)
 			return true
 		}
 		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","

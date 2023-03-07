@@ -3,9 +3,9 @@ package etcd
 import (
 	"context"
 	"crypto/tls"
-	"github.com/gogf/gf/encoding/ghash"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/encoding/ghash"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/osgochina/dmicro/registry"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"go.etcd.io/etcd/client/v3"
@@ -166,7 +166,7 @@ func (that *etcdRegistry) registerNode(s *registry.Service, node *registry.Node,
 				}
 
 				// create hash of service; uint64
-				h := ghash.BKDRHash64(gjson.New(srv.Nodes[0]).MustToJson())
+				h := ghash.BKDR64(gjson.New(srv.Nodes[0]).MustToJson())
 				if err != nil {
 					continue
 				}
@@ -192,7 +192,7 @@ func (that *etcdRegistry) registerNode(s *registry.Service, node *registry.Node,
 			leaseNotFound = true
 		}
 	}
-	h := ghash.BKDRHash64(gjson.New(node).MustToJson())
+	h := ghash.BKDR64(gjson.New(node).MustToJson())
 	that.Lock()
 	v, ok := that.register[s.Name+node.Id]
 	that.Unlock()

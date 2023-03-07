@@ -17,7 +17,7 @@ jsonrpc协议是实现`JSONRPC`标准的套接字通信协议。
 package jsonrpcproto_test
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto/jsonrpcproto"

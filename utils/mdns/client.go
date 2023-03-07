@@ -134,7 +134,7 @@ func Listen(entries chan<- *ServiceEntry, exit chan struct{}) error {
 				msg.SetQuestion(e.Name, dns.TypePTR)
 				msg.RecursionDesired = false
 				if err = cli.sendQuery(msg); err != nil {
-					logger.Printf("[ERR] mdns: Failed to query instance %s: %v", e.Name, err)
+					logger.Printf(context.TODO(), "[ERR] mdns: Failed to query instance %s: %v", e.Name, err)
 				}
 			}
 		}
@@ -168,7 +168,7 @@ func newClient() (*client, error) {
 	uConn6, err6 := net.ListenUDP("udp6", &net.UDPAddr{IP: net.IPv6zero, Port: 0})
 
 	if err4 != nil && err6 != nil {
-		logger.Printf("[ERR] mdns: Failed to bind to udp port: %v %v", err4, err6)
+		logger.Printf(context.TODO(), "[ERR] mdns: Failed to bind to udp port: %v %v", err4, err6)
 	}
 	if uConn4 == nil && uConn6 == nil {
 		return nil, fmt.Errorf("failed to bind to any unicast udp port")
@@ -185,7 +185,7 @@ func newClient() (*client, error) {
 	mConn4, err4 := net.ListenUDP("udp4", mdnsWildcardAddrIPv4)
 	mConn6, err6 := net.ListenUDP("udp6", mdnsWildcardAddrIPv6)
 	if err4 != nil && err6 != nil {
-		logger.Printf("[ERR] mdns: Failed to bind to udp port: %v %v", err4, err6)
+		logger.Printf(context.TODO(), "[ERR] mdns: Failed to bind to udp port: %v %v", err4, err6)
 	}
 
 	if mConn4 == nil && mConn6 == nil {
@@ -353,7 +353,7 @@ func (that *client) query(params *QueryParam) error {
 				msg.SetQuestion(inp.Name, inp.Type)
 				msg.RecursionDesired = false
 				if err := that.sendQuery(msg); err != nil {
-					logger.Printf("[ERR] mdns: Failed to query instance %s: %v", inp.Name, err)
+					logger.Printf(context.TODO(), "[ERR] mdns: Failed to query instance %s: %v", inp.Name, err)
 				}
 			}
 		case <-params.Context.Done():

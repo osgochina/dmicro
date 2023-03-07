@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"time"
@@ -17,14 +18,14 @@ func main() {
 		fmt.Sprintf("%s/key.pem", gfile.MainPkgPath()),
 		true)
 	if e != nil {
-		logger.Fatalf("%v", e)
+		logger.Fatalf(context.TODO(), "%v", e)
 	}
 
 	cli.RoutePush(new(Push))
 
 	sess, stat := cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
 
 	var result int
@@ -34,11 +35,11 @@ func main() {
 		drpc.WithSetMeta("author", "clownfish"),
 	).Status()
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
-	logger.Printf("result: %d", result)
+	logger.Printf(context.TODO(), "result: %d", result)
 
-	logger.Printf("wait for 10s...")
+	logger.Printf(context.TODO(), "wait for 10s...")
 	time.Sleep(time.Second * 10)
 }
 
@@ -49,6 +50,6 @@ type Push struct {
 
 // Status handles '/push/status' message
 func (p *Push) Status(arg *string) *drpc.Status {
-	logger.Printf("%s", *arg)
+	logger.Printf(context.TODO(), "%s", *arg)
 	return nil
 }

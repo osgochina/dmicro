@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
 	"os"
@@ -27,7 +28,7 @@ func runServer() {
 	)
 	proc, err := m.NewProcessByOptions(opts)
 	if err != nil {
-		logger.Error(err)
+		logger.Error(context.TODO(), err)
 		return
 	}
 	proc.Start(true)
@@ -40,7 +41,7 @@ func initSignals(s *process.Manager) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		logger.Infof("receive a signal %s to stop all process & exit", sig)
+		logger.Infof(context.TODO(), "receive a signal %s to stop all process & exit", sig)
 		s.StopAllProcesses()
 		os.Exit(-1)
 	}()

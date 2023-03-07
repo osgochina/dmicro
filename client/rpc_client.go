@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -66,7 +67,7 @@ func NewRpcClient(serviceName string, opt ...Option) *RpcClient {
 		if len(opts.TlsCertFile) > 0 && len(opts.TlsKeyFile) > 0 {
 			err := endpoint.SetTLSConfigFromFile(opts.TlsCertFile, opts.TlsKeyFile)
 			if err != nil {
-				logger.Fatalf("%v", err)
+				logger.Fatalf(context.TODO(), "%v", err)
 			}
 		}
 	}
@@ -108,7 +109,7 @@ func (that *RpcClient) Call(serviceMethod string, args interface{}, result inter
 			return callCmd
 		}
 		if i > 0 {
-			logger.Debugf("链接第[%d]出错，错误原因: %s", i, callCmd.Status().String())
+			logger.Debugf(context.TODO(), "链接第[%d]出错，错误原因: %s", i, callCmd.Status().String())
 		}
 	}
 	return callCmd
@@ -137,7 +138,7 @@ func (that *RpcClient) Push(serviceMethod string, arg interface{}, setting ...me
 			return stat
 		}
 		if i > 0 {
-			logger.Debugf("链接第[%d]出错，错误原因: %s", i, stat.String())
+			logger.Debugf(context.TODO(), "链接第[%d]出错，错误原因: %s", i, stat.String())
 		}
 	}
 	return stat
@@ -149,7 +150,7 @@ func (that *RpcClient) AsyncCall(serviceMethod string, arg interface{}, result i
 		callCmdChan = make(chan drpc.CallCmd, 10) // buffered.
 	} else {
 		if cap(callCmdChan) == 0 {
-			logger.Panicf("*Client.AsyncCall(): callCmdChan channel is unbuffered")
+			logger.Panicf(context.TODO(), "*Client.AsyncCall(): callCmdChan channel is unbuffered")
 		}
 	}
 	select {
@@ -257,7 +258,7 @@ func (that *RpcClient) defaultSelector(serviceName string) {
 	that.opts.Registry = registry.DefaultRegistry
 	err := that.opts.Registry.Init(registry.OptServiceName(serviceName))
 	if err != nil {
-		logger.Error(err)
+		logger.Error(context.TODO(), err)
 	}
 	// 初始化默认selector
 	if that.opts.Selector == nil {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
@@ -14,7 +15,7 @@ func main() {
 
 	sess, stat := cli.Dial("127.0.0.1:9091")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
 	n := 1
 	for {
@@ -24,7 +25,7 @@ func main() {
 			&result,
 		).Status()
 		if !stat.OK() {
-			logger.Error(stat.Cause())
+			logger.Error(context.TODO(), stat.Cause())
 			time.Sleep(1 * time.Second)
 		}
 		fmt.Printf("%d.%s\n", n, result)

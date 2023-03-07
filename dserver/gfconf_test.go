@@ -1,8 +1,9 @@
 package dserver
 
 import (
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 
@@ -15,6 +16,6 @@ func TestGetGFConf(t *testing.T) {
 		}()
 		t.Assert(err, nil)
 		cfg := newDServer("test").getGFConf(path)
-		t.Assert(cfg.GetString("addr"), "127.0.0.1:80")
+		t.Assert(cfg.MustGet(context.TODO(), "addr").String(), "127.0.0.1:80")
 	})
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/dserver"
 	"github.com/osgochina/dmicro/examples/dserver/sandbox"
 	"github.com/osgochina/dmicro/logger"
@@ -17,11 +18,11 @@ func main() {
 		})
 		err := svr.AddSandBox(new(sandbox.DefaultSandBox), svr.NewService("admin"))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 		err = svr.AddSandBox(new(sandbox.DefaultSandBox1), svr.NewService("user"))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 		//err = svr.AddSandBox(new(sandbox.JobSandbox), svr.NewService("admin"))
 		//if err != nil {

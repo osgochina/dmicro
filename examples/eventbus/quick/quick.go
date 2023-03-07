@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/eventbus"
 	"github.com/osgochina/dmicro/logger"
@@ -14,7 +15,7 @@ func main() {
 		return nil
 	}), eventbus.Normal)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 
 	err = eventbus.Listen("event1", eventbus.ListenerFunc(func(e eventbus.IEvent) error {
@@ -22,12 +23,12 @@ func main() {
 		return nil
 	}), eventbus.High)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	// 执行事件的时候，会优先执行listen2，因为它的优先度高
 	event1, err = eventbus.Fire("event1", map[interface{}]interface{}{"arg0": "val0", "arg1": "val1"})
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	// 输出 val0
 	fmt.Println(event1.Get("arg0"))

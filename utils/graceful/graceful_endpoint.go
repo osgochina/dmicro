@@ -1,8 +1,9 @@
 package graceful
 
 import (
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
@@ -33,10 +34,10 @@ func (that *graceful) onStart() {
 	pPid := syscall.Getppid()
 	if pPid != 1 {
 		if err := signals.KillPid(pPid, signals.ToSignal("SIGTERM"), false); err != nil {
-			logger.Errorf("子进程重启后向父进程发送信号失败，error: %s", err.Error())
+			logger.Errorf(context.TODO(), "子进程重启后向父进程发送信号失败，error: %s", err.Error())
 			return
 		}
-		logger.Printf("平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
+		logger.Printf(context.TODO(), "平滑重启中,子进程[%d]已向父进程[%d]发送信号'SIGTERM'", syscall.Getpid(), pPid)
 	}
 }
 
@@ -73,14 +74,14 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
-			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			logger.Warningf(context.TODO(), "inheritedProcListener 不是 net.Listener类型")
 			return true
 		}
 		quicLis, ok := v.(*quic.Listener)
 		if ok {
 			f, e := quicLis.PacketConn().(filer).File()
 			if e != nil {
-				logger.Error(e)
+				logger.Error(context.TODO(), e)
 				return false
 			}
 			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -94,7 +95,7 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 		if ok {
 			f, e := kcpLis.PacketConn().(filer).File()
 			if e != nil {
-				logger.Error(e)
+				logger.Error(context.TODO(), e)
 				return false
 			}
 			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -106,7 +107,7 @@ func (that *graceful) getEndpointListenerFdMapChangeProcess() map[string]string 
 		}
 		f, e := lis.(filer).File()
 		if e != nil {
-			logger.Error(e)
+			logger.Error(context.TODO(), e)
 			return false
 		}
 		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -131,7 +132,7 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
-			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			logger.Warningf(context.TODO(), "inheritedProcListener 不是 net.Listener类型")
 			return true
 		}
 		if that.mwListenAddr != nil {
@@ -145,7 +146,7 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 		if ok {
 			f, e := quicLis.PacketConn().(filer).File()
 			if e != nil {
-				logger.Error(e)
+				logger.Error(context.TODO(), e)
 				return false
 			}
 			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -159,7 +160,7 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 		if ok {
 			f, e := kcpLis.PacketConn().(filer).File()
 			if e != nil {
-				logger.Error(e)
+				logger.Error(context.TODO(), e)
 				return false
 			}
 			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -171,7 +172,7 @@ func (that *graceful) getEndpointListenerFdMasterWorker() map[string]string {
 		}
 		f, e := lis.(filer).File()
 		if e != nil {
-			logger.Error(e)
+			logger.Error(context.TODO(), e)
 			return true
 		}
 		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","

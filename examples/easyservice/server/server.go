@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/easyservice"
 	"github.com/osgochina/dmicro/examples/easyservice/sandbox"
@@ -32,7 +33,7 @@ func main() {
 			{Network: "http", Host: "127.0.0.1", Port: "8080", ServerName: "default"},
 		})
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 			return
 		}
 		var cfg = easyservice.DefaultBoxConf(svr.CmdParser(), svr.Config())

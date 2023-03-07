@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/tfilter"
@@ -27,7 +28,7 @@ func main() {
 	endpoint.RouteCall(new(MainCall))
 	err := endpoint.ListenAndServe()
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 }
 
@@ -37,7 +38,7 @@ func Client() {
 	endpoint := drpc.NewEndpoint(cfg)
 	sess, stat := endpoint.Dial("127.0.0.1:8888")
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(), stat)
 	}
 	var str = "liuzhiming"
 	var result string
@@ -49,7 +50,7 @@ func Client() {
 			drpc.WithTFilterPipe(tfilter.AesId, tfilter.Md5Id, tfilter.GzipId),
 		).Status()
 		if !stat.OK() {
-			logger.Warning(stat)
+			logger.Warning(context.TODO(), stat)
 		}
 		time.Sleep(3 * time.Second)
 	}

@@ -1,7 +1,8 @@
 package pbproto_test
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
@@ -33,7 +34,7 @@ type Push struct {
 }
 
 func (that *Push) Test(arg *pb_test.Push) *drpc.Status {
-	internal.Infof("receive push(%s):\narg: %#v\n", that.IP(), arg.PeerId)
+	internal.Infof(context.TODO(), "receive push(%s):\narg: %#v\n", that.IP(), arg.PeerId)
 	return nil
 }
 

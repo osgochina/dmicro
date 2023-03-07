@@ -1,7 +1,8 @@
 package heartbeat
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"strconv"
@@ -141,9 +142,9 @@ func handheldHeartbeat(sess drpc.CtxSession, peekMeta func(string) interface{}) 
 		return drpc.NewStatus(drpc.CodeBadMessage, "invalid heartbeat rate", rateStr)
 	}
 	if rateSecond == 0 {
-		internal.Infof("heart-pong: %s", sess.ID())
+		internal.Infof(context.TODO(), "heart-pong: %s", sess.ID())
 	} else {
-		internal.Infof("heart-pong: %s, set rate: %ds", sess.ID(), rateSecond)
+		internal.Infof(context.TODO(), "heart-pong: %s, set rate: %ds", sess.ID(), rateSecond)
 	}
 	return nil
 }

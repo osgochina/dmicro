@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"io/ioutil"
 	"sync"
@@ -94,23 +94,23 @@ func (that *jsonSubProto) Unpack(m proto.Message) error {
 	j := gjson.New(b)
 
 	// read transfer pipe
-	pipeTFilter := j.GetArray("ptf")
+	pipeTFilter := j.Get("ptf").Array()
 	for _, r := range pipeTFilter {
 		_ = m.PipeTFilter().Append(byte(gconv.Int(r)))
 	}
 
 	// read body
-	m.SetBodyCodec(byte(j.GetInt("bodyCodec")))
-	bodyBytes, err := m.PipeTFilter().OnUnpack(j.GetBytes("body"))
+	m.SetBodyCodec(byte(j.Get("bodyCodec").Int()))
+	bodyBytes, err := m.PipeTFilter().OnUnpack(j.Get("body").Bytes())
 	if err != nil {
 		return err
 	}
 
 	// read other
-	m.SetSeq(j.GetInt32("seq"))
-	m.SetMType(byte(j.GetInt8("mtype")))
-	m.SetServiceMethod(j.GetString("serviceMethod"))
-	meta := j.GetMap("meta")
+	m.SetSeq(j.Get("seq").Int32())
+	m.SetMType(byte(j.Get("mtype").Int8()))
+	m.SetServiceMethod(j.Get("serviceMethod").String())
+	meta := j.Get("meta").Map()
 	if len(meta) > 0 {
 		for k, v := range meta {
 			m.Meta().Set(k, v)

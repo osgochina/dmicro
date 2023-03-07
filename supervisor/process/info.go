@@ -2,8 +2,8 @@ package process
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"syscall"
 	"time"
 )

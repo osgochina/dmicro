@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket/jsonSubProto"
@@ -96,7 +96,7 @@ func (that *Server) ListenAndServe(protoFunc ...proto.ProtoFunc) (err error) {
 		return err
 	}
 	that.lisAddr = that.lis.Addr()
-	internal.Printf("listen and serve (network:%s, addr:%s)", network, that.lisAddr)
+	internal.Printf(context.TODO(), "listen and serve (network:%s, addr:%s)", network, that.lisAddr)
 
 	// 执行listen钩子
 	for _, v := range that.Endpoint.PluginContainer().GetAll() {

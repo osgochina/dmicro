@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/eventbus"
 	"github.com/osgochina/dmicro/logger"
@@ -22,11 +23,11 @@ func main() {
 	var event1 eventbus.IEvent
 	err := eventbus.Listen("event1", &MyListener{}, eventbus.Normal)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	event1, err = eventbus.Fire("event1", nil)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	// 输出 ok
 	fmt.Println(event1.Get("result"))

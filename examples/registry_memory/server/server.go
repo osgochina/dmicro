@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/ignorecase"
@@ -27,7 +28,7 @@ func main() {
 		time.Sleep(3 * time.Second)
 		s, err := reg.GetService("testregistry")
 		if err != nil {
-			logger.Error(err)
+			logger.Error(context.TODO(), err)
 		}
 		for _, s1 := range s {
 			for _, n := range s1.Nodes {
@@ -47,7 +48,7 @@ type Math struct {
 
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// test meta
-	logger.Infof("author: %s", m.PeekMeta("author"))
+	logger.Infof(context.TODO(), "author: %s", m.PeekMeta("author"))
 	// add
 	var r int
 	for _, a := range *arg {

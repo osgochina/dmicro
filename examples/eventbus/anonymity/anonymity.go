@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/eventbus"
 	"github.com/osgochina/dmicro/logger"
@@ -15,10 +16,10 @@ var anonymity = func(e eventbus.IEvent) error {
 func main() {
 	err := eventbus.Listen("event1", eventbus.ListenerFunc(anonymity), eventbus.Normal)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 	_, err = eventbus.Fire("event1", nil)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal(context.TODO(), err)
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/proxy"
 	"github.com/osgochina/dmicro/logger"
@@ -26,7 +27,7 @@ func newProxyPlugin() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Warningf("%v", stat)
+		logger.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}

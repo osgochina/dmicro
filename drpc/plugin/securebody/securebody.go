@@ -2,10 +2,10 @@ package securebody
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/crypto/gaes"
-	"github.com/gogf/gf/encoding/gbase64"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/crypto/gaes"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 )
 

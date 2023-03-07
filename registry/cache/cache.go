@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/registry"
 	registryUtil "github.com/osgochina/dmicro/registry/util"
@@ -139,7 +140,7 @@ func (that *cache) run(service string) {
 			that.setStatus(err)
 			// 如果大于三次，则重置
 			if a > 3 {
-				logger.Debugf("rcache: %v backing off %d", err, d)
+				logger.Debugf(context.TODO(), "rcache: %v backing off %d", err, d)
 				a = 0
 			}
 			time.Sleep(d)
@@ -157,7 +158,7 @@ func (that *cache) run(service string) {
 			d := backoff.Do(b)
 			that.setStatus(err)
 			if b > 3 {
-				logger.Debugf("rcache: %v backing off %d", err, d)
+				logger.Debugf(context.TODO(), "rcache: %v backing off %d", err, d)
 				b = 0
 			}
 			time.Sleep(d)

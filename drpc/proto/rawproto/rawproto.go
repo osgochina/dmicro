@@ -3,7 +3,7 @@ package rawproto
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/utils/dbuffer"
 	"io"

@@ -1,8 +1,9 @@
 package registry
 
 import (
+	"context"
 	"errors"
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/backoff"
@@ -60,7 +61,7 @@ func (that *PluginRegistry) AfterListen(addr net.Addr) (err error) {
 				that.mu.RUnlock()
 				if registered {
 					if err := that.Register(); err != nil {
-						logger.Error(err)
+						logger.Error(context.TODO(), err)
 					}
 				}
 			case <-that.exit:

@@ -2,17 +2,18 @@ package easyservice
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/os/gspath"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gmode"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gspath"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmode"
 	"github.com/osgochina/dmicro/logger"
 )
 
@@ -23,27 +24,27 @@ const (
 
 // 获取gf框架的配置对象
 func (that *EasyService) getGFConf(parser *gcmd.Parser) *gcfg.Config {
-	confFile := parser.GetOpt("config")
+	confFile := parser.GetOpt("config").String()
 	if len(confFile) > 0 {
 		//指定了具体的配置文件地址
 		if gstr.Contains(confFile, gfile.Separator) {
 			confPath := gfile.Abs(confFile)
 			if gfile.Exists(confPath) {
-				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
+				gcfg.Instance().GetAdapter().(*gcfg.AdapterFile).SetContent(string(gfile.GetContents(confPath)), gcfg.DefaultConfigFileName)
 				return gcfg.Instance()
 			}
 			confPath = fmt.Sprintf("%s%s%s", gfile.MainPkgPath(), gfile.Separator, gfile.Basename(confPath))
 			if gfile.Exists(confPath) {
-				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
+				gcfg.Instance().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFileName)
 				return gcfg.Instance()
 			}
 		} else {
 			// 未指定配置文件地址，但是指定了配置文件名，需要去默认的目录搜索
 			confPath, _ := getFilePath(confFile)
 			if !gfile.Exists(confPath) {
-				logger.Errorf("配置文件 %s 不存在", confFile)
+				logger.Errorf(context.TODO(), "配置文件 %s 不存在", confFile)
 			} else {
-				gcfg.SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFile)
+				gcfg.Instance().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFileName)
 			}
 		}
 		return gcfg.Instance()
@@ -59,9 +60,9 @@ func (that *EasyService) getGFConf(parser *gcmd.Parser) *gcfg.Config {
 		}
 	}
 	//如果并未设置配置文件，为了让程序不报错，写入空的配置
-	confPath, _ := getFilePath(gcfg.DefaultConfigFile)
+	confPath, _ := getFilePath(gcfg.DefaultConfigFileName)
 	if len(confPath) <= 0 {
-		gcfg.SetContent("{}", gcfg.DefaultConfigFile)
+		gcfg.Instance().GetAdapter().(*gcfg.AdapterFile).SetContent("{}", gcfg.DefaultConfigFileName)
 	}
 	return gcfg.Instance()
 }

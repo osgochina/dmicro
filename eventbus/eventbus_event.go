@@ -1,6 +1,6 @@
 package eventbus
 
-import "github.com/gogf/gf/container/gmap"
+import "github.com/gogf/gf/v2/container/gmap"
 
 // IEvent 事件的接口
 type IEvent interface {

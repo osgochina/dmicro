@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/grand"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/event"
 	"github.com/osgochina/dmicro/eventbus"
@@ -41,7 +42,7 @@ type Math struct {
 
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// test meta
-	glog.Infof("author: %s", m.PeekMeta("author"))
+	glog.Infof(context.TODO(), "author: %s", m.PeekMeta("author"))
 	// add
 	var r int
 	for _, a := range *arg {

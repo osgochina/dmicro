@@ -2,7 +2,7 @@ package dgpool
 
 import (
 	"context"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 	"time"
 )
 
@@ -23,7 +23,7 @@ func SetFILOPool(maxGoroutinesAmount int, maxGoroutineIdleDuration time.Duration
 // FILOGo 使用栈的形式组织协程执行方法，
 func FILOGo(fn func()) bool {
 	if err := _filoPool.Go(fn); err != nil {
-		glog.Printf("%s", err.Error())
+		glog.Printf(context.TODO(), "%s", err.Error())
 		return false
 	}
 	return true

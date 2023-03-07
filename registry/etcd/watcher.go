@@ -2,7 +2,7 @@ package etcd
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/osgochina/dmicro/registry"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"

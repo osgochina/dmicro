@@ -2,7 +2,7 @@ package redisproto
 
 import (
 	"bufio"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/osgochina/dmicro/drpc/codec/redis_codec"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto"

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/client"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/logger"
@@ -25,9 +26,9 @@ func main() {
 			message.WithSetMeta("author", "liuzhiming"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf("%v", stat)
+			logger.Fatalf(context.TODO(), "%v", stat)
 		}
-		logger.Printf("result: %d", result)
+		logger.Printf(context.TODO(), "result: %d", result)
 		time.Sleep(time.Second * 2)
 	}
 

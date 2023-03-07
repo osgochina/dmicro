@@ -2,7 +2,7 @@ package dserver
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/spf13/cobra"
 	"os"
 )

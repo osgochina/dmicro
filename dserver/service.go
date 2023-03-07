@@ -3,11 +3,11 @@ package dserver
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
 	"github.com/spf13/cobra"
@@ -96,14 +96,14 @@ func (that *DService) start(cmd *cobra.Command) {
 		}
 		var args = []string{"start"}
 
-		if len(that.server.config.GetString("ENV_NAME")) > 0 {
-			args = append(args, fmt.Sprintf("--env=%s", that.server.config.GetString("ENV_NAME")))
+		if len(that.server.config.MustGet(context.TODO(), "ENV_NAME").String()) > 0 {
+			args = append(args, fmt.Sprintf("--env=%s", that.server.config.MustGet(context.TODO(), "ENV_NAME").String()))
 		}
 		confFile := cmd.Flag("config").Value.String()
 		if len(confFile) > 0 {
 			args = append(args, fmt.Sprintf("--config=%s", confFile))
 		}
-		if that.server.config.GetBool("Debug") {
+		if that.server.config.MustGet(context.TODO(), "Debug").Bool() {
 			args = append(args, "--debug")
 		}
 		args = append(args, sandBoxNames...)
@@ -122,7 +122,7 @@ func (that *DService) start(cmd *cobra.Command) {
 			process.ProcStopWaitSecs(int(minShutdownTimeout/time.Second)),
 		))
 		if e != nil {
-			logger.Warning(e)
+			logger.Warning(context.TODO(), e)
 		}
 		p.Start(true)
 		return
@@ -145,7 +145,7 @@ func (that *DService) start(cmd *cobra.Command) {
 			e := s1.sandbox.Setup()
 			if e != nil && s1.state != process.Stopping {
 				s1.state = process.Stopped
-				logger.Warningf("Sandbox Setup Return: %v", e)
+				logger.Warningf(context.TODO(), "Sandbox Setup Return: %v", e)
 			}
 		}(s)
 	}
@@ -158,9 +158,9 @@ func (that *DService) stop() {
 		if s.state == process.Running {
 			s.state = process.Stopping
 			if e := s.sandbox.Shutdown(); e != nil {
-				logger.Errorf("服务 %s .结束出错，error: %v", s.sandbox.Name(), e)
+				logger.Errorf(context.TODO(), "服务 %s .结束出错，error: %v", s.sandbox.Name(), e)
 			} else {
-				logger.Printf("%s 服务 已结束.", s.sandbox.Name())
+				logger.Printf(context.TODO(), "%s 服务 已结束.", s.sandbox.Name())
 			}
 			s.state = process.Stopped
 			s.stopTime = gtime.Now()
@@ -185,7 +185,7 @@ func (that *DService) startSandbox(name string) error {
 		e := s1.sandbox.Setup()
 		if e != nil && s1.state != process.Stopping {
 			s1.state = process.Stopped
-			logger.Warningf("Sandbox Setup Return: %v", e)
+			logger.Warningf(context.TODO(), "Sandbox Setup Return: %v", e)
 		}
 	}(sc)
 	return nil
@@ -218,7 +218,7 @@ func (that *DService) removeSandbox(name string) {
 	if sandbox.state == process.Running {
 		err := that.stopSandbox(name)
 		if err != nil {
-			logger.Error(err)
+			logger.Error(context.TODO(), err)
 		}
 	}
 }

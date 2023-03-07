@@ -2,8 +2,8 @@ package sandbox
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/osgochina/dmicro/dserver"
 )
 
@@ -21,7 +21,7 @@ func (that *DefaultSandBox1) Abc() string {
 func (that *DefaultSandBox1) Setup() error {
 	fmt.Println("DefaultSandBox1 Setup")
 	c := g.Cfg()
-	fmt.Println(c.Get("sandbox"))
+	fmt.Println(c.Get(that.Context, "sandbox"))
 	//that.svr = g.Server("ghttp1")
 	//that.svr.BindHandler("/", func(r *ghttp.Request) {
 	//	time.Sleep(10 * time.Second)

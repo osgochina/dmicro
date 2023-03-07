@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/easyservice"
 	"github.com/osgochina/dmicro/logger"
@@ -17,12 +18,12 @@ func main() {
 		})
 		for true {
 			time.Sleep(3 * time.Second)
-			logger.Debug("Debug")
-			logger.Info("Info")
-			logger.Notice("Notice")
-			logger.Warning("Warning")
-			logger.Error("Error")
-			logger.Critical("Critical")
+			logger.Debug(context.TODO(), "Debug")
+			logger.Info(context.TODO(), "Info")
+			logger.Notice(context.TODO(), "Notice")
+			logger.Warning(context.TODO(), "Warning")
+			logger.Error(context.TODO(), "Error")
+			logger.Critical(context.TODO(), "Critical")
 		}
 	})
 }

@@ -1,9 +1,9 @@
 package process
 
 import (
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gstr"
 	"runtime"
 )
 

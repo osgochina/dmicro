@@ -1,9 +1,10 @@
 package drpc
 
 import (
+	"context"
 	"encoding/json"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
 	"strconv"
@@ -32,7 +33,7 @@ func enablePrintRunLog() bool {
 func (that *session) printRunLog(realIP string, costTime time.Duration, input, output message.Message, logType int8) {
 	defer func() {
 		if err := recover(); err != nil {
-			internal.Error(err)
+			internal.Error(context.TODO(), err)
 		}
 	}()
 	var addr = that.RemoteAddr().String()
@@ -60,13 +61,13 @@ func (that *session) printRunLog(realIP string, costTime time.Duration, input, o
 
 	switch logType {
 	case typePushLaunch:
-		printFunc(logFormatPushLaunch, addr, costTimeStr, output.ServiceMethod(), messageLogBytes(output, that.endpoint.printDetail))
+		printFunc(context.TODO(), logFormatPushLaunch, addr, costTimeStr, output.ServiceMethod(), messageLogBytes(output, that.endpoint.printDetail))
 	case typePushHandle:
-		printFunc(logFormatPushHandle, addr, costTimeStr, input.ServiceMethod(), messageLogBytes(input, that.endpoint.printDetail))
+		printFunc(context.TODO(), logFormatPushHandle, addr, costTimeStr, input.ServiceMethod(), messageLogBytes(input, that.endpoint.printDetail))
 	case typeCallLaunch:
-		printFunc(logFormatCallLaunch, addr, costTimeStr, output.ServiceMethod(), messageLogBytes(output, that.endpoint.printDetail), messageLogBytes(input, that.endpoint.printDetail))
+		printFunc(context.TODO(), logFormatCallLaunch, addr, costTimeStr, output.ServiceMethod(), messageLogBytes(output, that.endpoint.printDetail), messageLogBytes(input, that.endpoint.printDetail))
 	case typeCallHandle:
-		printFunc(logFormatCallHandle, addr, costTimeStr, input.ServiceMethod(), messageLogBytes(input, that.endpoint.printDetail), messageLogBytes(output, that.endpoint.printDetail))
+		printFunc(context.TODO(), logFormatCallHandle, addr, costTimeStr, input.ServiceMethod(), messageLogBytes(input, that.endpoint.printDetail), messageLogBytes(output, that.endpoint.printDetail))
 	}
 }
 

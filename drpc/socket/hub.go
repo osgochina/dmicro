@@ -1,6 +1,6 @@
 package socket
 
-import "github.com/gogf/gf/container/gmap"
+import "github.com/gogf/gf/v2/container/gmap"
 
 // HubSocket socket 仓库
 type HubSocket struct {

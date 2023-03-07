@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 

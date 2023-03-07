@@ -8,7 +8,7 @@
 package securebody_test
 
 import (
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/securebody"
 	"strconv"

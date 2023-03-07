@@ -1,6 +1,7 @@
 package drpc
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/status"
 	"net"
@@ -23,7 +24,7 @@ func (that *PluginContainer) beforeNewEndpoint(endpointConfig *EndpointConfig) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeNewEndpointPlugin); ok {
 			if err = _plugin.BeforeNewEndpoint(endpointConfig, that); err != nil {
-				internal.Fatalf("[BeforeNewEndpoint:%s] %s", plugin.Name(), err.Error())
+				internal.Fatalf(context.TODO(), "[BeforeNewEndpoint:%s] %s", plugin.Name(), err.Error())
 				return
 			}
 		}
@@ -42,7 +43,7 @@ func (that *PluginContainer) afterNewEndpoint(e EarlyEndpoint) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterNewEndpointPlugin); ok {
 			if err = _plugin.AfterNewEndpoint(e); err != nil {
-				internal.Fatalf("[AfterNewEndpoint:%s] %s", plugin.Name(), err.Error())
+				internal.Fatalf(context.TODO(), "[AfterNewEndpoint:%s] %s", plugin.Name(), err.Error())
 				return
 			}
 		}
@@ -60,7 +61,7 @@ func (that *PluginContainer) beforeCloseEndpoint(endpoint Endpoint) (err error) 
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeCloseEndpointPlugin); ok {
 			if err = _plugin.BeforeCloseEndpoint(endpoint); err != nil {
-				internal.Fatalf("[BeforeCloseEndpoint:%s] %s", plugin.Name(), err.Error())
+				internal.Fatalf(context.TODO(), "[BeforeCloseEndpoint:%s] %s", plugin.Name(), err.Error())
 				return err
 			}
 		}
@@ -80,7 +81,7 @@ func (that *PluginContainer) afterCloseEndpoint(endpoint Endpoint, e error) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterCloseEndpointPlugin); ok {
 			if err = _plugin.AfterCloseEndpoint(endpoint, e); err != nil {
-				internal.Fatalf("[AfterNewEndpoint:%s] %s", plugin.Name(), err.Error())
+				internal.Fatalf(context.TODO(), "[AfterNewEndpoint:%s] %s", plugin.Name(), err.Error())
 				return
 			}
 		}
@@ -99,7 +100,7 @@ func (that *pluginSingleContainer) afterRegRouter(h *Handler) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterRegRouterPlugin); ok {
 			if err = _plugin.AfterRegRouter(h); err != nil {
-				internal.Fatalf("[AfterRegRouter:%s] register handler:%s %s, error:%s", plugin.Name(), h.RouterTypeName(), h.Name(), err.Error())
+				internal.Fatalf(context.TODO(), "[AfterRegRouter:%s] register handler:%s %s, error:%s", plugin.Name(), h.RouterTypeName(), h.Name(), err.Error())
 				return
 			}
 		}
@@ -118,7 +119,7 @@ func (that *pluginSingleContainer) afterListen(addr net.Addr) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterListenPlugin); ok {
 			if err = _plugin.AfterListen(addr); err != nil {
-				internal.Fatalf("[AfterListenPlugin:%s] network:%s, addr:%s, error:%s", plugin.Name(), addr.Network(), addr.String(), err.Error())
+				internal.Fatalf(context.TODO(), "[AfterListenPlugin:%s] network:%s, addr:%s, error:%s", plugin.Name(), addr.Network(), addr.String(), err.Error())
 				return
 			}
 		}
@@ -137,7 +138,7 @@ func (that *pluginSingleContainer) beforeDial(addr string, isRedial bool) (stat 
 	var pluginName string
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("[BeforeDialPlugin:%s]  panic:%v\n%s", pluginName, p, status.PanicStackTrace())
+			internal.Errorf(context.TODO(), "[BeforeDialPlugin:%s]  panic:%v\n%s", pluginName, p, status.PanicStackTrace())
 			stat = statDialFailed.Copy(p)
 		}
 	}()
@@ -145,7 +146,7 @@ func (that *pluginSingleContainer) beforeDial(addr string, isRedial bool) (stat 
 		if _plugin, ok := plugin.(BeforeDialPlugin); ok {
 			pluginName = plugin.Name()
 			if stat = _plugin.BeforeDial(addr, isRedial); !stat.OK() {
-				internal.Debugf("[BeforeDialPlugin:%s] is_redial:%v, error:%s",
+				internal.Debugf(context.TODO(), "[BeforeDialPlugin:%s] is_redial:%v, error:%s",
 					pluginName, isRedial, stat.String(),
 				)
 				return stat
@@ -166,7 +167,7 @@ func (that *pluginSingleContainer) afterDial(sess EarlySession, isRedial bool) (
 	var pluginName string
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("[AfterDialPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
+			internal.Errorf(context.TODO(), "[AfterDialPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
 			stat = statDialFailed.Copy(p)
 		}
 	}()
@@ -174,7 +175,7 @@ func (that *pluginSingleContainer) afterDial(sess EarlySession, isRedial bool) (
 		if _plugin, ok := plugin.(AfterDialPlugin); ok {
 			pluginName = plugin.Name()
 			if stat = _plugin.AfterDial(sess, isRedial); !stat.OK() {
-				internal.Debugf("[AfterDialPlugin:%s] network:%s, addr:%s, is_redial:%v, error:%s",
+				internal.Debugf(context.TODO(), "[AfterDialPlugin:%s] network:%s, addr:%s, is_redial:%v, error:%s",
 					pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), isRedial, stat.String(),
 				)
 				return stat
@@ -195,7 +196,7 @@ func (that *pluginSingleContainer) afterDialFail(sess EarlySession, err error, i
 	var pluginName string
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("[AfterDialFailPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
+			internal.Errorf(context.TODO(), "[AfterDialFailPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
 			stat = statDialFailed.Copy(p)
 		}
 	}()
@@ -203,7 +204,7 @@ func (that *pluginSingleContainer) afterDialFail(sess EarlySession, err error, i
 		if _plugin, ok := plugin.(AfterDialFailPlugin); ok {
 			pluginName = plugin.Name()
 			if stat = _plugin.AfterDialFail(sess, err, isRedial); !stat.OK() {
-				internal.Debugf("[AfterDialFailPlugin:%s] network:%s, addr:%s, is_redial:%v, error:%s",
+				internal.Debugf(context.TODO(), "[AfterDialFailPlugin:%s] network:%s, addr:%s, is_redial:%v, error:%s",
 					pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), isRedial, stat.String(),
 				)
 				return stat
@@ -224,7 +225,7 @@ func (that *pluginSingleContainer) afterAccept(sess EarlySession) (stat *Status)
 	var pluginName string
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("[AfterAcceptPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
+			internal.Errorf(context.TODO(), "[AfterAcceptPlugin:%s] network:%s, addr:%s, panic:%v\n%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), p, status.PanicStackTrace())
 			stat = statInternalServerError.Copy(p)
 		}
 	}()
@@ -232,7 +233,7 @@ func (that *pluginSingleContainer) afterAccept(sess EarlySession) (stat *Status)
 		if _plugin, ok := plugin.(AfterAcceptPlugin); ok {
 			pluginName = plugin.Name()
 			if stat = _plugin.AfterAccept(sess); !stat.OK() {
-				internal.Debugf("[PostAcceptPlugin:%s] network:%s, addr:%s, error:%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), stat.String())
+				internal.Debugf(context.TODO(), "[PostAcceptPlugin:%s] network:%s, addr:%s, error:%s", pluginName, sess.RemoteAddr().Network(), sess.RemoteAddr().String(), stat.String())
 				return stat
 			}
 		}
@@ -252,7 +253,7 @@ func (that *pluginSingleContainer) beforeWriteCall(ctx WriteCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeWriteCallPlugin); ok {
 			if stat = _plugin.BeforeWriteCall(ctx); !stat.OK() {
-				internal.Debugf("[BeforeWriteCallPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Debugf(context.TODO(), "[BeforeWriteCallPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -272,7 +273,7 @@ func (that *pluginSingleContainer) afterWriteCall(ctx WriteCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterWriteCallPlugin); ok {
 			if stat = _plugin.AfterWriteCall(ctx); !stat.OK() {
-				internal.Errorf("[AfterWriteCallPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterWriteCallPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -292,7 +293,7 @@ func (that *pluginSingleContainer) beforeWriteReply(ctx WriteCtx) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeWriteReplyPlugin); ok {
 			if stat = _plugin.BeforeWriteReply(ctx); !stat.OK() {
-				internal.Errorf("[BeforeWriteReplyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[BeforeWriteReplyPlugin:%s] %s", plugin.Name(), stat.String())
 				return
 			}
 		}
@@ -311,7 +312,7 @@ func (that *pluginSingleContainer) afterWriteReply(ctx WriteCtx) {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterWriteReplyPlugin); ok {
 			if stat = _plugin.AfterWriteReply(ctx); !stat.OK() {
-				internal.Errorf("[AfterWriteReplyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterWriteReplyPlugin:%s] %s", plugin.Name(), stat.String())
 				return
 			}
 		}
@@ -330,7 +331,7 @@ func (that *pluginSingleContainer) beforeWritePush(ctx WriteCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeWritePushPlugin); ok {
 			if stat = _plugin.BeforeWritePush(ctx); !stat.OK() {
-				internal.Debugf("[BeforeWritePushPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Debugf(context.TODO(), "[BeforeWritePushPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -350,7 +351,7 @@ func (that *pluginSingleContainer) afterWritePush(ctx WriteCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterWritePushPlugin); ok {
 			if stat = _plugin.AfterWritePush(ctx); !stat.OK() {
-				internal.Errorf("[AfterWritePushPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterWritePushPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -370,7 +371,7 @@ func (that *pluginSingleContainer) beforeReadHeader(ctx EarlyCtx) error {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeReadHeaderPlugin); ok {
 			if err = _plugin.BeforeReadHeader(ctx); err != nil {
-				internal.Debugf("[BeforeReadHeaderPlugin:%s] disconnected when reading: %s", plugin.Name(), err.Error())
+				internal.Debugf(context.TODO(), "[BeforeReadHeaderPlugin:%s] disconnected when reading: %s", plugin.Name(), err.Error())
 				return err
 			}
 		}
@@ -390,7 +391,7 @@ func (that *pluginSingleContainer) afterReadCallHeader(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterReadCallHeaderPlugin); ok {
 			if stat = _plugin.AfterReadCallHeader(ctx); !stat.OK() {
-				internal.Errorf("[AfterReadCallHeaderPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterReadCallHeaderPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -410,7 +411,7 @@ func (that *pluginSingleContainer) beforeReadCallBody(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeReadCallBodyPlugin); ok {
 			if stat = _plugin.BeforeReadCallBody(ctx); !stat.OK() {
-				internal.Errorf("[BeforeReadCallBodyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[BeforeReadCallBodyPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -430,7 +431,7 @@ func (that *pluginSingleContainer) afterReadCallBody(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterReadCallBodyPlugin); ok {
 			if stat = _plugin.AfterReadCallBody(ctx); !stat.OK() {
-				internal.Errorf("[AfterReadCallBodyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterReadCallBodyPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -450,7 +451,7 @@ func (that *pluginSingleContainer) afterReadPushHeader(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterReadPushHeaderPlugin); ok {
 			if stat = _plugin.AfterReadPushHeader(ctx); !stat.OK() {
-				internal.Errorf("[AfterReadPushHeaderPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterReadPushHeaderPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -470,7 +471,7 @@ func (that *pluginSingleContainer) beforeReadPushBody(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeReadPushBodyPlugin); ok {
 			if stat = _plugin.BeforeReadPushBody(ctx); !stat.OK() {
-				internal.Errorf("[BeforeReadPushBodyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[BeforeReadPushBodyPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -490,7 +491,7 @@ func (that *pluginSingleContainer) afterReadPushBody(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterReadPushBodyPlugin); ok {
 			if stat = _plugin.AfterReadPushBody(ctx); !stat.OK() {
-				internal.Errorf("[AfterReadPushBodyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterReadPushBodyPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -510,7 +511,7 @@ func (that *pluginSingleContainer) afterReadReplyHeader(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterReadReplyHeaderPlugin); ok {
 			if stat = _plugin.AfterReadReplyHeader(ctx); !stat.OK() {
-				internal.Errorf("[AfterReadReplyHeaderPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterReadReplyHeaderPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -530,7 +531,7 @@ func (that *pluginSingleContainer) beforeReadReplyBody(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(BeforeReadReplyBodyPlugin); ok {
 			if stat = _plugin.BeforeReadReplyBody(ctx); !stat.OK() {
-				internal.Errorf("[BeforeReadReplyBodyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[BeforeReadReplyBodyPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -550,7 +551,7 @@ func (that *pluginSingleContainer) afterReadReplyBody(ctx ReadCtx) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterReadReplyBodyPlugin); ok {
 			if stat = _plugin.AfterReadReplyBody(ctx); !stat.OK() {
-				internal.Errorf("[AfterReadReplyBodyPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterReadReplyBodyPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}
@@ -570,7 +571,7 @@ func (that *pluginSingleContainer) afterDisconnect(sess BaseSession) *Status {
 	for _, plugin := range that.plugins {
 		if _plugin, ok := plugin.(AfterDisconnectPlugin); ok {
 			if stat = _plugin.AfterDisconnect(sess); !stat.OK() {
-				internal.Errorf("[AfterDisconnectPlugin:%s] %s", plugin.Name(), stat.String())
+				internal.Errorf(context.TODO(), "[AfterDisconnectPlugin:%s] %s", plugin.Name(), stat.String())
 				return stat
 			}
 		}

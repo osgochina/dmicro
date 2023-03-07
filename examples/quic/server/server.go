@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/graceful"
@@ -21,11 +22,11 @@ func main() {
 		PrintDetail: true,
 	})
 	e := srv.SetTLSConfigFromFile(
-		fmt.Sprintf("%s/cert.pem", gfile.MainPkgPath()),
-		fmt.Sprintf("%s/key.pem", gfile.MainPkgPath()),
+		fmt.Sprintf("%s/../cert.pem", gfile.MainPkgPath()),
+		fmt.Sprintf("%s/../key.pem", gfile.MainPkgPath()),
 	)
 	if e != nil {
-		logger.Fatalf("%v", e)
+		logger.Fatalf(context.TODO(), "%v", e)
 	}
 
 	// router
@@ -58,7 +59,7 @@ type Math struct {
 // Add handles addition request
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// test query parameter
-	logger.Infof("author: %s", m.PeekMeta("author"))
+	logger.Infof(context.TODO(), "author: %s", m.PeekMeta("author"))
 	// add
 	var r int
 	for _, a := range *arg {

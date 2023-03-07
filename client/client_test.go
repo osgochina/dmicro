@@ -1,7 +1,8 @@
 package client_test
 
 import (
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/client"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -19,7 +20,7 @@ type Math struct {
 }
 
 func (that *Math) Add(arg *[]int) (int, *drpc.Status) {
-	logger.Infof("author: %s", that.PeekMeta("author"))
+	logger.Infof(context.TODO(), "author: %s", that.PeekMeta("author"))
 	var r int
 	for _, a := range *arg {
 		r += a
@@ -58,7 +59,7 @@ func TestNewRpcClientDefault(t *testing.T) {
 			message.WithSetMeta("author", "clownfish"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf("%v", stat)
+			logger.Fatalf(context.TODO(), "%v", stat)
 		}
 		t.Assert(stat.OK(), true)
 		t.Assert(result, 15)
@@ -80,7 +81,7 @@ func TestNewRpcClientMDNS(t *testing.T) {
 			message.WithSetMeta("author", "clownfish"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf("%v", stat)
+			logger.Fatalf(context.TODO(), "%v", stat)
 		}
 		t.Assert(stat.OK(), true)
 		t.Assert(result, 15)
@@ -111,7 +112,7 @@ func TestNewRpcClientMemory(t *testing.T) {
 			message.WithSetMeta("author", "clownfish"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf("%v", stat)
+			logger.Fatalf(context.TODO(), "%v", stat)
 		}
 		t.Assert(stat.OK(), true)
 		t.Assert(result, 15)

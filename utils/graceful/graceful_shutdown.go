@@ -18,9 +18,9 @@ func (that *graceful) Shutdown(timeout ...time.Duration) {
 	var isReboot = false
 	if that.processStatus.Val() == statusActionRestarting {
 		isReboot = true
-		logger.Printf("进程:%d,平滑重启，正在结束父进程...", pid)
+		logger.Printf(context.TODO(), "进程:%d,平滑重启，正在结束父进程...", pid)
 	} else {
-		logger.Printf("进程:%d,正在结束...", pid)
+		logger.Printf(context.TODO(), "进程:%d,正在结束...", pid)
 	}
 	that.processStatus.Set(statusActionShuttingDown)
 
@@ -32,15 +32,15 @@ func (that *graceful) Shutdown(timeout ...time.Duration) {
 			//当进程非重启状态时候，才需要执行清理动作
 			if !isReboot {
 				if err := that.firstSweep(); err != nil {
-					logger.Errorf("进程:%d 结束中 - 执行前置方法失败，error: %s", pid, err.Error())
+					logger.Errorf(context.TODO(), "进程:%d 结束中 - 执行前置方法失败，error: %s", pid, err.Error())
 					g = false
 				}
 			}
 			g = that.shutdown(ctxTimeout, "shutdown") && g
 			if g {
-				logger.Printf("进程:%d 结束了.", pid)
+				logger.Printf(context.TODO(), "进程:%d 结束了.", pid)
 			} else {
-				logger.Printf("进程:%d 结束了,但是非平滑模式.", pid)
+				logger.Printf(context.TODO(), "进程:%d 结束了,但是非平滑模式.", pid)
 			}
 		}()
 		return endCh
@@ -51,7 +51,7 @@ func (that *graceful) Shutdown(timeout ...time.Duration) {
 func (that *graceful) shutdownWorker(timeout ...time.Duration) {
 	pid := os.Getpid()
 	defer os.Exit(0)
-	logger.Printf("进程:%d,正在退出...", pid)
+	logger.Printf(context.TODO(), "进程:%d,正在退出...", pid)
 	that.processStatus.Set(statusActionShuttingDown)
 
 	that.contextExec(timeout, "shutdown", func(ctxTimeout context.Context) <-chan struct{} {
@@ -60,14 +60,14 @@ func (that *graceful) shutdownWorker(timeout ...time.Duration) {
 			defer close(endCh)
 			var g = true
 			if err := that.firstSweep(); err != nil {
-				logger.Errorf("进程:%d 结束中 - 执行前置方法失败，error: %s", pid, err.Error())
+				logger.Errorf(context.TODO(), "进程:%d 结束中 - 执行前置方法失败，error: %s", pid, err.Error())
 				g = false
 			}
 			g = that.shutdown(ctxTimeout, "shutdown") && g
 			if g {
-				logger.Printf("进程:%d 结束了.", pid)
+				logger.Printf(context.TODO(), "进程:%d 结束了.", pid)
 			} else {
-				logger.Printf("进程:%d 结束了,但是非平滑模式.", pid)
+				logger.Printf(context.TODO(), "进程:%d 结束了,但是非平滑模式.", pid)
 			}
 		}()
 		return endCh
@@ -85,7 +85,7 @@ func (that *graceful) contextExec(timeout []time.Duration, action string, deferC
 	select {
 	case <-ctxTimeout.Done():
 		if err := ctxTimeout.Err(); err != nil {
-			logger.Errorf("进程:%d,处理 %s 超时 %s", pid, action, err.Error())
+			logger.Errorf(context.TODO(), "进程:%d,处理 %s 超时 %s", pid, action, err.Error())
 		}
 	case <-deferCallback(ctxTimeout):
 	}
@@ -94,9 +94,9 @@ func (that *graceful) contextExec(timeout []time.Duration, action string, deferC
 //执行后置函数
 func (that *graceful) shutdown(ctxTimeout context.Context, action string) bool {
 	pid := os.Getpid()
-	logger.Printf("进程:%d 正在结束中 - 正在执行后置函数", pid)
+	logger.Printf(context.TODO(), "进程:%d 正在结束中 - 正在执行后置函数", pid)
 	if err := that.beforeExiting(); err != nil {
-		logger.Errorf("进程:%d [%s-后置函数执行失败] error:%v", pid, action, err)
+		logger.Errorf(context.TODO(), "进程:%d [%s-后置函数执行失败] error:%v", pid, action, err)
 		return false
 	}
 	return true

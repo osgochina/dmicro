@@ -1,6 +1,7 @@
 package mdns
 
 import (
+	"context"
 	"fmt"
 	"github.com/miekg/dns"
 	"github.com/osgochina/dmicro/logger"
@@ -404,7 +405,7 @@ func (that *Server) probe() {
 
 	for i := 0; i < 3; i++ {
 		if err := that.SendMulticast(q); err != nil {
-			logger.Errorf("[ERR] mdns: failed to send probe:%v", err.Error())
+			logger.Errorf(context.TODO(), "[ERR] mdns: failed to send probe:%v", err.Error())
 		}
 		time.Sleep(time.Duration(randomizer.Intn(250)) * time.Millisecond)
 	}
@@ -419,7 +420,7 @@ func (that *Server) probe() {
 	timer := time.NewTimer(timeout)
 	for i := 0; i < 3; i++ {
 		if err := that.SendMulticast(resp); err != nil {
-			logger.Errorf("[ERR] mdns: failed to send announcement:%v", err.Error())
+			logger.Errorf(context.TODO(), "[ERR] mdns: failed to send announcement:%v", err.Error())
 		}
 		select {
 		case <-timer.C:

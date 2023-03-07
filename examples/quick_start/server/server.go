@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 )
@@ -16,7 +17,7 @@ func main() {
 	svr.RouteCall(new(Math))
 	//启动监听
 	err := svr.ListenAndServe()
-	logger.Warning(err)
+	logger.Warning(context.TODO(), err)
 }
 
 // Math rpc请求的最终处理器，必须集成drpc.CallCtx
@@ -26,7 +27,7 @@ type Math struct {
 
 func (m *Math) Add(arg *[]int) (int, *drpc.Status) {
 	// test meta
-	logger.Infof("author: %s", m.PeekMeta("author"))
+	logger.Infof(context.TODO(), "author: %s", m.PeekMeta("author"))
 	// add
 	var r int
 	for _, a := range *arg {

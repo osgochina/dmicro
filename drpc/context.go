@@ -2,8 +2,8 @@ package drpc
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -482,7 +482,7 @@ func (that *handlerCtx) buildReplyBody(header message.Header) interface{} {
 	//从call消息暂存池获取改消息对象
 	_callCmd, ok := that.sess.callCmdMap.Search(header.Seq())
 	if !ok {
-		internal.Warningf("not found call cmd: %v", that.input)
+		internal.Warningf(that.context, "not found call cmd: %v", that.input)
 		return nil
 	}
 	that.callCmd = _callCmd.(*callCmd)
@@ -525,7 +525,7 @@ func (that *handlerCtx) handleReply() {
 	}
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			internal.Errorf(that.context, "panic:%v\n%s", p, status.PanicStackTrace())
 		}
 		//把响应消息的消息体赋值给返回值
 		that.callCmd.result = that.input.Body()
@@ -584,7 +584,7 @@ func (that *handlerCtx) handle() {
 	}
 E:
 	that.output.SetStatus(statCodeMTypeNotAllowed)
-	internal.Warningf(logFormatDisconnected,
+	internal.Warningf(that.context, logFormatDisconnected,
 		that.input.MType(), that.IP(), that.input.ServiceMethod(), that.input.Seq(),
 		messageLogBytes(that.input, that.sess.endpoint.printDetail))
 
@@ -605,7 +605,7 @@ func (that *handlerCtx) handlePush() {
 	}
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			internal.Errorf(that.context, "panic:%v\n%s", p, status.PanicStackTrace())
 		}
 		//打印处理log
 		if enablePrintRunLog() {
@@ -622,7 +622,7 @@ func (that *handlerCtx) handlePush() {
 		}
 	}
 	if !that.stat.OK() {
-		internal.Warningf("%s", that.stat.String())
+		internal.Warningf(that.context, "%s", that.stat.String())
 	}
 }
 
@@ -632,7 +632,7 @@ func (that *handlerCtx) handleCall() {
 
 	defer func() {
 		if p := recover(); p != nil {
-			internal.Errorf("panic:%v\n%s", p, status.PanicStackTrace())
+			internal.Errorf(that.context, "panic:%v\n%s", p, status.PanicStackTrace())
 			//报错的情况，如果没有写入响应，则再次写入响应
 			if !isWrite {
 				if that.stat.OK() {

@@ -2,9 +2,10 @@ package httpproto_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/proto/httpproto"
@@ -19,7 +20,7 @@ type Home struct {
 }
 
 func (h *Home) Test(arg *map[string]string) (map[string]interface{}, *drpc.Status) {
-	internal.Infof("endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
+	internal.Infof(context.TODO(), "endpoint_id: %s", gconv.String(h.PeekMeta("endpoint_id")))
 	return map[string]interface{}{
 		"arg": *arg,
 	}, nil

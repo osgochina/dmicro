@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/client"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/metrics"
@@ -27,7 +28,7 @@ func main() {
 		if stat.OK() {
 
 		}
-		logger.Printf("result: %d", result)
+		logger.Printf(context.TODO(), "result: %d", result)
 		time.Sleep(time.Second * 1)
 	}
 }

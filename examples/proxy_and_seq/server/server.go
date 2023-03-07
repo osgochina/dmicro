@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 )
@@ -34,6 +35,6 @@ type chat struct {
 }
 
 func (c *chat) Say(arg *string) *drpc.Status {
-	logger.Printf("%s say: %q", c.PeekMeta("X-ID"), *arg)
+	logger.Printf(context.TODO(), "%s say: %q", c.PeekMeta("X-ID"), *arg)
 	return nil
 }

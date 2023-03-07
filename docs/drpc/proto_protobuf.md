@@ -21,7 +21,7 @@ pbproto实现了`ProtoBuf`协议。
 package pbproto_test
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"

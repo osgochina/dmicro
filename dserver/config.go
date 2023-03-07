@@ -1,8 +1,10 @@
 package dserver
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/server"
 	"time"
@@ -35,25 +37,26 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 	}
 	if len(sandboxName) > 0 {
 		name := sandboxName[0]
-		cj := that.Config.GetJson(fmt.Sprintf("sandbox.%s", name))
+		cj := that.Config.MustGet(context.TODO(), fmt.Sprintf("sandbox.%s", name))
 		if cj.IsNil() {
 			return cfg
 		}
-		cfg.Network = cj.GetString("Network", "tcp")
-		cfg.ListenIP = cj.GetString("ListenIP", "0.0.0.0")
-		cfg.ListenPort = cj.GetUint16("ListenPort", 0)
-		cfg.LocalIP = cj.GetString("LocalIP", "0.0.0.0")
-		cfg.LocalPort = cj.GetUint16("LocalPort", 0)
+		cjJson := gjson.New(cj)
+		cfg.Network = cjJson.Get("Network", "tcp").String()
+		cfg.ListenIP = cjJson.Get("ListenIP", "0.0.0.0").String()
+		cfg.ListenPort = cjJson.Get("ListenPort", 0).Uint16()
+		cfg.LocalIP = cjJson.Get("LocalIP", "0.0.0.0").String()
+		cfg.LocalPort = cjJson.Get("LocalPort", 0).Uint16()
 
-		cfg.DefaultBodyCodec = cj.GetString("DefaultBodyCodec", drpc.DefaultBodyCodec().Name())
-		cfg.DefaultSessionAge = time.Duration(cj.GetInt("DefaultSessionAge", 0)) * time.Second
-		cfg.DefaultContextAge = time.Duration(cj.GetInt("DefaultContextAge", 0)) * time.Second
-		cfg.SlowCometDuration = time.Duration(cj.GetInt("SlowCometDuration", 0)) * time.Second
-		cfg.PrintDetail = cj.GetBool("PrintDetail", false)
+		cfg.DefaultBodyCodec = cjJson.Get("DefaultBodyCodec", drpc.DefaultBodyCodec().Name()).String()
+		cfg.DefaultSessionAge = time.Duration(cjJson.Get("DefaultSessionAge", 0).Int()) * time.Second
+		cfg.DefaultContextAge = time.Duration(cjJson.Get("DefaultContextAge", 0).Int()) * time.Second
+		cfg.SlowCometDuration = time.Duration(cjJson.Get("SlowCometDuration", 0).Int()) * time.Second
+		cfg.PrintDetail = cjJson.Get("PrintDetail", false).Bool()
 
-		cfg.DialTimeout = time.Duration(cj.GetInt("DialTimeout", 0)) * time.Second
-		cfg.RedialInterval = time.Duration(cj.GetInt("RedialInterval", 0)) * time.Second
-		cfg.RedialTimes = cj.GetInt("RedialTimes", 1)
+		cfg.DialTimeout = time.Duration(cjJson.Get("DialTimeout", 0).Int()) * time.Second
+		cfg.RedialInterval = time.Duration(cjJson.Get("RedialInterval", 0).Int()) * time.Second
+		cfg.RedialTimes = cjJson.Get("RedialTimes", 1).Int()
 	}
 
 	return cfg
@@ -63,20 +66,20 @@ func (that *Config) EndpointConfig(sandboxName ...string) drpc.EndpointConfig {
 func (that *Config) RpcServerOption(serverName string) []server.Option {
 
 	var opts []server.Option
-	cfg := that.Config.GetJson(serverName)
+	cfg := that.Config.MustGet(context.TODO(), serverName)
 	if cfg == nil || cfg.IsNil() {
 		return opts
 	}
-
-	opts = append(opts, server.OptNetwork(cfg.GetString("Network", "tcp")))
+	cfgJson := gjson.New(cfg)
+	opts = append(opts, server.OptNetwork(cfgJson.Get("Network", "tcp").String()))
 	opts = append(opts, server.OptListenAddress(
-		fmt.Sprintf("%s:%d", cfg.GetString("ListenIP", "0.0.0.0"), cfg.GetUint16("ListenPort", 0)),
+		fmt.Sprintf("%s:%d", cfgJson.Get("ListenIP", "0.0.0.0").String(), cfgJson.Get("ListenPort", 0).Uint16()),
 	))
-	opts = append(opts, server.OptBodyCodec(cfg.GetString("DefaultBodyCodec", drpc.DefaultBodyCodec().Name())))
-	opts = append(opts, server.OptSessionAge(time.Duration(cfg.GetInt("DefaultSessionAge", 0))*time.Second))
-	opts = append(opts, server.OptContextAge(time.Duration(cfg.GetInt("DefaultContextAge", 0))*time.Second))
-	opts = append(opts, server.OptSlowCometDuration(time.Duration(cfg.GetInt("SlowCometDuration", 0))*time.Second))
-	opts = append(opts, server.OptPrintDetail(cfg.GetBool("PrintDetail", false)))
+	opts = append(opts, server.OptBodyCodec(cfgJson.Get("DefaultBodyCodec", drpc.DefaultBodyCodec().Name()).String()))
+	opts = append(opts, server.OptSessionAge(time.Duration(cfgJson.Get("DefaultSessionAge", 0).Int())*time.Second))
+	opts = append(opts, server.OptContextAge(time.Duration(cfgJson.Get("DefaultContextAge", 0).Int())*time.Second))
+	opts = append(opts, server.OptSlowCometDuration(time.Duration(cfgJson.Get("SlowCometDuration", 0).Int())*time.Second))
+	opts = append(opts, server.OptPrintDetail(cfgJson.Get("PrintDetail", false).Bool()))
 
 	return opts
 }

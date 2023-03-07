@@ -3,7 +3,7 @@ package jsonproto
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/utils/dbuffer"
 	"io"
@@ -135,15 +135,15 @@ func (that *jsonProto) Unpack(m proto.Message) error {
 
 	j := gjson.New(string(bb.B))
 	// read other
-	m.SetSeq(j.GetInt32("seq"))
-	m.SetMType(byte(j.GetInt8("mtype")))
-	m.SetServiceMethod(j.GetString("serviceMethod"))
-	_ = m.Status(true).UnmarshalJSON(j.GetBytes("status"))
-	_ = m.Meta().UnmarshalJSON(j.GetBytes("meta"))
+	m.SetSeq(j.Get("seq").Int32())
+	m.SetMType(byte(j.Get("mtype").Int8()))
+	m.SetServiceMethod(j.Get("serviceMethod").String())
+	_ = m.Status(true).UnmarshalJSON(j.Get("status").Bytes())
+	_ = m.Meta().UnmarshalJSON(j.Get("meta").Bytes())
 
 	// read body
-	m.SetBodyCodec(byte(j.GetInt8("bodyCodec")))
-	body := j.GetBytes("body")
+	m.SetBodyCodec(byte(j.Get("bodyCodec").Int8()))
+	body := j.Get("body").Bytes()
 	err = m.UnmarshalBody(body)
 	return err
 }

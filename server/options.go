@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"github.com/osgochina/dmicro/logger"
@@ -71,7 +71,7 @@ func (that Options) EndpointConfig() drpc.EndpointConfig {
 	case "tcp", "tcp4", "tcp6", "kcp", "udp", "udp4", "udp6", "quic":
 		ip, port, err := net.SplitHostPort(that.ListenAddress)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 		c.ListenIP = ip
 		c.ListenPort = gconv.Uint16(port)

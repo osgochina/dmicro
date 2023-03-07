@@ -220,7 +220,7 @@ func OptCustomService(service *registry.Service) Option {
 		o.Registry = memory.NewRegistry()
 		err := o.Registry.Register(service)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 		// 初始化默认selector
 		if o.Selector == nil {
@@ -228,7 +228,7 @@ func OptCustomService(service *registry.Service) Option {
 		} else {
 			err = o.Selector.Init(selector.OptRegistry(o.Registry))
 			if err != nil {
-				logger.Fatal(err)
+				logger.Fatal(context.TODO(), err)
 			}
 		}
 	}

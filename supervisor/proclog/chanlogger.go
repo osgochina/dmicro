@@ -2,7 +2,7 @@ package proclog
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 type ChanLogger struct {

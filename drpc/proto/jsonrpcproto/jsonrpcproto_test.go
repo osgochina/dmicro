@@ -1,7 +1,8 @@
 package jsonrpcproto_test
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -59,6 +60,6 @@ type Push struct {
 }
 
 func (p *Push) Test(arg *map[string]string) *drpc.Status {
-	internal.Infof("receive push(%s):\narg: %#v\n", p.IP(), arg)
+	internal.Infof(context.TODO(), "receive push(%s):\narg: %#v\n", p.IP(), arg)
 	return nil
 }

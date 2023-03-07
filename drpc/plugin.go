@@ -1,6 +1,7 @@
 package drpc
 
 import (
+	"context"
 	"errors"
 	"github.com/osgochina/dmicro/drpc/internal"
 )
@@ -83,11 +84,11 @@ func (that *PluginContainer) refresh() {
 	m := make(map[string]bool, count)
 	for _, plugin := range allPlugins {
 		if plugin == nil {
-			internal.Fatalf("plugin cannot be nil!")
+			internal.Fatalf(context.TODO(), "plugin cannot be nil!")
 			return
 		}
 		if m[plugin.Name()] {
-			internal.Fatalf("repeat add plugin: %s", plugin.Name())
+			internal.Fatalf(context.TODO(), "repeat add plugin: %s", plugin.Name())
 			return
 		}
 		m[plugin.Name()] = true
@@ -164,30 +165,31 @@ func (that *pluginSingleContainer) remove(pluginName string) error {
 }
 
 func warnInvalidHandlerHooks(plugin []Plugin) {
+	ctx := context.TODO()
 	for _, p := range plugin {
 		switch p.(type) {
 		case BeforeNewEndpointPlugin:
-			internal.Debugf("invalid BeforeNewEndpointPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid BeforeNewEndpointPlugin in router: %s", p.Name())
 		case AfterNewEndpointPlugin:
-			internal.Debugf("invalid AfterNewEndpointPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterNewEndpointPlugin in router: %s", p.Name())
 		case AfterDialPlugin:
-			internal.Debugf("invalid AfterDialPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterDialPlugin in router: %s", p.Name())
 		case AfterAcceptPlugin:
-			internal.Debugf("invalid AfterAcceptPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterAcceptPlugin in router: %s", p.Name())
 		case BeforeWriteCallPlugin:
-			internal.Debugf("invalid BeforeWriteCallPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid BeforeWriteCallPlugin in router: %s", p.Name())
 		case AfterWriteCallPlugin:
-			internal.Debugf("invalid AfterWriteCallPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterWriteCallPlugin in router: %s", p.Name())
 		case BeforeWritePushPlugin:
-			internal.Debugf("invalid BeforeWritePushPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid BeforeWritePushPlugin in router: %s", p.Name())
 		case AfterWritePushPlugin:
-			internal.Debugf("invalid AfterWritePushPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterWritePushPlugin in router: %s", p.Name())
 		case BeforeReadHeaderPlugin:
-			internal.Debugf("invalid BeforeReadHeaderPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid BeforeReadHeaderPlugin in router: %s", p.Name())
 		case AfterReadCallHeaderPlugin:
-			internal.Debugf("invalid AfterReadCallHeaderPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterReadCallHeaderPlugin in router: %s", p.Name())
 		case AfterReadPushHeaderPlugin:
-			internal.Debugf("invalid AfterReadPushHeaderPlugin in router: %s", p.Name())
+			internal.Debugf(ctx, "invalid AfterReadPushHeaderPlugin in router: %s", p.Name())
 		}
 	}
 }

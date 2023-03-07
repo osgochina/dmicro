@@ -2,8 +2,8 @@ package socket
 
 import (
 	"bufio"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/proto"
 	"net"

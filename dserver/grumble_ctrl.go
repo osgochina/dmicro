@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/desertbit/grumble"
 	"github.com/fatih/color"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/grand"
 	"github.com/modood/table"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
@@ -254,7 +254,7 @@ func (that *DServer) getCtrlSession() (drpc.Session, error) {
 	if that.ctrlSession != nil && that.ctrlSession.Health() {
 		return that.ctrlSession, nil
 	}
-	localPath := gfile.TempDir(fmt.Sprintf("%s.cli.%s", that.name, grand.S(6)))
+	localPath := gfile.Temp(fmt.Sprintf("%s.cli.%s", that.name, grand.S(6)))
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{
 		Network:        "unix",
 		LocalIP:        localPath,
@@ -264,7 +264,7 @@ func (that *DServer) getCtrlSession() (drpc.Session, error) {
 	},
 	)
 	cli.RoutePush(new(ctrlLoggerPush))
-	svrPath := gfile.TempDir(fmt.Sprintf("%s.sock", that.name))
+	svrPath := gfile.Temp(fmt.Sprintf("%s.sock", that.name))
 	var stat *drpc.Status
 	that.ctrlSession, stat = cli.Dial(svrPath, pbproto.NewPbProtoFunc())
 	if !stat.OK() {

@@ -3,10 +3,10 @@ package dserver
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc/netproto/kcp"
 	"github.com/osgochina/dmicro/drpc/netproto/quic"
 	"github.com/osgochina/dmicro/logger"
@@ -29,14 +29,14 @@ type filer interface {
 func (that *graceful) rebootSingle(timeout ...time.Duration) {
 	that.processStatus.Set(statusActionRestarting)
 	pid := os.Getpid()
-	logger.Printf("进程:%d,平滑重启中...", pid)
+	logger.Printf(context.TODO(), "进程:%d,平滑重启中...", pid)
 	that.contextExec(timeout, "reboot", func(_ context.Context) <-chan struct{} {
 		endCh := make(chan struct{})
 
 		go func() {
 			defer close(endCh)
 			if err := that.firstSweep(); err != nil {
-				logger.Warningf("进程:%d,平滑重启中 - 执行前置方法失败,error: %s", pid, err.Error())
+				logger.Warningf(context.TODO(), "进程:%d,平滑重启中 - 执行前置方法失败,error: %s", pid, err.Error())
 				os.Exit(-1)
 			}
 
@@ -44,13 +44,13 @@ func (that *graceful) rebootSingle(timeout ...time.Duration) {
 			_, err := that.startProcess()
 			// 启动新的进程失败，则表示该进程有问题，直接错误退出
 			if err != nil {
-				logger.Warningf("进程:%d,平滑重启中 - 启动新的进程失败,error: %s", pid, err.Error())
+				logger.Warningf(context.TODO(), "进程:%d,平滑重启中 - 启动新的进程失败,error: %s", pid, err.Error())
 				os.Exit(-1)
 			}
 		}()
 		return endCh
 	})
-	logger.Printf("进程:%d,进程已进行平滑重启,等待子进程的信号...", pid)
+	logger.Printf(context.TODO(), "进程:%d,进程已进行平滑重启,等待子进程的信号...", pid)
 }
 
 //启动新的进程
@@ -147,7 +147,7 @@ func (that *graceful) getEndpointListenerFdMap() map[string]string {
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
-			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			logger.Warningf(context.TODO(), "inheritedProcListener 不是 net.Listener类型")
 			return true
 		}
 		if that.listenAddrMap != nil {
@@ -161,7 +161,7 @@ func (that *graceful) getEndpointListenerFdMap() map[string]string {
 		if ok {
 			f, e := quicLis.PacketConn().(filer).File()
 			if e != nil {
-				logger.Error(e)
+				logger.Error(context.TODO(), e)
 				return false
 			}
 			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -175,7 +175,7 @@ func (that *graceful) getEndpointListenerFdMap() map[string]string {
 		if ok {
 			f, e := kcpLis.PacketConn().(filer).File()
 			if e != nil {
-				logger.Error(e)
+				logger.Error(context.TODO(), e)
 				return false
 			}
 			str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -187,7 +187,7 @@ func (that *graceful) getEndpointListenerFdMap() map[string]string {
 		}
 		f, e := lis.(filer).File()
 		if e != nil {
-			logger.Error(e)
+			logger.Error(context.TODO(), e)
 			return false
 		}
 		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","
@@ -204,7 +204,7 @@ func (that *graceful) getEndpointListenerFdMap() map[string]string {
 func (that *graceful) rebootMulti() {
 	that.dServer.manager.ForEachProcess(func(p *process.Process) {
 		pid := p.Pid()
-		logger.Printf("主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
+		logger.Printf(context.TODO(), "主进程:%d 向子进程: %d 发送信号SIGQUIT", os.Getpid(), pid)
 		_ = signals.KillPid(pid, signals.ToSignal("SIGQUIT"), false)
 	})
 	that.processStatus.Set(statusActionNone)
@@ -229,7 +229,7 @@ func (that *graceful) getGHttpListenerFdMap() map[string]httpListenerFdMap {
 	that.inheritedProcListener.Iterator(func(_ int, v interface{}) bool {
 		lis, ok := v.(net.Listener)
 		if !ok {
-			logger.Warningf("inheritedProcListener 不是 net.Listener类型")
+			logger.Warningf(context.TODO(), "inheritedProcListener 不是 net.Listener类型")
 			return true
 		}
 		if that.listenAddrMap == nil {
@@ -244,7 +244,7 @@ func (that *graceful) getGHttpListenerFdMap() map[string]httpListenerFdMap {
 		}
 		f, e := lis.(filer).File()
 		if e != nil {
-			logger.Error(e)
+			logger.Error(context.TODO(), e)
 			return true
 		}
 		str := lis.Addr().String() + "#" + gconv.String(f.Fd()) + ","

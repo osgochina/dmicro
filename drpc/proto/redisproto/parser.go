@@ -2,7 +2,7 @@ package redisproto
 
 import (
 	"bufio"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/osgochina/dmicro/drpc/codec/redis_codec"
 	"io"
 	"strconv"

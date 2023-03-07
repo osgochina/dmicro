@@ -1,20 +1,21 @@
 package dserver
 
 import (
+	"context"
 	"fmt"
 	"github.com/desertbit/grumble"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/supervisor/process"
@@ -74,7 +75,7 @@ func newDServer(name string) *DServer {
 		serviceList:  gmap.NewTreeMap(gutil.ComparatorString, true),
 		sandboxNames: garray.NewStrArray(true),
 		manager:      process.NewManager(),
-		masterBool:   genv.GetVar(multiProcessMasterEnv, true).Bool(),
+		masterBool:   genv.Get(multiProcessMasterEnv, true).Bool(),
 		openCtl:      true,
 	}
 	svr.graceful = newGraceful(svr)
@@ -95,7 +96,7 @@ func (that *DServer) BeforeStop(f StopFunc) {
 // 只有linux下才支持多进程模式
 func (that *DServer) ProcessModel(model ProcessModel) {
 	if runtime.GOOS == "linux" {
-		v := gcmd.GetOptVar("model", gconv.String(model))
+		v := gcmd.GetOpt("model", gconv.String(model))
 		that.procModel = ProcessModel(v.Int())
 		return
 	}
@@ -106,7 +107,7 @@ func (that *DServer) ProcessModel(model ProcessModel) {
 func (that *DServer) run(cmd *cobra.Command) {
 	//判断是否是守护进程运行
 	if e := that.demonize(that.config); e != nil {
-		logger.Fatalf("error:%v", e)
+		logger.Fatalf(context.TODO(), "error:%v", e)
 	}
 	//记录启动时间
 	that.started = gtime.Now()
@@ -137,7 +138,7 @@ func (that *DServer) run(cmd *cobra.Command) {
 	}
 
 	//答疑服务信息
-	logger.Printf("%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
+	logger.Printf(context.TODO(), "%d: 服务已经初始化完成, %d 个协程被创建.", os.Getpid(), runtime.NumGoroutine())
 	//监听重启信号
 	that.graceful.graceSignal()
 }
@@ -147,7 +148,7 @@ func (that *DServer) runProcessModelMulti(cmd *cobra.Command) {
 	// 多进程模式下，master进程预先监听地址
 	err := that.inheritListenerList()
 	if err != nil {
-		logger.Warningf("error:%v", err)
+		logger.Warningf(context.TODO(), "error:%v", err)
 		os.Exit(255)
 	}
 	// 启动service进程
@@ -242,12 +243,10 @@ func (that *DServer) StartTime() *gtime.Time {
 // 生产环境: 日志级别为 PRODUCT，会打印 WARN,ERRO,CRIT三个级别的日志，标准输出为关闭
 // Debug开关会无视以上设置，强制把日志级别设置为ALL，并且打开标准输出。
 func (that *DServer) initLogSetting(config *gcfg.Config) error {
-	loggerCfg := config.GetJson("logger")
-	if loggerCfg == nil {
-		loggerCfg = gjson.New(nil)
-	}
-	env := config.GetString("ENV_NAME")
-	level := loggerCfg.GetString("Level")
+	loggerCfg := config.MustGet(context.TODO(), "logger")
+	loggerCfgJson := gjson.New(loggerCfg)
+	env := config.MustGet(context.TODO(), "ENV_NAME").String()
+	level := loggerCfgJson.Get("Level").String()
 	logger.SetDebug(false)
 	logger.SetStdoutPrint(false)
 	//如果配置文件中的日志配置不存在，则判断环境变量，通过不同的环境变量，给与不同的日志级别
@@ -267,7 +266,7 @@ func (that *DServer) initLogSetting(config *gcfg.Config) error {
 		setConfig["stdout"] = true
 		logger.SetDebug(true)
 	}
-	logPath := loggerCfg.GetString("Path")
+	logPath := loggerCfgJson.Get("Path").String()
 	if len(logPath) > 0 {
 		setConfig["path"] = logPath
 	} else {
@@ -275,7 +274,7 @@ func (that *DServer) initLogSetting(config *gcfg.Config) error {
 	}
 
 	// 如果开启debug模式，则无视其他设置
-	if config.GetBool("Debug", false) {
+	if config.MustGet(context.TODO(), "Debug", false).Bool() {
 		setConfig["level"] = "ALL"
 		setConfig["stdout"] = true
 		logger.SetDebug(true)
@@ -287,7 +286,7 @@ func (that *DServer) initLogSetting(config *gcfg.Config) error {
 func (that *DServer) demonize(config *gcfg.Config) error {
 
 	//判断是否需要后台运行
-	daemon := config.GetBool("Daemon", false)
+	daemon := config.MustGet(context.TODO(), "Daemon", false).Bool()
 	if !daemon {
 		return nil
 	}
@@ -297,7 +296,7 @@ func (that *DServer) demonize(config *gcfg.Config) error {
 	}
 	// 将命令行参数中执行文件路径转换成可用路径
 	filePath := gfile.SelfPath()
-	logger.Infof("Starting %s: ", filePath)
+	logger.Infof(context.TODO(), "Starting %s: ", filePath)
 	arg0, e := exec.LookPath(filePath)
 	if e != nil {
 		return e
@@ -328,18 +327,18 @@ func (that *DServer) putPidFile() {
 	pid := os.Getpid()
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if e != nil {
-		logger.Fatalf("os.OpenFile: %v", e)
+		logger.Fatalf(context.TODO(), "os.OpenFile: %v", e)
 	}
 	defer func() {
 		_ = f.Close()
 	}()
 	if e := os.Truncate(that.pidFile, 0); e != nil {
-		logger.Fatalf("os.Truncate: %v.", e)
+		logger.Fatalf(context.TODO(), "os.Truncate: %v.", e)
 	}
 	if _, e := fmt.Fprintf(f, "%d", pid); e != nil {
-		logger.Fatalf("Unable to write pid %d to file: %s.", pid, e)
+		logger.Fatalf(context.TODO(), "Unable to write pid %d to file: %s.", pid, e)
 	}
-	logger.Printf("写入Pid:[%d]到文件[%s]", pid, that.pidFile)
+	logger.Printf(context.TODO(), "写入Pid:[%d]到文件[%s]", pid, that.pidFile)
 }
 
 // Shutdown 主动结束进程
@@ -357,16 +356,16 @@ func (that *DServer) firstStop() error {
 	if (that.procModel == ProcessModelMulti && that.isMaster()) || that.procModel == ProcessModelSingle {
 		if len(that.pidFile) > 0 && gfile.Exists(that.pidFile) {
 			if e := gfile.Remove(that.pidFile); e != nil {
-				logger.Errorf("os.Remove: %v", e)
+				logger.Errorf(context.TODO(), "os.Remove: %v", e)
 			}
-			logger.Printf("删除pid文件[%s]成功", that.pidFile)
+			logger.Printf(context.TODO(), "删除pid文件[%s]成功", that.pidFile)
 		}
 	}
 
 	//结束服务前调用该方法,如果结束回调方法返回false，则中断结束
 	if that.beforeStopFunc != nil && !that.beforeStopFunc(that) {
 		err := gerror.New("执行完服务停止前的回调方法，该方法强制中断了服务结束流程！")
-		logger.Warning(err)
+		logger.Warning(context.TODO(), err)
 		that.shutting = false
 		return err
 	}

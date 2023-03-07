@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/dserver"
 	"github.com/osgochina/dmicro/logger"
@@ -33,7 +34,7 @@ func main() {
 
 		err := svr.AddSandBox(new(DefaultSandBox), svr.NewService("rpc"))
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatal(context.TODO(), err)
 		}
 	})
 }

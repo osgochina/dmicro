@@ -1,7 +1,8 @@
 package proxy_test
 
 import (
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/plugin/proxy"
@@ -65,14 +66,14 @@ func newUnknownProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		internal.Warningf("%v", stat)
+		internal.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyPlugin(func(label *proxy.Label) proxy.Forwarder {
-		internal.Infof("label RealIP:%s", label.RealIP)
-		internal.Infof("label SessionID:%s", label.SessionID)
-		internal.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		internal.Infof(context.TODO(), "label RealIP:%s", label.RealIP)
+		internal.Infof(context.TODO(), "label SessionID:%s", label.SessionID)
+		internal.Infof(context.TODO(), "label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }
@@ -84,14 +85,14 @@ func newUnknownCallProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		internal.Warningf("%v", stat)
+		internal.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyCallPlugin(func(label *proxy.Label) proxy.CallForwarder {
-		internal.Infof("label RealIP:%s", label.RealIP)
-		internal.Infof("label SessionID:%s", label.SessionID)
-		internal.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		internal.Infof(context.TODO(), "label RealIP:%s", label.RealIP)
+		internal.Infof(context.TODO(), "label SessionID:%s", label.SessionID)
+		internal.Infof(context.TODO(), "label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }
@@ -103,14 +104,14 @@ func newUnknownPushProxy() drpc.Plugin {
 DIAL:
 	sess, stat = cli.Dial(":9090")
 	if !stat.OK() {
-		internal.Warningf("%v", stat)
+		internal.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
 		goto DIAL
 	}
 	return proxy.NewProxyPushPlugin(func(label *proxy.Label) proxy.PushForwarder {
-		internal.Infof("label RealIP:%s", label.RealIP)
-		internal.Infof("label SessionID:%s", label.SessionID)
-		internal.Infof("label ServiceMethod:%s", label.ServiceMethod)
+		internal.Infof(context.TODO(), "label RealIP:%s", label.RealIP)
+		internal.Infof(context.TODO(), "label SessionID:%s", label.SessionID)
+		internal.Infof(context.TODO(), "label ServiceMethod:%s", label.ServiceMethod)
 		return sess
 	})
 }

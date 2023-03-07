@@ -1,8 +1,8 @@
 package redis_codec
 
 import (
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/osgochina/dmicro/drpc/codec"
 )
 

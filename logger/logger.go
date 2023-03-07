@@ -1,8 +1,9 @@
 package logger
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/glog"
+	"context"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/glog"
 	"sync"
 )
 
@@ -62,121 +63,120 @@ func SetLevelStr(levelStr string) error {
 
 // Print prints <v> with newline using fmt.Sprintln.
 // The parameter <v> can be multiple variables.
-func Print(v ...interface{}) {
-	log.gLog.Print(v...)
+func Print(ctx context.Context, v ...interface{}) {
+	log.gLog.Print(ctx, v...)
 	log.callHandler(glog.LEVEL_NONE, "", v...)
 }
 
 // Printf prints <v> with format <format> using fmt.Sprintf.
 // The parameter <v> can be multiple variables.
-func Printf(format string, v ...interface{}) {
-	log.gLog.Printf(format, v...)
+func Printf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Printf(ctx, format, v...)
 	log.callHandler(glog.LEVEL_NONE, format, v...)
 }
 
 // Println See Print.
-func Println(v ...interface{}) {
-	log.gLog.Println(v...)
-	log.callHandler(glog.LEVEL_NONE, "", v...)
+func Println(ctx context.Context, v ...interface{}) {
+	log.gLog.Printf(ctx, "%v\n", v...)
 }
 
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
-func Fatal(v ...interface{}) {
-	log.gLog.Fatal(v...)
+func Fatal(ctx context.Context, v ...interface{}) {
+	log.gLog.Fatal(ctx, v...)
 }
 
 // Fatalf prints the logging content with [FATA] header, custom format and newline, then exit the current process.
-func Fatalf(format string, v ...interface{}) {
-	log.gLog.Fatalf(format, v...)
+func Fatalf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Fatalf(ctx, format, v...)
 }
 
 // Panic prints the logging content with [PANI] header and newline, then panics.
-func Panic(v ...interface{}) {
-	log.gLog.Panic(v...)
+func Panic(ctx context.Context, v ...interface{}) {
+	log.gLog.Panic(ctx, v...)
 }
 
 // Panicf prints the logging content with [PANI] header, custom format and newline, then panics.
-func Panicf(format string, v ...interface{}) {
-	log.gLog.Panicf(format, v...)
+func Panicf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Panicf(ctx, format, v...)
 }
 
 // Info prints the logging content with [INFO] header and newline.
-func Info(v ...interface{}) {
-	log.gLog.Info(v...)
+func Info(ctx context.Context, v ...interface{}) {
+	log.gLog.Info(ctx, v...)
 	log.callHandler(glog.LEVEL_INFO, "", v...)
 }
 
 // Infof prints the logging content with [INFO] header, custom format and newline.
-func Infof(format string, v ...interface{}) {
-	log.gLog.Infof(format, v...)
+func Infof(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Infof(ctx, format, v...)
 	log.callHandler(glog.LEVEL_INFO, format, v...)
 }
 
 // Debug prints the logging content with [DEBU] header and newline.
-func Debug(v ...interface{}) {
-	log.gLog.Debug(v...)
+func Debug(ctx context.Context, v ...interface{}) {
+	log.gLog.Debug(ctx, v...)
 	log.callHandler(glog.LEVEL_DEBU, "", v...)
 }
 
 // Debugf prints the logging content with [DEBU] header, custom format and newline.
-func Debugf(format string, v ...interface{}) {
-	log.gLog.Debugf(format, v...)
+func Debugf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Debugf(ctx, format, v...)
 	log.callHandler(glog.LEVEL_DEBU, format, v...)
 }
 
 // Notice prints the logging content with [NOTI] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Notice(v ...interface{}) {
-	log.gLog.Notice(v...)
+func Notice(ctx context.Context, v ...interface{}) {
+	log.gLog.Notice(ctx, v...)
 	log.callHandler(glog.LEVEL_NOTI, "", v...)
 }
 
 // Noticef prints the logging content with [NOTI] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Noticef(format string, v ...interface{}) {
-	log.gLog.Noticef(format, v...)
+func Noticef(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Noticef(ctx, format, v...)
 	log.callHandler(glog.LEVEL_NOTI, format, v...)
 }
 
 // Warning prints the logging content with [WARN] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Warning(v ...interface{}) {
-	log.gLog.Warning(v...)
+func Warning(ctx context.Context, v ...interface{}) {
+	log.gLog.Warning(ctx, v...)
 	log.callHandler(glog.LEVEL_WARN, "", v...)
 }
 
 // Warningf prints the logging content with [WARN] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Warningf(format string, v ...interface{}) {
-	log.gLog.Warningf(format, v...)
+func Warningf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Warningf(ctx, format, v...)
 	log.callHandler(glog.LEVEL_WARN, format, v...)
 }
 
 // Error prints the logging content with [ERRO] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Error(v ...interface{}) {
-	log.gLog.Error(v...)
+func Error(ctx context.Context, v ...interface{}) {
+	log.gLog.Error(ctx, v...)
 	log.callHandler(glog.LEVEL_ERRO, "", v...)
 }
 
 // Errorf prints the logging content with [ERRO] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Errorf(format string, v ...interface{}) {
-	log.gLog.Errorf(format, v...)
+func Errorf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Errorf(ctx, format, v...)
 	log.callHandler(glog.LEVEL_ERRO, format, v...)
 }
 
 // Critical prints the logging content with [CRIT] header and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Critical(v ...interface{}) {
-	log.gLog.Critical(v...)
+func Critical(ctx context.Context, v ...interface{}) {
+	log.gLog.Critical(ctx, v...)
 	log.callHandler(glog.LEVEL_CRIT, "", v...)
 }
 
 // Criticalf prints the logging content with [CRIT] header, custom format and newline.
 // It also prints caller stack info if stack feature is enabled.
-func Criticalf(format string, v ...interface{}) {
-	log.gLog.Criticalf(format, v...)
+func Criticalf(ctx context.Context, format string, v ...interface{}) {
+	log.gLog.Criticalf(ctx, format, v...)
 	log.callHandler(glog.LEVEL_CRIT, format, v...)
 }
 

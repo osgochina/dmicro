@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket"
 	"github.com/osgochina/dmicro/logger"
@@ -28,7 +29,7 @@ func main() {
 	cli := websocket.NewClient("/", drpc.EndpointConfig{})
 	sess, stat := cli.Dial(":9090")
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(), stat)
 	}
 	var result int
 	stat = sess.Call("/p/divide", &Arg{
@@ -37,9 +38,9 @@ func main() {
 	}, &result,
 	).Status()
 	if !stat.OK() {
-		logger.Fatal(stat)
+		logger.Fatal(context.TODO(), stat)
 	}
-	logger.Println("10/2=%d", result)
+	logger.Println(context.TODO(), "10/2=%d", result)
 	time.Sleep(time.Second)
 }
 

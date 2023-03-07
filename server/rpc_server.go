@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/plugin/heartbeat"
 	"github.com/osgochina/dmicro/drpc/proto"
@@ -67,7 +68,7 @@ func NewRpcServer(serviceName string, opt ...Option) *RpcServer {
 		if len(opts.TlsCertFile) > 0 && len(opts.TlsKeyFile) > 0 {
 			err := endpoint.SetTLSConfigFromFile(opts.TlsCertFile, opts.TlsKeyFile)
 			if err != nil {
-				logger.Fatalf("%v", err)
+				logger.Fatalf(context.TODO(), "%v", err)
 			}
 		}
 	}

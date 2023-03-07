@@ -1,9 +1,11 @@
 package dserver
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/proto/pbproto"
 	"github.com/osgochina/dmicro/logger"
@@ -13,7 +15,7 @@ import (
 )
 
 func (that *DServer) endpoint() {
-	unix := gfile.TempDir(fmt.Sprintf("%s.sock", that.name))
+	unix := gfile.Temp(fmt.Sprintf("%s.sock", that.name))
 	// 判断socket文件是否存在
 	_, err := os.Stat(unix)
 	if !os.IsNotExist(err) {
@@ -26,9 +28,9 @@ func (that *DServer) endpoint() {
 	that.ctrlEndpoint = drpc.NewEndpoint(cfg)
 	that.ctrlEndpoint.RouteCall(new(Ctl))
 	go func() {
-		err := that.ctrlEndpoint.ListenAndServe(pbproto.NewPbProtoFunc())
+		err = that.ctrlEndpoint.ListenAndServe(pbproto.NewPbProtoFunc())
 		if err != nil {
-			logger.Warning(err)
+			logger.Warning(context.TODO(), err)
 		}
 		_ = gfile.Remove(unix)
 	}()
@@ -190,10 +192,10 @@ func (that *Ctl) Reload(name *string) (*Result, *drpc.Status) {
 func (that *Ctl) Debug(debug *bool) (*Result, *drpc.Status) {
 	if *debug {
 		logger.SetDebug(true)
-		_ = defaultServer.config.Set("Debug", "true")
+		_ = defaultServer.config.GetAdapter().(*gcfg.AdapterFile).Set("Debug", "true")
 	} else {
 		logger.SetDebug(false)
-		_ = defaultServer.config.Set("Debug", "false")
+		_ = defaultServer.config.GetAdapter().(*gcfg.AdapterFile).Set("Debug", "false")
 	}
 	return &Result{}, nil
 }

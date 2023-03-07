@@ -2,8 +2,8 @@ package easyservice
 
 import (
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/osgochina/dmicro"
 )
 

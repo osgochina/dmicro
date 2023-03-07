@@ -1,9 +1,9 @@
 package jsonrpcproto
 
 import (
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/message"
@@ -158,11 +158,11 @@ func (that *jsonRPCProto) Unpack(m proto.Message) error {
 	if json.IsNil() {
 		return gerror.New("解包失败")
 	}
-	m.SetSeq(json.GetInt32("id"))
-	for k, v := range json.GetMap("context") {
+	m.SetSeq(json.Get("id").Int32())
+	for k, v := range json.Get("context").Map() {
 		m.Meta().Set(k, v)
 	}
-	method := json.GetString("method")
+	method := json.Get("method").String()
 	if len(method) > 0 {
 		m.SetMType(message.TypeCall)
 		m.SetServiceMethod(method)
@@ -180,8 +180,8 @@ func (that *jsonRPCProto) Unpack(m proto.Message) error {
 	} else if m.MType() == message.TypeReply {
 		if json.GetJson("result").IsNil() {
 			errorJson := json.GetJson("error")
-			m.SetStatus(drpc.NewStatus(errorJson.GetInt32("code"), errorJson.GetString("message")))
-			return m.UnmarshalBody(errorJson.GetBytes("data"))
+			m.SetStatus(drpc.NewStatus(errorJson.Get("code").Int32(), errorJson.Get("message").String()))
+			return m.UnmarshalBody(errorJson.Get("data").Bytes())
 		} else {
 			bt, _ := json.GetJson("result").ToJson()
 			return m.UnmarshalBody(bt)

@@ -4,6 +4,7 @@
 package dserver
 
 import (
+	"context"
 	"github.com/osgochina/dmicro/logger"
 	"os"
 	"os/signal"
@@ -41,7 +42,7 @@ func (that *graceful) graceSingle() {
 	pid := os.Getpid()
 	for {
 		sig := <-that.signal
-		logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
+		logger.Printf(context.TODO(), `进程:%d,收到信号: %s`, pid, sig.String())
 		switch sig {
 		// 强制关闭服务
 		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGABRT:
@@ -78,7 +79,7 @@ func (that *graceful) graceMultiSignal() {
 		)
 		for {
 			sig := <-that.signal
-			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
+			logger.Printf(context.TODO(), `进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
 			// 强制关闭服务
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGABRT:
@@ -109,7 +110,7 @@ func (that *graceful) graceMultiSignal() {
 		)
 		for {
 			sig := <-that.signal
-			logger.Printf(`进程:%d,收到信号: %s`, pid, sig.String())
+			logger.Printf(context.TODO(), `进程:%d,收到信号: %s`, pid, sig.String())
 			switch sig {
 			// 关闭服务
 			case syscall.SIGINT, syscall.SIGKILL, syscall.SIGABRT, syscall.SIGTERM:

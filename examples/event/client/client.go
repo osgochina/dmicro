@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/util/grand"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/message"
 	"github.com/osgochina/dmicro/drpc/plugin/event"
@@ -29,7 +30,7 @@ func main() {
 	}))
 	sess, stat := cli.Dial("127.0.0.1:9091")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
 	var result int
 	stat = sess.Call("/math/add",
@@ -38,10 +39,10 @@ func main() {
 		message.WithSetMeta("author", "liuzhiming"),
 	).Status()
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
-	logger.Printf("result: %d", result)
-	logger.Printf("Wait 10 seconds to receive the push...")
+	logger.Printf(context.TODO(), "result: %d", result)
+	logger.Printf(context.TODO(), "Wait 10 seconds to receive the push...")
 	time.Sleep(time.Second * 10)
 }
 
@@ -50,6 +51,6 @@ type Push struct {
 }
 
 func (that *Push) Status(arg *string) *drpc.Status {
-	logger.Printf("%s", *arg)
+	logger.Printf(context.TODO(), "%s", *arg)
 	return nil
 }

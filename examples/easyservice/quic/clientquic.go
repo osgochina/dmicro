@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
 	"time"
@@ -18,12 +19,12 @@ func main() {
 		true,
 	)
 	if e != nil {
-		logger.Fatalf("%v", e)
+		logger.Fatalf(context.TODO(), "%v", e)
 	}
 
 	sess, stat := cli.Dial("127.0.0.1:8198")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
 
 	for true {
@@ -33,9 +34,9 @@ func main() {
 			&result,
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf("%v", stat)
+			logger.Fatalf(context.TODO(), "%v", stat)
 		}
-		logger.Printf("result: %s", result)
+		logger.Printf(context.TODO(), "result: %s", result)
 		time.Sleep(time.Second)
 	}
 }

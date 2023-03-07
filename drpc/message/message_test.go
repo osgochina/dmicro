@@ -1,7 +1,7 @@
 package message
 
 import (
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc/status"
 	"github.com/osgochina/dmicro/drpc/tfilter"
 	"testing"

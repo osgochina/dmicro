@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/util/grand"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/metrics"
 	"github.com/osgochina/dmicro/metrics/prometheus"

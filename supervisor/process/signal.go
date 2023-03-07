@@ -1,6 +1,7 @@
 package process
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/signals"
@@ -28,7 +29,7 @@ func (that *Process) sendSignals(sigs []string, sigChildren bool) {
 		sig := signals.ToSignal(strSig)
 		err := that.sendSignal(sig, sigChildren)
 		if err != nil {
-			logger.Infof("向进程[%s]发送信号[%s]失败,err:%v", that.GetName(), strSig, err)
+			logger.Infof(context.TODO(), "向进程[%s]发送信号[%s]失败,err:%v", that.GetName(), strSig, err)
 		}
 	}
 }
@@ -38,7 +39,7 @@ func (that *Process) sendSignals(sigs []string, sigChildren bool) {
 // sigChildren: 如果为true，则信号会发送到该进程的子进程
 func (that *Process) sendSignal(sig os.Signal, sigChildren bool) error {
 	if that.cmd != nil && that.cmd.Process != nil {
-		logger.Infof("发送信号[%s]到进程[%s]", sig, that.GetName())
+		logger.Infof(context.TODO(), "发送信号[%s]到进程[%s]", sig, that.GetName())
 		err := signals.Kill(that.cmd.Process, sig, sigChildren)
 		return err
 	}

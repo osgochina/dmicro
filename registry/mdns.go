@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/util/guid"
 	"github.com/osgochina/dmicro/logger"
 	"github.com/osgochina/dmicro/utils/mdns"
 	"io"
@@ -144,7 +144,7 @@ func (that *mdnsRegistry) Register(service *Service, _ ...RegisterOption) error 
 			continue
 		}
 		port, _ := strconv.Atoi(pt)
-		logger.Debugf("[mdns] registry create new service with ip: %s:%d for: %s", net.ParseIP(host).String(), port, host)
+		logger.Debugf(context.TODO(), "[mdns] registry create new service with ip: %s:%d for: %s", net.ParseIP(host).String(), port, host)
 
 		//
 		s, err := mdns.NewServiceMDNS(node.Id, service.Name, that.domain+".", "", port, []net.IP{net.ParseIP(host)}, txt)
@@ -255,7 +255,7 @@ func (that *mdnsRegistry) GetService(service string, _ ...GetOption) ([]*Service
 				} else if len(e.AddrV6) > 0 {
 					addr = net.JoinHostPort(e.AddrV6.String(), fmt.Sprint(e.Port))
 				} else {
-					logger.Debugf("[mdns]: invalid endpoint received: %v", e)
+					logger.Debugf(context.TODO(), "[mdns]: invalid endpoint received: %v", e)
 					continue
 				}
 				s.Nodes = append(s.Nodes, &Node{

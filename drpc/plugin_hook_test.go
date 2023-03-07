@@ -1,8 +1,9 @@
 package drpc_test
 
 import (
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"net"
 	"testing"
@@ -397,11 +398,11 @@ func TestEventPlugin(t *testing.T) {
 			LocalPort: 9902,
 		}, plugins)
 
-		gtimer.AddOnce(10*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 10*time.Second, func(ctx context.Context) {
 			_ = endpointCli.Close()
 			_ = endpointSvr.Close()
 		})
-		gtimer.AddOnce(1*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 1*time.Second, func(ctx context.Context) {
 			sess, status := endpointCli.Dial("127.0.0.1:9901")
 			if !status.OK() {
 				t.Fatal("dial 127.0.0.1:9901 fail")
@@ -519,11 +520,11 @@ func TestListenPlugin(t *testing.T) {
 			LocalIP:   "127.0.0.1",
 			LocalPort: 0,
 		}, plugins)
-		gtimer.AddOnce(3*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 3*time.Second, func(ctx context.Context) {
 			_ = endpointCli.Close()
 			_ = endpointSvr.Close()
 		})
-		gtimer.AddOnce(1*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 1*time.Second, func(ctx context.Context) {
 			sess, status := endpointCli.Dial("127.0.0.1:9901")
 			if !status.OK() {
 				t.Fatal("dial 127.0.0.1:9901 fail")
@@ -605,11 +606,11 @@ func TestCallPlugin(t *testing.T) {
 			LocalIP:   "127.0.0.1",
 			LocalPort: 0,
 		}, plugins)
-		gtimer.AddOnce(3*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 3*time.Second, func(ctx context.Context) {
 			_ = endpointCli.Close()
 			_ = endpointSvr.Close()
 		})
-		gtimer.AddOnce(1*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 1*time.Second, func(ctx context.Context) {
 			sess, status := endpointCli.Dial("127.0.0.1:9901")
 			if !status.OK() {
 				t.Fatal("dial 127.0.0.1:9901 fail")
@@ -677,11 +678,11 @@ func TestPushPlugin(t *testing.T) {
 			LocalIP:   "127.0.0.1",
 			LocalPort: 0,
 		}, plugins)
-		gtimer.AddOnce(3*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 3*time.Second, func(ctx context.Context) {
 			_ = endpointCli.Close()
 			_ = endpointSvr.Close()
 		})
-		gtimer.AddOnce(1*time.Second, func() {
+		gtimer.AddOnce(context.TODO(), 1*time.Second, func(ctx context.Context) {
 			sess, status := endpointCli.Dial("127.0.0.1:9901")
 			if !status.OK() {
 				t.Fatal("dial 127.0.0.1:9901 fail")

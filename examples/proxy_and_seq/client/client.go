@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/logger"
@@ -16,7 +17,7 @@ func main() {
 
 	sess, stat := cli.Dial(":8080")
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
 
 	var result int
@@ -26,9 +27,9 @@ func main() {
 	).Status()
 
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
-	logger.Printf("result: %d", result)
+	logger.Printf(context.TODO(), "result: %d", result)
 
 	stat = sess.Push(
 		"/chat/say",
@@ -36,6 +37,6 @@ func main() {
 		drpc.WithSetMeta("X-ID", "client-001"),
 	)
 	if !stat.OK() {
-		logger.Fatalf("%v", stat)
+		logger.Fatalf(context.TODO(), "%v", stat)
 	}
 }
