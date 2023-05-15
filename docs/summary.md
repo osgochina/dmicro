@@ -14,6 +14,7 @@
   * [快速开始](dserver/quickstart.md)
   * [平滑重启](dserver/graceful.md)
   * [控制命令CTL](dserver/ctl.md)
+  * [自定义命令](dserver/cobra.md)
   
 * DRPC框架
   * [整体架构](drpc/diagram.md)
