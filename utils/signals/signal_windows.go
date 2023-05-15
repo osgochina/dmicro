@@ -1,8 +1,10 @@
+//go:build windows
 // +build windows
 
 package signals
 
 import (
+	"context"
 	"fmt"
 	"github.com/osgochina/dmicro/logger"
 	"os"
@@ -21,10 +23,10 @@ func ToSignal(signalName string) os.Signal {
 	} else if signalName == "KILL" {
 		return syscall.SIGKILL
 	} else if signalName == "USR1" {
-		logger.Warning("signal USR1 is not supported in windows")
+		logger.Warning(context.TODO(), "signal USR1 is not supported in windows")
 		return syscall.SIGTERM
 	} else if signalName == "USR2" {
-		logger.Warning("signal USR2 is not supported in windows")
+		logger.Warning(context.TODO(), "signal USR2 is not supported in windows")
 		return syscall.SIGTERM
 	} else {
 		return syscall.SIGTERM
