@@ -19,7 +19,8 @@ func main() {
 func runServer() {
 	m := process.NewManager()
 	opts := process.NewProcOptions(
-		process.ProcCommand(fmt.Sprintf("%s/../simple/server", gfile.MainPkgPath())),
+		process.ProcCommand(fmt.Sprintf("%s/../simple/server/server", gfile.MainPkgPath())),
+		process.ProcArgs("start"),
 		process.ProcName("simpleserver"),
 		process.ProcUser("lzm"),
 		process.ProcDirectory(fmt.Sprintf("%s/../", gfile.MainPkgPath())),
@@ -32,7 +33,9 @@ func runServer() {
 		return
 	}
 	proc.Start(true)
+	fmt.Println("start server ", proc.GetName())
 	initSignals(m)
+	fmt.Println("server started")
 	select {}
 }
 
