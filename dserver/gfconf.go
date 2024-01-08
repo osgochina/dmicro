@@ -74,7 +74,11 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 	//如果并未设置配置文件，为了让程序不报错，写入空的配置
 	confPath, _ := getFilePath(gcfg.DefaultConfigFileName)
 	if len(confPath) <= 0 {
-		g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent("{}", gcfg.DefaultConfigFileName)
+		switch g.Cfg().GetAdapter().(type) {
+		case *gcfg.AdapterFile:
+			g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent("{}", gfile.Basename(gcfg.DefaultConfigFileName))
+		default:
+		}
 	}
 	return gcfg.Instance()
 }
