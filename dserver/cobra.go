@@ -47,7 +47,7 @@ func (that *DServer) initCobra() {
 			// 解析debug参数
 			that.parserDebug(cmd.Flag("debug").Value.String() == "true")
 			//初始化日志配置
-			if e := that.initLogSetting(that.config); e != nil {
+			if e := that.initLogSetting(); e != nil {
 				cmd.PrintErrf("error:%v", e)
 				return
 			}

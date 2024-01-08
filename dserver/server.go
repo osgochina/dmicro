@@ -48,7 +48,6 @@ type DServer struct {
 	beforeStopFunc       StopFunc         //服务关闭之前执行该方法
 	pidFile              string           //pid文件的路径
 	sandboxNames         *garray.StrArray // 启动服务的名称
-	config               *gcfg.Config     ///服务的配置信息
 	inheritAddr          []InheritAddr    // 多进程模式，开启平滑重启逻辑模式下需要监听的列表
 	procModel            ProcessModel     // 进程模式，processModelSingle 单进程模型，processModelMulti 多进程模型
 	graceful             *graceful
@@ -106,7 +105,7 @@ func (that *DServer) ProcessModel(model ProcessModel) {
 // 启动服务
 func (that *DServer) run(cmd *cobra.Command) {
 	//判断是否是守护进程运行
-	if e := that.demonize(that.config); e != nil {
+	if e := that.demonize(); e != nil {
 		logger.Fatalf(context.TODO(), "error:%v", e)
 	}
 	//记录启动时间
@@ -228,7 +227,7 @@ func (that *DServer) searchDServiceBySandboxName(name string) (*DService, bool) 
 
 // Config 获取配置信息
 func (that *DServer) Config() *gcfg.Config {
-	return that.config
+	return g.Cfg()
 }
 
 // StartTime 返回启动时间
@@ -236,16 +235,16 @@ func (that *DServer) StartTime() *gtime.Time {
 	return that.started
 }
 
-//通过参数设置日志级别
+// 通过参数设置日志级别
 // 日志级别通过环境默认分三个类型，开发环境，测试环境，生产环境
 // 开发环境: 日志级别为 DEVELOP,标准输出打开
 // 测试环境：日志级别为 INFO,除了debug日志，都会被打印，标准输出关闭
 // 生产环境: 日志级别为 PRODUCT，会打印 WARN,ERRO,CRIT三个级别的日志，标准输出为关闭
 // Debug开关会无视以上设置，强制把日志级别设置为ALL，并且打开标准输出。
-func (that *DServer) initLogSetting(config *gcfg.Config) error {
-	loggerCfg := config.MustGet(context.TODO(), "logger")
+func (that *DServer) initLogSetting() error {
+	loggerCfg := that.Config().MustGet(context.TODO(), "logger")
 	loggerCfgJson := gjson.New(loggerCfg)
-	env := config.MustGet(context.TODO(), "ENV_NAME").String()
+	env := that.Config().MustGet(context.TODO(), "ENV_NAME").String()
 	level := loggerCfgJson.Get("Level").String()
 	logger.SetDebug(false)
 	logger.SetStdoutPrint(false)
@@ -274,7 +273,7 @@ func (that *DServer) initLogSetting(config *gcfg.Config) error {
 	}
 
 	// 如果开启debug模式，则无视其他设置
-	if config.MustGet(context.TODO(), "Debug", false).Bool() {
+	if that.Config().MustGet(context.TODO(), "Debug", false).Bool() {
 		setConfig["level"] = "ALL"
 		setConfig["stdout"] = true
 		logger.SetDebug(true)
@@ -282,11 +281,11 @@ func (that *DServer) initLogSetting(config *gcfg.Config) error {
 	return logger.SetConfigWithMap(setConfig)
 }
 
-//守护进程
-func (that *DServer) demonize(config *gcfg.Config) error {
+// 守护进程
+func (that *DServer) demonize() error {
 
 	//判断是否需要后台运行
-	daemon := config.MustGet(context.TODO(), "Daemon", false).Bool()
+	daemon := genv.Get("DAEMON", false).Bool()
 	if !daemon {
 		return nil
 	}
@@ -322,7 +321,7 @@ func (that *DServer) demonize(config *gcfg.Config) error {
 	return nil
 }
 
-//写入pid文件
+// 写入pid文件
 func (that *DServer) putPidFile() {
 	pid := os.Getpid()
 	f, e := os.OpenFile(that.pidFile, os.O_WRONLY|os.O_CREATE, os.FileMode(0600))

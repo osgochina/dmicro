@@ -3,7 +3,7 @@ package dserver
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
@@ -89,14 +89,18 @@ func (that *DServer) checkStart() {
 
 // 解析配置文件信息
 func (that *DServer) parserConfig(config string) {
-	that.config = that.getGFConf(config)
+	that.initGFConf(config)
 	// 设置配置文件中log的配置
 	that.initLogCfg()
 }
 
 // 是否守护进程启动
 func (that *DServer) parserDaemon(daemon bool) {
-	_ = that.config.GetAdapter().(*gcfg.AdapterFile).Set("Daemon", daemon)
+	if daemon {
+		_ = genv.Set("DAEMON", "true")
+	} else {
+		_ = genv.Set("DAEMON", "false")
+	}
 }
 
 // 解析运行环境
@@ -104,10 +108,8 @@ func (that *DServer) parserEnv(env string) {
 	//如果命令行传入了env参数，则使用命令行参数
 	if len(env) > 0 {
 		_ = genv.Set("ENV_NAME", gstr.ToLower(env))
-		_ = that.config.GetAdapter().(*gcfg.AdapterFile).Set("ENV_NAME", gstr.ToLower(env))
-	} else if len(that.config.MustGet(context.TODO(), "ENV_NAME").String()) <= 0 {
-		//如果命令行未传入env参数,且配置文件中页不存在ENV_NAME配置，则先查找环境变量ENV_NAME，并把环境变量中的ENV_NAME赋值给配置文件
-		_ = that.config.GetAdapter().(*gcfg.AdapterFile).Set("ENV_NAME", gstr.ToLower(genv.Get("ENV_NAME", "product").String()))
+	} else {
+		_ = genv.Set("ENV_NAME", "product")
 	}
 }
 
@@ -116,12 +118,8 @@ func (that *DServer) parserDebug(debug bool) {
 	if debug {
 		// 如果启动命令行强制设置了debug参数，则优先级最高
 		_ = genv.Set("DEBUG", "true")
-		_ = that.config.GetAdapter().(*gcfg.AdapterFile).Set("Debug", true)
 	} else {
-		// 1. 从配置文件中获取debug参数,如果获取到则使用，未获取到这进行下一步
-		// 2. 先从环境变量获取debug参数
-		// 3. 最终传导获取到debug值，把它设置到配置文件中
-		_ = that.config.GetAdapter().(*gcfg.AdapterFile).Set("Debug", that.config.MustGet(context.TODO(), "Debug", genv.Get("DEBUG", false).Bool()).Bool())
+		_ = genv.Set("DEBUG", "false")
 	}
 }
 
@@ -129,17 +127,17 @@ const configNodeNameLogger = "logger"
 
 // 把配置文件中的配置信息写入到logger配置中
 func (that *DServer) initLogCfg() {
-	if !that.config.Available(context.TODO()) {
+	if !g.Cfg().Available(context.TODO()) {
 		return
 	}
 	var m map[string]interface{}
-	nodeKey, _ := gutil.MapPossibleItemByKey(that.config.MustGet(context.TODO(), ".").Map(), configNodeNameLogger)
+	nodeKey, _ := gutil.MapPossibleItemByKey(g.Cfg().MustGet(context.TODO(), ".").Map(), configNodeNameLogger)
 	if nodeKey == "" {
 		nodeKey = configNodeNameLogger
 	}
-	m = that.config.MustGet(context.TODO(), fmt.Sprintf(`%s.%s`, nodeKey, glog.DefaultName)).Map()
+	m = g.Cfg().MustGet(context.TODO(), fmt.Sprintf(`%s.%s`, nodeKey, glog.DefaultName)).Map()
 	if len(m) == 0 {
-		m = that.config.MustGet(context.TODO(), nodeKey).Map()
+		m = g.Cfg().MustGet(context.TODO(), nodeKey).Map()
 	}
 	if len(m) > 0 {
 		if err := logger.SetConfigWithMap(m); err != nil {

@@ -3,7 +3,7 @@ package dserver
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/osgochina/dmicro/drpc"
@@ -192,10 +192,10 @@ func (that *Ctl) Reload(name *string) (*Result, *drpc.Status) {
 func (that *Ctl) Debug(debug *bool) (*Result, *drpc.Status) {
 	if *debug {
 		logger.SetDebug(true)
-		_ = defaultServer.config.GetAdapter().(*gcfg.AdapterFile).Set("Debug", "true")
+		_ = genv.Set("DEBUG", "true")
 	} else {
 		logger.SetDebug(false)
-		_ = defaultServer.config.GetAdapter().(*gcfg.AdapterFile).Set("Debug", "false")
+		_ = genv.Set("DEBUG", "false")
 	}
 	return &Result{}, nil
 }

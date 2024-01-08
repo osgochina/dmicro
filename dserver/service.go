@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -96,14 +97,14 @@ func (that *DService) start(cmd *cobra.Command) {
 		}
 		var args = []string{"start"}
 
-		if len(that.server.config.MustGet(context.TODO(), "ENV_NAME").String()) > 0 {
-			args = append(args, fmt.Sprintf("--env=%s", that.server.config.MustGet(context.TODO(), "ENV_NAME").String()))
+		if len(genv.Get("ENV_NAME").String()) > 0 {
+			args = append(args, fmt.Sprintf("--env=%s", genv.Get("ENV_NAME").String()))
 		}
 		confFile := cmd.Flag("config").Value.String()
 		if len(confFile) > 0 {
 			args = append(args, fmt.Sprintf("--config=%s", confFile))
 		}
-		if that.server.config.MustGet(context.TODO(), "Debug").Bool() {
+		if genv.Get("DEBUG").Bool() {
 			args = append(args, "--debug")
 		}
 		args = append(args, sandBoxNames...)
@@ -269,7 +270,7 @@ func (that *DService) makeSandBox(s ISandbox) (ISandbox, kindSandbox, error) {
 	iValue = cValue.Elem().FieldByName("Config")
 	if iValue.CanSet() {
 		c := &Config{}
-		c.Config = that.server.config
+		c.Config = that.server.Config()
 		iValue.Set(reflect.ValueOf(c))
 	}
 	_, ok = cTypeElem.FieldByName("ServiceSandbox")

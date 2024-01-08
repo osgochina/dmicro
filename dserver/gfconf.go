@@ -33,7 +33,7 @@ func init() {
 }
 
 // 传入配置文件地址，获取gcfg对象
-func (that *DServer) getGFConf(confFile string) *gcfg.Config {
+func (that *DServer) initGFConf(confFile string) {
 	if len(confFile) > 0 {
 		//指定了具体的配置文件地址
 		if gstr.Contains(confFile, gfile.Separator) {
@@ -41,13 +41,13 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 			if gfile.Exists(confPath) {
 				g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
 				g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFileName)
-				return gcfg.Instance()
+				return
 			}
 			confPath = fmt.Sprintf("%s%s%s", gfile.MainPkgPath(), gfile.Separator, gfile.Basename(confPath))
 			if gfile.Exists(confPath) {
 				g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
 				g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFileName)
-				return gcfg.Instance()
+				return
 			}
 		} else {
 			// 未指定配置文件地址，但是指定了配置文件名，需要去默认的目录搜索
@@ -58,29 +58,20 @@ func (that *DServer) getGFConf(confFile string) *gcfg.Config {
 				g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gfile.Basename(confPath))
 				g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confPath), gcfg.DefaultConfigFileName)
 			}
-			return gcfg.Instance()
+			return
 		}
 	}
 	//如果环境变量有设置，则使用gf框架自带的配置文件获取流程
 	if customFile := gcmd.GetOptWithEnv(commandEnvKeyForFile).String(); customFile != "" {
-		return gcfg.Instance()
+		return
 	}
 	// 如果环境变量有设置配置文件搜索路径，则使用gf框架自带的配置文件获取流程
 	if customPath := gcmd.GetOptWithEnv(commandEnvKeyForPath).String(); customPath != "" {
 		if gfile.Exists(customPath) {
-			return gcfg.Instance()
+			return
 		}
 	}
-	//如果并未设置配置文件，为了让程序不报错，写入空的配置
-	confPath, _ := getFilePath(gcfg.DefaultConfigFileName)
-	if len(confPath) <= 0 {
-		switch g.Cfg().GetAdapter().(type) {
-		case *gcfg.AdapterFile:
-			g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetContent("{}", gfile.Basename(gcfg.DefaultConfigFileName))
-		default:
-		}
-	}
-	return gcfg.Instance()
+
 }
 
 // 该方法是copy自gcfg组件，在默认目录搜索配置文件
