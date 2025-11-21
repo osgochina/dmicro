@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -142,4 +143,13 @@ func autoCheckAndAddMainPkgPathToSearchPaths() {
 			}
 		}
 	}
+}
+
+// getGFConf 获取配置对象，用于测试
+func (that *DServer) getGFConf(confFile string) *gcfg.Config {
+	cfg, _ := gcfg.New()
+	if gfile.Exists(confFile) {
+		cfg.GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(confFile), gfile.Basename(confFile))
+	}
+	return cfg
 }

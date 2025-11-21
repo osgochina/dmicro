@@ -1,14 +1,15 @@
 package quic
 
 import (
-	"github.com/quic-go/quic-go"
 	"net"
 	"time"
+
+	"github.com/quic-go/quic-go"
 )
 
 type Conn struct {
-	sess   quic.Connection
-	stream quic.Stream
+	sess   *quic.Conn
+	stream *quic.Stream
 }
 
 var _ net.Conn = new(Conn)

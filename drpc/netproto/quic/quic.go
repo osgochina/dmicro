@@ -3,12 +3,13 @@ package quic
 import (
 	"context"
 	"crypto/tls"
-	"github.com/quic-go/quic-go"
 	"net"
+
+	"github.com/quic-go/quic-go"
 )
 
 type Listener struct {
-	lis  quic.Listener
+	lis  *quic.Listener
 	conn net.PacketConn
 }
 
@@ -37,7 +38,7 @@ func DialAddrContext(ctx context.Context, network string, laddr *net.UDPAddr, ra
 	if err != nil {
 		return nil, err
 	}
-	sess, err := quic.DialContext(ctx, udpConn, udpAddr, raddr, tlsConf, config)
+	sess, err := quic.Dial(ctx, udpConn, udpAddr, tlsConf, config)
 	if err != nil {
 		return nil, err
 	}

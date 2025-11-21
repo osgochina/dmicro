@@ -1,15 +1,17 @@
 package websocket_test
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket"
 	"github.com/osgochina/dmicro/drpc/mixer/websocket/jsonSubProto"
 	websocket2 "golang.org/x/net/websocket"
-	"net/http"
-	"testing"
-	"time"
 )
 
 const clientAuthKey = "access_token"
@@ -17,15 +19,17 @@ const clientUserID = "user-1234"
 
 var handshakePlugin = websocket.NewHandshakeAuthPlugin(
 	func(r *http.Request) (sessionId string, status *drpc.Status) {
+		ctx := context.Background()
 		token := websocket.QueryToken(clientAuthKey, r)
-		internal.Infof("auth token: %v", token)
+		internal.Infof(ctx, "auth token: %v", token)
 		if token != clientAuthInfo {
 			return "", drpc.NewStatus(drpc.CodeUnauthorized, drpc.CodeText(drpc.CodeUnauthorized))
 		}
 		return clientUserID, nil
 	},
 	func(sess drpc.Session) *drpc.Status {
-		internal.Infof("login userID: %v", sess.ID())
+		ctx := context.Background()
+		internal.Infof(ctx, "login userID: %v", sess.ID())
 		return nil
 	},
 )
