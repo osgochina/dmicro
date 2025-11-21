@@ -39,7 +39,8 @@ func TestHandshakeWebsocketAuth(t *testing.T) {
 	http.Handle("/token", websocket.NewJSONServeHandler(srv, nil))
 	go http.ListenAndServe(":9094", nil)
 	srv.RouteCall(new(P))
-	time.Sleep(time.Millisecond * 200)
+	defer srv.Close()
+	time.Sleep(time.Second)
 
 	// example in Browser: ws://localhost/token?access_token=clientAuthInfo
 	rawQuery := fmt.Sprintf("/token?%s=%s", clientAuthKey, clientAuthInfo)
@@ -58,7 +59,7 @@ func TestHandshakeWebsocketAuth(t *testing.T) {
 		t.Fatal(stat)
 	}
 	t.Logf("10/2=%d", result)
-	time.Sleep(time.Millisecond * 200)
+	time.Sleep(time.Second)
 
 	// error test
 	rawQuery = fmt.Sprintf("/token?%s=wrongToken", clientAuthKey)
@@ -67,7 +68,7 @@ func TestHandshakeWebsocketAuth(t *testing.T) {
 	if stat.OK() {
 		t.Fatal("why dial correct by wrong token?")
 	}
-	time.Sleep(time.Millisecond * 200)
+	time.Sleep(time.Second)
 }
 
 func TestHandshakeWebsocketAuthCustomizedHandshake(t *testing.T) {

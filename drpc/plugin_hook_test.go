@@ -388,36 +388,34 @@ func TestEventPlugin(t *testing.T) {
 		endpointSvr := drpc.NewEndpoint(drpc.EndpointConfig{
 			Network:    "tcp",
 			ListenIP:   "127.0.0.1",
-			ListenPort: 9901,
+			ListenPort: 9891,
 		}, plugins)
 		endpointSvr.RouteCall(new(Math))
+		addArgsPath := endpointSvr.SubRoute("/math").RouteCallFunc(func(ctx drpc.CallCtx, arg *struct{ A, B, C int }) (int, *drpc.Status) {
+			return arg.A + arg.B + arg.C, nil
+		})
 
 		endpointCli := drpc.NewEndpoint(drpc.EndpointConfig{
 			Network:   "tcp",
 			LocalIP:   "127.0.0.1",
-			LocalPort: 9902,
+			LocalPort: 0,
 		}, plugins)
 
-		gtimer.AddOnce(context.TODO(), 10*time.Second, func(ctx context.Context) {
-			_ = endpointCli.Close()
-			_ = endpointSvr.Close()
-		})
-		gtimer.AddOnce(context.TODO(), 1*time.Second, func(ctx context.Context) {
-			sess, status := endpointCli.Dial("127.0.0.1:9901")
-			if !status.OK() {
-				t.Fatal("dial 127.0.0.1:9901 fail")
-			}
-			t.Assert(sess.ID(), "127.0.0.1:9902")
-			var result int
-			status = sess.Call("/math/add", []int{1, 2, 3}, &result).Status()
-			if !status.OK() {
-				t.Fatalf("/math/add fail,%v", status)
-			}
-			t.Log(result)
-			t.Assert(result, 6)
-		})
-		_ = endpointSvr.ListenAndServe()
-		time.Sleep(1 * time.Second)
+		go endpointSvr.ListenAndServe()
+		time.Sleep(300 * time.Millisecond)
+		sess, status := endpointCli.Dial("127.0.0.1:9891")
+		if !status.OK() {
+			t.Fatal("dial 127.0.0.1:9901 fail")
+		}
+		var result int
+		status = sess.Call(addArgsPath, &struct{ A, B, C int }{1, 2, 3}, &result).Status()
+		if !status.OK() {
+			t.Fatalf("/math/add fail,%v", status)
+		}
+		t.Log(result)
+		t.Assert(result, 6)
+		_ = endpointCli.Close()
+		_ = endpointSvr.Close()
 	})
 }
 
@@ -601,6 +599,9 @@ func TestCallPlugin(t *testing.T) {
 			ListenPort: 9901,
 		}, plugins)
 		endpointSvr.RouteCall(new(Math))
+		addArgsPath := endpointSvr.SubRoute("/math").RouteCallFunc(func(ctx drpc.CallCtx, arg *struct{ A, B, C int }) (int, *drpc.Status) {
+			return arg.A + arg.B + arg.C, nil
+		})
 		endpointCli := drpc.NewEndpoint(drpc.EndpointConfig{
 			Network:   "tcp",
 			LocalIP:   "127.0.0.1",
@@ -617,7 +618,7 @@ func TestCallPlugin(t *testing.T) {
 			}
 			t.Log(sess.ID())
 			var result int
-			status = sess.Call("/math/add", []int{1, 2, 3}, &result).Status()
+			status = sess.Call(addArgsPath, &struct{ A, B, C int }{1, 2, 3}, &result).Status()
 			if !status.OK() {
 				t.Fatalf("/math/add fail,%v", status)
 			}

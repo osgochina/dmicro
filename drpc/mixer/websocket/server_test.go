@@ -29,7 +29,8 @@ func TestJSONWebsocket(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srv := websocket.NewServer("/", drpc.EndpointConfig{ListenPort: 9090})
 		srv.RouteCall(new(P))
-		go srv.ListenAndServe()
+		defer srv.Close()
+		go srv.ListenAndServeJSON()
 		time.Sleep(time.Second * 1)
 		cli := websocket.NewClient("/", drpc.EndpointConfig{})
 		sess, stat := cli.Dial(":9090")
@@ -53,14 +54,15 @@ func TestJSONWebsocket(t *testing.T) {
 
 func TestJSONWebsocketTLS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srv := websocket.NewServer("/", drpc.EndpointConfig{ListenPort: 9090})
+		srv := websocket.NewServer("/", drpc.EndpointConfig{ListenPort: 9096})
 		srv.RouteCall(new(P))
 		srv.SetTLSConfig(utils.GenerateTLSConfigForServer())
+		defer srv.Close()
 		go srv.ListenAndServeJSON()
 		time.Sleep(time.Second * 1)
 		cli := websocket.NewClient("/", drpc.EndpointConfig{})
 		cli.SetTLSConfig(utils.GenerateTLSConfigForClient())
-		sess, stat := cli.Dial(":9090")
+		sess, stat := cli.Dial(":9096")
 		if !stat.OK() {
 			t.Fatal(stat)
 		}
@@ -83,6 +85,7 @@ func TestPbWebsocket(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srv := websocket.NewServer("/abc", drpc.EndpointConfig{ListenPort: 9091, PrintDetail: true})
 		srv.RouteCall(new(P))
+		defer srv.Close()
 		go srv.ListenAndServeProtobuf()
 		time.Sleep(time.Second * 1)
 		cli := websocket.NewClient("/abc", drpc.EndpointConfig{PrintDetail: true})
@@ -110,6 +113,7 @@ func TestPbWebsocketTLS(t *testing.T) {
 		srv := websocket.NewServer("/abc", drpc.EndpointConfig{ListenPort: 9091, PrintDetail: true})
 		srv.RouteCall(new(P))
 		srv.SetTLSConfig(utils.GenerateTLSConfigForServer())
+		defer srv.Close()
 		go srv.ListenAndServeProtobuf()
 		time.Sleep(time.Second * 1)
 		cli := websocket.NewClient("/abc", drpc.EndpointConfig{PrintDetail: true})

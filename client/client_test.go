@@ -59,7 +59,7 @@ func TestNewRpcClientDefault(t *testing.T) {
 			message.WithSetMeta("author", "clownfish"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf(context.TODO(), "%v", stat)
+			t.Fatal(stat)
 		}
 		t.Assert(stat.OK(), true)
 		t.Assert(result, 15)
@@ -81,7 +81,7 @@ func TestNewRpcClientMDNS(t *testing.T) {
 			message.WithSetMeta("author", "clownfish"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf(context.TODO(), "%v", stat)
+			t.Fatal(stat)
 		}
 		t.Assert(stat.OK(), true)
 		t.Assert(result, 15)
@@ -112,7 +112,7 @@ func TestNewRpcClientMemory(t *testing.T) {
 			message.WithSetMeta("author", "clownfish"),
 		).Status()
 		if !stat.OK() {
-			logger.Fatalf(context.TODO(), "%v", stat)
+			t.Fatal(stat)
 		}
 		t.Assert(stat.OK(), true)
 		t.Assert(result, 15)

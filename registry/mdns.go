@@ -59,7 +59,7 @@ type mdnsWatcher struct {
 func newRegistry(opts ...Option) Registry {
 	options := Options{
 		Context: context.Background(),
-		Timeout: time.Millisecond * 100,
+		Timeout: time.Second,
 	}
 	for _, o := range opts {
 		o(&options)

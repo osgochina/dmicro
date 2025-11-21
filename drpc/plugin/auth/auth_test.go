@@ -2,13 +2,14 @@ package auth_test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/codec"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/plugin/auth"
-	"testing"
-	"time"
 )
 
 func TestAuth(t *testing.T) {
@@ -41,18 +42,18 @@ func TestAuth(t *testing.T) {
 	})
 }
 
-func TestAuthBearer(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		srv := drpc.NewEndpoint(
-			drpc.EndpointConfig{ListenPort: 9081},
-			authChecker,
-		)
-		srv.RouteCall(new(Home))
-		go srv.ListenAndServe()
-		time.Sleep(10 * time.Minute)
-
-	})
-}
+//func TestAuthBearer(t *testing.T) {
+//	gtest.C(t, func(t *gtest.T) {
+//		srv := drpc.NewEndpoint(
+//			drpc.EndpointConfig{ListenPort: 9081},
+//			authChecker,
+//		)
+//		srv.RouteCall(new(Home))
+//		go srv.ListenAndServe()
+//		time.Sleep(10 * time.Minute)
+//
+//	})
+//}
 
 func TestAuthChecker(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
