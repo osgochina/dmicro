@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/proto/httpproto"
-	"io/ioutil"
-	"net/http"
-	"testing"
-	"time"
 )
 
 type Home struct {
@@ -50,7 +51,7 @@ func TestHTTProto(t *testing.T) {
 			"author": "liuzhiming",
 		}
 
-		testUrl := "http://localhost:9090/home/test?endpoint_id=110"
+		testUrl := "http://localhost:9091/home/test?endpoint_id=110"
 		stat = sess.Call(testUrl, arg, &result).Status()
 		if !stat.OK() {
 			t.Fatal(stat)

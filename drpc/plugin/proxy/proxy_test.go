@@ -2,13 +2,14 @@ package proxy_test
 
 import (
 	"context"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/osgochina/dmicro/drpc"
 	"github.com/osgochina/dmicro/drpc/internal"
 	"github.com/osgochina/dmicro/drpc/plugin/proxy"
-	"strconv"
-	"testing"
-	"time"
 )
 
 type Request struct {
@@ -32,9 +33,9 @@ func (m *mathPush) Push(arg *Request) *drpc.Status {
 	return nil
 }
 
-func newSession(t *gtest.T, newProxy func() drpc.Plugin) drpc.Session {
+func newSession(t *gtest.T, newProxy func() drpc.Plugin, backendPort int, proxyPort int) drpc.Session {
 	srv := drpc.NewEndpoint(drpc.EndpointConfig{
-		ListenPort:  9090,
+		ListenPort:  uint16(backendPort),
 		PrintDetail: true,
 	})
 	srv.RouteCall(new(math))
@@ -42,7 +43,7 @@ func newSession(t *gtest.T, newProxy func() drpc.Plugin) drpc.Session {
 	go srv.ListenAndServe()
 	time.Sleep(time.Second)
 	srv1 := drpc.NewEndpoint(drpc.EndpointConfig{
-		ListenPort:  8080,
+		ListenPort:  uint16(proxyPort),
 		PrintDetail: true,
 	},
 		newProxy(),
@@ -52,19 +53,19 @@ func newSession(t *gtest.T, newProxy func() drpc.Plugin) drpc.Session {
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{
 		PrintDetail: true,
 	})
-	sess, stat := cli.Dial(":" + strconv.Itoa(8080))
+	sess, stat := cli.Dial(":" + strconv.Itoa(proxyPort))
 	if !stat.OK() {
 		t.Fatal(stat)
 	}
 	return sess
 }
 
-func newUnknownProxy() drpc.Plugin {
+func newUnknownProxy(backendPort int) drpc.Plugin {
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{RedialTimes: 3})
 	var sess drpc.Session
 	var stat *drpc.Status
 DIAL:
-	sess, stat = cli.Dial(":9090")
+	sess, stat = cli.Dial(":" + strconv.Itoa(backendPort))
 	if !stat.OK() {
 		internal.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
@@ -78,12 +79,12 @@ DIAL:
 	})
 }
 
-func newUnknownCallProxy() drpc.Plugin {
+func newUnknownCallProxy(backendPort int) drpc.Plugin {
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{RedialTimes: 3})
 	var sess drpc.Session
 	var stat *drpc.Status
 DIAL:
-	sess, stat = cli.Dial(":9090")
+	sess, stat = cli.Dial(":" + strconv.Itoa(backendPort))
 	if !stat.OK() {
 		internal.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
@@ -97,12 +98,12 @@ DIAL:
 	})
 }
 
-func newUnknownPushProxy() drpc.Plugin {
+func newUnknownPushProxy(backendPort int) drpc.Plugin {
 	cli := drpc.NewEndpoint(drpc.EndpointConfig{RedialTimes: 3})
 	var sess drpc.Session
 	var stat *drpc.Status
 DIAL:
-	sess, stat = cli.Dial(":9090")
+	sess, stat = cli.Dial(":" + strconv.Itoa(backendPort))
 	if !stat.OK() {
 		internal.Warningf(context.TODO(), "%v", stat)
 		time.Sleep(time.Second * 3)
@@ -118,7 +119,7 @@ DIAL:
 
 func TestProxy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		sess := newSession(t, newUnknownProxy)
+		sess := newSession(t, func() drpc.Plugin { return newUnknownProxy(9099) }, 9099, 8080)
 		var result Response
 		stat := sess.Call(
 			"/math/add",
@@ -139,7 +140,7 @@ func TestProxy(t *testing.T) {
 
 func TestCallProxy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		sess := newSession(t, newUnknownCallProxy)
+		sess := newSession(t, func() drpc.Plugin { return newUnknownCallProxy(9091) }, 9091, 8081)
 		var result Response
 		stat := sess.Call(
 			"/math/add",
@@ -154,7 +155,7 @@ func TestCallProxy(t *testing.T) {
 
 func TestPushProxy(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		sess := newSession(t, newUnknownPushProxy)
+		sess := newSession(t, func() drpc.Plugin { return newUnknownPushProxy(9092) }, 9092, 8082)
 		stat2 := sess.Push(
 			"/math_push/push",
 			&Request{One: 1, Two: 2},

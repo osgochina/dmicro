@@ -1,12 +1,13 @@
 package securebody_test
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/osgochina/dmicro/drpc"
-	"github.com/osgochina/dmicro/drpc/plugin/securebody"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/osgochina/dmicro/drpc"
+	"github.com/osgochina/dmicro/drpc/plugin/securebody"
 )
 
 type Request struct {
@@ -46,7 +47,7 @@ func newSession(t *gtest.T, port uint16) drpc.Session {
 
 func TestSecureBodyPlugin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		sess := newSession(t, 9090)
+		sess := newSession(t, 9095)
 		var result Response
 		stat := sess.Call(
 			"/math/add",
@@ -62,7 +63,7 @@ func TestSecureBodyPlugin(t *testing.T) {
 
 func TestReplySecureBodyPlugin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		sess := newSession(t, 9090)
+		sess := newSession(t, 9097)
 		var result Response
 		stat := sess.Call(
 			"/math/add",
